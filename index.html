@@ -1,0 +1,2484 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arsip Digital & BPM Survey - PT PLN (Persero)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #f8fafc;
+      background-image: radial-gradient(#e2e8f0 1.2px, transparent 1.2px);
+      background-size: 24px 24px;
+    }
+
+    [x-cloak] {
+      display: none !important;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace !important;
+    }
+
+    body.swal2-height-auto {
+      height: 100vh !important;
+      overflow: hidden !important;
+    }
+  </style>
+</head>
+
+<body class="text-slate-800 antialiased h-screen flex overflow-hidden" x-data="app()" x-init="initApp()" x-cloak>
+
+  <!-- LOGIN SCREEN -->
+  <div x-show="!isAuthenticated" x-transition.opacity
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cover bg-center"
+    style="background-image: url('https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');">
+    <div class="absolute inset-0 bg-gradient-to-tr from-[#005C9A]/85 to-[#00A2E2]/70 backdrop-blur-[4px]"></div>
+
+    <div
+      class="relative z-10 bg-white/95 p-6 sm:p-10 rounded-3xl sm:rounded-[32px] shadow-2xl w-full max-w-[420px] flex flex-col border border-white/40 backdrop-blur-md">
+      <div class="text-center mb-6 sm:mb-8 flex flex-col items-center">
+        <div class="w-16 h-20 sm:w-20 sm:h-24 mb-3 sm:mb-4 flex items-center justify-center">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png" class="h-20 sm:h-24 w-auto object-contain drop-shadow-sm transition-transform hover:scale-105 duration-300" alt="Logo PLN">
+        </div>
+        <h3 class="text-[#005C9A] font-extrabold text-[10px] sm:text-[11px] uppercase tracking-[0.25em] mb-1">E-Arsip & BPM Digital
+        </h3>
+        <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">PT PLN (PERSERO)</h1>
+        <p class="text-slate-500 text-xs mt-1.5 font-medium">Silakan masuk menggunakan kredensial korporat Anda</p>
+      </div>
+
+      <form @submit.prevent="login" class="w-full space-y-4">
+        <div class="relative group">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <i class="fas fa-user text-slate-400 group-focus-within:text-[#005C9A] transition-colors text-sm"></i>
+          </div>
+          <input x-model="loginForm.username" type="text" class="w-full pl-11 pr-4 py-3 sm:py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-700 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#005C9A] focus:ring-4 focus:ring-[#005C9A]/10 transition-all duration-200" placeholder="Username / NIP" required>
+        </div>
+
+        <div class="relative group">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <i class="fas fa-lock text-slate-400 group-focus-within:text-[#005C9A] transition-colors text-sm"></i>
+          </div>
+          <input x-model="loginForm.password" type="password" class="w-full pl-11 pr-4 py-3 sm:py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-700 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#005C9A] focus:ring-4 focus:ring-[#005C9A]/10 transition-all duration-200" placeholder="Password" required>
+        </div>
+
+        <div class="flex justify-end">
+          <a href="#" @click.prevent="openForgotModal()"
+            class="text-xs text-[#00A2E2] hover:text-[#005C9A] font-bold transition-colors">Lupa Password Akun?</a>
+        </div>
+
+        <button type="submit" class="w-full mt-2 bg-gradient-to-r from-[#005C9A] to-[#00A2E2] hover:opacity-95 text-white font-bold py-3.5 rounded-2xl shadow-xl shadow-[#005C9A]/20 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center text-xs tracking-wider uppercase" :disabled="isLoading">
+          <span x-show="!isLoading" class="flex items-center gap-2">MASUK SISTEM <i class="fas fa-arrow-right text-[10px]"></i></span>
+          <span x-show="isLoading" class="flex items-center gap-2">
+            <i class="fas fa-circle-notch fa-spin"></i> Autentikasi...
+          </span>
+        </button>
+      </form>
+
+      <div class="mt-6 sm:mt-8 text-center border-t border-slate-100 pt-4 sm:pt-5">
+        <p class="text-slate-400 text-[10px] font-bold tracking-wider uppercase">&copy; 2026 PT PLN (Persero). All
+          Rights Reserved.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN INTERFACE -->
+  <template x-if="isAuthenticated">
+    <div class="flex w-full h-full relative">
+
+      <!-- SIDEBAR -->
+      <aside :class="sidebarOpen ? 'w-72 translate-x-0' : 'w-72 -translate-x-full md:translate-x-0 md:w-24'"
+        class="bg-[#005C9A] text-white flex flex-col transition-all duration-300 fixed md:relative z-40 h-full border-r border-[#004b7e]/30 shadow-2xl">
+
+        <div class="h-16 sm:h-20 flex items-center px-6 border-b border-[#004b7e]/30 bg-[#004b7e]/20 justify-between">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 flex items-center justify-center flex-shrink-0 bg-white/10 p-1.5 rounded-xl border border-white/10">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png" class="h-8 w-auto object-contain" alt="Logo PLN">
+            </div>
+            <span x-show="sidebarOpen" class="font-black text-base tracking-widest text-white transition-opacity duration-300">E-ARSIP PLN</span>
+          </div>
+          <button @click="sidebarOpen = false" class="md:hidden text-white/70 hover:text-white p-1">
+            <i class="fas fa-times text-lg"></i>
+          </button>
+        </div>
+
+        <div class="p-4 sm:p-5 border-b border-[#004b7e]/30 bg-[#004b7e]/10">
+          <div class="flex items-center gap-4 cursor-pointer group p-2 rounded-2xl hover:bg-white/5 transition-all"
+            @click="modals.profile = true; if(window.innerWidth < 768) sidebarOpen = false;" title="Klik untuk edit profil">
+            <div class="relative flex-shrink-0">
+              <div
+                class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#FFF200] text-[#005C9A] flex items-center justify-center text-lg font-black shadow-md ring-4 ring-white/10 group-hover:ring-[#00A2E2]/50 transition-all">
+                <span x-text="(currentUser.nama_lengkap || currentUser.username || 'U').toString().charAt(0).toUpperCase()"></span>
+              </div>
+              <div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-400 border-2 border-[#005C9A] rounded-full">
+              </div>
+            </div>
+            <div x-show="sidebarOpen" class="overflow-hidden transition-all duration-300">
+              <p class="text-sm font-bold truncate text-white group-hover:text-amber-200 transition-colors"
+                x-text="currentUser.nama_lengkap || currentUser.username"></p>
+              <p class="text-[9px] uppercase tracking-wider text-[#FFF200] font-extrabold bg-black/20 px-2.5 py-1 rounded-lg inline-block mt-1"
+                x-text="currentUser.role"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- MENU LIST -->
+        <nav class="flex-1 overflow-y-auto py-4 sm:py-6 px-4 custom-scrollbar">
+          <ul class="space-y-1.5">
+
+            <template x-if="currentUser.role === 'Admin' || (!currentUser.role.includes('Pengajuan') && !currentUser.role.includes('ULP'))">
+              <li>
+                <a href="#" @click.prevent="navigate('dashboard'); if(window.innerWidth < 768) sidebarOpen = false;"
+                  :class="view === 'dashboard' ? 'bg-[#00A2E2] shadow-lg shadow-[#00A2E2]/20 text-white font-bold' : 'text-slate-100 hover:bg-white/5'"
+                  class="flex items-center px-4 py-3.5 rounded-2xl transition-all duration-200 group">
+                  <i class="fas fa-home w-5 text-center group-hover:scale-110 transition-transform text-sm"></i>
+                  <span x-show="sidebarOpen" class="ml-3.5 font-semibold text-sm">Dashboard Utama</span>
+                </a>
+              </li>
+            </template>
+
+            <template x-if="currentUser.role === 'Admin' || currentUser.role.includes('Pengajuan') || currentUser.role.includes('ULP')">
+              <div class="space-y-1">
+                <li class="px-4 pt-4 sm:pt-5 pb-2 text-[10px] font-extrabold text-amber-300/80 uppercase tracking-widest"
+                  x-show="sidebarOpen">
+                  <i class="fas fa-paper-plane mr-1 text-[9px]"></i> Tim Pengajuan (ULP)
+                </li>
+                <li>
+                  <a href="#" @click.prevent="navigate('create-bpm'); if(window.innerWidth < 768) sidebarOpen = false;"
+                    :class="view === 'create-bpm' ? 'bg-[#00A2E2] shadow-lg shadow-[#00A2E2]/20 text-white font-bold' : 'text-slate-100 hover:bg-white/5'"
+                    class="flex items-center px-4 py-3 rounded-2xl transition-all duration-200 group">
+                    <i class="fas fa-plus-circle w-5 text-center text-amber-400 group-hover:scale-110 transition-transform text-sm"></i>
+                    <span x-show="sidebarOpen" class="ml-3.5 font-semibold text-sm">Permohonan Baru</span>
+                  </a>
+                </li>
+              </div>
+            </template>
+
+            <template x-if="currentUser.role === 'Admin' || currentUser.role.includes('Survey') || currentUser.role.includes('Rensis')">
+              <div class="space-y-1">
+                <li class="px-4 pt-4 sm:pt-5 pb-2 text-[10px] font-extrabold text-sky-200/80 uppercase tracking-widest"
+                  x-show="sidebarOpen">
+                  <i class="fas fa-map-marked-alt mr-1 text-[9px]"></i> Tim Survey & Rensis
+                </li>
+                <li>
+                  <a href="#" @click.prevent="navigate('bpm'); if(window.innerWidth < 768) sidebarOpen = false;"
+                    :class="view === 'bpm' ? 'bg-[#00A2E2] shadow-lg shadow-[#00A2E2]/20 text-white font-bold' : 'text-slate-100 hover:bg-white/5'"
+                    class="flex items-center px-4 py-3 rounded-2xl transition-all duration-200 group">
+                    <i class="fas fa-tasks w-5 text-center text-sky-300 group-hover:scale-110 transition-transform text-sm"></i>
+                    <span x-show="sidebarOpen" class="ml-3.5 font-semibold text-sm">Daftar Proses BPM</span>
+                  </a>
+                </li>
+              </div>
+            </template>
+
+            <template x-if="currentUser.role === 'Admin' || currentUser.role.includes('Manajemen') || currentUser.role.includes('Arsip')">
+              <div class="space-y-1">
+                <li class="px-4 pt-4 sm:pt-5 pb-2 text-[10px] font-extrabold text-emerald-300/80 uppercase tracking-widest"
+                  x-show="sidebarOpen">
+                  <i class="fas fa-folder-closed mr-1 text-[9px]"></i> Tim Manajemen & Arsip
+                </li>
+                <li>
+                  <a href="#" @click.prevent="navigate('archives'); if(window.innerWidth < 768) sidebarOpen = false;"
+                    :class="view === 'archives' ? 'bg-[#00A2E2] shadow-lg shadow-[#00A2E2]/20 text-white font-bold' : 'text-slate-100 hover:bg-white/5'"
+                    class="flex items-center px-4 py-3 rounded-2xl transition-all duration-200 group">
+                    <i class="fas fa-box-archive w-5 text-center text-emerald-400 group-hover:scale-110 transition-transform text-sm"></i>
+                    <span x-show="sidebarOpen" class="ml-3.5 font-semibold text-sm">Kotak Arsip Digital</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="#" @click.prevent="navigate('reports'); if(window.innerWidth < 768) sidebarOpen = false;"
+                    :class="view === 'reports' ? 'bg-[#00A2E2] shadow-lg shadow-[#00A2E2]/20 text-white font-bold' : 'text-slate-100 hover:bg-white/5'"
+                    class="flex items-center px-4 py-3 rounded-2xl transition-all duration-200 group">
+                    <i class="fas fa-file-excel w-5 text-center text-emerald-300 group-hover:scale-110 transition-transform text-sm"></i>
+                    <span x-show="sidebarOpen" class="ml-3.5 font-semibold text-sm">Unduh Laporan Kerja</span>
+                  </a>
+                </li>
+              </div>
+            </template>
+
+            <template x-if="currentUser.role === 'Admin'">
+              <div class="space-y-1">
+                <li class="px-4 pt-4 sm:pt-5 pb-2 text-[10px] font-extrabold text-blue-200/50 uppercase tracking-widest"
+                  x-show="sidebarOpen">
+                  <i class="fas fa-user-shield mr-1 text-[9px]"></i> Administrator
+                </li>
+                <li>
+                  <a href="#" @click.prevent="navigate('users'); if(window.innerWidth < 768) sidebarOpen = false;"
+                    :class="view === 'users' ? 'bg-[#00A2E2] text-white font-bold' : 'text-slate-100 hover:bg-white/5'"
+                    class="flex items-center px-4 py-3 rounded-2xl transition-all group">
+                    <i class="fas fa-users-cog w-5 text-center text-sm"></i>
+                    <span x-show="sidebarOpen" class="ml-3.5 font-semibold text-sm">Manajemen Pegawai</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="#" @click.prevent="navigate('logs'); if(window.innerWidth < 768) sidebarOpen = false;"
+                    :class="view === 'logs' ? 'bg-[#00A2E2] text-white font-bold' : 'text-slate-100 hover:bg-white/5'"
+                    class="flex items-center px-4 py-3 rounded-2xl transition-all group">
+                    <i class="fas fa-stream w-5 text-center text-sm"></i>
+                    <span x-show="sidebarOpen" class="ml-3.5 font-semibold text-sm">Log Aktivitas Sistem</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="#" @click.prevent="navigate('settings'); if(window.innerWidth < 768) sidebarOpen = false;"
+                    :class="view === 'settings' ? 'bg-[#00A2E2] text-white font-bold' : 'text-slate-100 hover:bg-white/5'"
+                    class="flex items-center px-4 py-3 rounded-2xl transition-all group">
+                    <i class="fas fa-sliders-h w-5 text-center text-sm"></i>
+                    <span x-show="sidebarOpen" class="ml-3.5 font-semibold text-sm">Konfigurasi Master</span>
+                  </a>
+                </li>
+              </div>
+            </template>
+
+          </ul>
+        </nav>
+
+        <div class="p-4 border-t border-[#004b7e]/30">
+          <button @click="logout" class="flex items-center justify-center text-red-200 hover:bg-red-600 hover:text-white w-full py-3 rounded-2xl transition-all duration-200 border border-transparent group">
+            <i class="fas fa-sign-out-alt w-5 text-center group-hover:-translate-x-1 transition-transform text-sm"></i>
+            <span x-show="sidebarOpen" class="ml-3.5 font-semibold text-sm">Keluar Aplikasi</span>
+          </button>
+        </div>
+      </aside>
+
+      <div x-show="sidebarOpen" @click="sidebarOpen = false"
+        class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 md:hidden"></div>
+
+      <!-- MAIN CONTAINER -->
+      <main class="flex-1 flex flex-col h-screen overflow-hidden relative bg-[#f4f7fa]">
+
+        <header
+          class="h-16 sm:h-20 bg-white border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-8 z-30 flex-shrink-0">
+          <div class="flex items-center gap-3 sm:gap-4">
+            <button @click="sidebarOpen = !sidebarOpen" class="p-2 sm:p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-[#005C9A] transition-all focus:outline-none">
+              <i class="fas fa-bars text-base sm:text-lg"></i>
+            </button>
+            <div>
+              <h2 class="text-base sm:text-xl font-extrabold text-slate-900 tracking-tight" x-text="viewTitle"></h2>
+              <p class="text-xs text-slate-400 hidden sm:block mt-0.5">Aplikasi Manajemen Dokumentasi & BPM Survey PLN
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 sm:gap-6">
+            <a href="https://drive.google.com/file/d/1po3SiHaBL5qc8CaogddHljg7YFHHNJlS/view?usp=sharing"
+              target="_blank"
+              class="inline-flex items-center gap-2 bg-sky-50 hover:bg-sky-100 text-[#005C9A] p-2 sm:px-3.5 sm:py-2 rounded-2xl border border-sky-100 text-xs font-bold transition-all shadow-sm group"
+              title="Unduh & Baca Buku Panduan Penggunaan">
+              <i class="fas fa-file-pdf text-rose-500 text-sm group-hover:scale-110 transition-transform"></i>
+              <span class="hidden sm:inline">Buku Panduan</span>
+            </a>
+
+            <!-- NOTIFIKASI LONCENG -->
+            <div class="relative" x-data="{ open: false }">
+              <button @click="open = !open; if(open) markNotificationsRead()" class="relative p-2 sm:p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-[#005C9A] transition-all focus:outline-none">
+                <i class="fas fa-bell text-base sm:text-lg"></i>
+                <span x-show="unreadCount > 0" x-transition.scale class="absolute top-1.5 right-1.5 h-4 w-4 bg-rose-500 rounded-full border-2 border-white flex items-center justify-center">
+                  <span class="text-[8px] font-black text-white" x-text="unreadCount > 9 ? '9+' : unreadCount"></span>
+                </span>
+              </button>
+
+              <div x-show="open" @click.away="open = false" x-transition
+                class="absolute right-0 mt-3 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 origin-top-right">
+                <div class="px-4 py-3.5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                  <h3 class="font-bold text-xs text-slate-800 uppercase tracking-wider">Notifikasi Berkas</h3>
+                  <button @click="markNotificationsRead(true)" class="text-[11px] text-[#00A2E2] font-bold hover:underline">Tandai Baca</button>
+                </div>
+                <div class="max-h-80 overflow-y-auto custom-scrollbar">
+                  <template x-for="notif in notifications" :key="notif.id">
+                    <div class="px-4 py-3 border-b border-slate-50 hover:bg-slate-50/50 transition-colors flex gap-3"
+                      :class="{'bg-sky-50/50': !notif.isRead}">
+                      <div
+                        class="flex-shrink-0 w-8 h-8 rounded-xl bg-sky-50 text-[#005C9A] flex items-center justify-center mt-1">
+                        <i class="fas fa-share-alt text-xs"></i>
+                      </div>
+                      <div class="flex-1">
+                        <p class="text-xs text-slate-600 leading-normal">
+                          <b class="text-slate-800" x-text="notif.from"></b> <span x-text="notif.message"></span>
+                        </p>
+                        <p class="text-[10px] text-slate-400 mt-1 font-mono" x-text="notif.timestamp"></p>
+                      </div>
+                      <div x-show="!notif.isRead" class="w-1.5 h-1.5 rounded-full bg-[#00A2E2] mt-2 flex-shrink-0">
+                      </div>
+                    </div>
+                  </template>
+                  <div x-show="notifications.length === 0" class="py-10 text-center text-slate-400">
+                    <i class="far fa-bell-slash text-xl mb-2 opacity-40"></i>
+                    <p class="text-xs font-medium">Tidak ada pemberitahuan baru</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- PROFIL -->
+            <div class="text-right hidden sm:block">
+              <p class="text-sm font-bold text-slate-800" x-text="currentUser.nama_lengkap"></p>
+              <p class="text-xs text-[#00A2E2] font-bold mt-0.5" x-text="currentUser.role"></p>
+            </div>
+            <div @click="modals.profile = true"
+              class="h-9 w-9 sm:h-11 sm:w-11 rounded-2xl bg-gradient-to-br from-[#005C9A] to-[#00A2E2] flex items-center justify-center text-white font-black shadow-md ring-4 ring-slate-100 cursor-pointer hover:scale-105 transition-all text-sm sm:text-base"
+              title="Edit Profil">
+              <span x-text="(currentUser.nama_lengkap || currentUser.username || 'U').toString().charAt(0).toUpperCase()"></span>
+            </div>
+          </div>
+        </header>
+
+        <!-- AREA KONTEN UTAMA -->
+        <div class="flex-1 overflow-y-auto p-4 sm:p-8 scroll-smooth custom-scrollbar">
+
+          <!-- 0. HALAMAN PERMOHONAN BARU -->
+          <div x-show="view === 'create-bpm'" x-transition:enter="transition ease-out duration-300"
+            class="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-16">
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
+              <div
+                class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+                <div>
+                  <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Total Pengajuan Saya</p>
+                  <h3 class="text-2xl font-black text-[#005C9A] mt-1" x-text="bpmList.length">0</h3>
+                </div>
+                <div class="p-3 bg-sky-50 text-[#005C9A] rounded-2xl">
+                  <i class="fas fa-paper-plane text-base"></i>
+                </div>
+              </div>
+
+              <div
+                class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+                <div>
+                  <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Dalam Proses Survey / RAB</p>
+                  <h3 class="text-2xl font-black text-amber-500 mt-1" x-text="bpmList.filter(b => b.step <= 10).length">0
+                  </h3>
+                </div>
+                <div class="p-3 bg-amber-50 text-amber-500 rounded-2xl">
+                  <i class="fas fa-spinner fa-spin text-base"></i>
+                </div>
+              </div>
+
+              <div
+                class="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+                <div>
+                  <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Selesai & Diarsip</p>
+                  <h3 class="text-2xl font-black text-emerald-600 mt-1"
+                    x-text="bpmList.filter(b => b.step > 10).length">0</h3>
+                </div>
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
+                  <i class="fas fa-check-circle text-base"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-5 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
+              <div
+                class="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none">
+              </div>
+
+              <div class="flex items-center gap-4 mb-6 border-b border-slate-100 pb-6">
+                <div
+                  class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200 flex items-center justify-center text-xl sm:text-2xl shadow-inner flex-shrink-0">
+                  <i class="fas fa-paper-plane"></i>
+                </div>
+                <div>
+                  <h2 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">Formulir Pengajuan Survey Baru</h2>
+                  <p class="text-slate-400 text-xs mt-1">Lengkapi rincian permohonan survey di bawah ini untuk
+                    diteruskan secara otomatis ke Tim Survey & RAB.</p>
+                </div>
+              </div>
+
+              <form @submit.prevent="saveBpm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+
+                  <div class="md:col-span-2 space-y-2">
+                    <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider">Judul Agenda / Nama Permohonan <span class="text-rose-500">*</span></label>
+                    <input x-model="bpmForm.judul" type="text" placeholder="Contoh: Survey Pasang Baru Pelanggan TM ULP Malang Kota" class="w-full px-4 py-3.5 border border-slate-200 rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 bg-slate-50/50 focus:bg-white text-sm font-semibold transition-all" required>
+                  </div>
+
+                  <div class="space-y-2">
+                    <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider">Kategori Percabangan Alur <span class="text-rose-500">*</span></label>
+                    <select x-model="bpmForm.isPFK" class="w-full px-4 py-3.5 border border-slate-200 rounded-2xl bg-slate-50/50 focus:bg-white font-semibold text-xs outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all cursor-pointer">
+                      <option :value="false">Non-PFK (SPKLU / Pelanggan TM / Estetika - Perlu Rapat MOM)</option>
+                      <option :value="true">Pekerjaan PFK (Langsung Ke Pengarsipan Setelah Approve)</option>
+                    </select>
+                  </div>
+
+                  <div class="space-y-2">
+                    <label class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider">Kode Identitas Agenda <span class="text-slate-400 font-normal">(Opsional)</span></label>
+                    <input x-model="bpmForm.kode" type="text" placeholder="BPM/00X/2026 (Otomatis dibuat jika dikosongkan)" class="w-full px-4 py-3.5 border border-slate-200 rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 bg-slate-50/50 focus:bg-white font-mono text-xs transition-all">
+                  </div>
+
+                </div>
+
+                <div class="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 flex items-start gap-3">
+                  <i class="fas fa-circle-info text-amber-500 text-base mt-0.5 flex-shrink-0"></i>
+                  <p class="text-xs text-amber-900 leading-relaxed font-medium">
+                    Setelah diajukan, berkas permohonan akan secara otomatis masuk ke antrean alur tugas
+                    <b>Step 1 (Kirim Surat Permohonan Survey & RAB)</b> untuk pengecekan lokasi serta penyusunan Rincian
+                    Anggaran Biaya.
+                  </p>
+                </div>
+
+                <div class="pt-2 flex flex-col sm:flex-row items-center justify-end gap-3 border-t border-slate-100">
+                  <button type="button" @click="redirectByRole()" class="w-full sm:w-auto px-6 py-3.5 font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl text-xs transition-colors">
+                    <i class="fas fa-times mr-1"></i> BATAL
+                  </button>
+                  <button type="submit" class="w-full sm:w-auto px-7 py-3.5 font-extrabold bg-amber-500 hover:bg-amber-600 text-white rounded-2xl shadow-lg shadow-amber-500/20 text-xs transition-all flex items-center justify-center gap-2" :disabled="isLoading">
+                    <span x-show="!isLoading"><i class="fas fa-paper-plane"></i> KIRIM PERMOHONAN SURVEY</span>
+                    <span x-show="isLoading"><i class="fas fa-spinner fa-spin"></i> Memproses...</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- TABEL RIWAYAT PENGAJUAN TERAKHIR -->
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden w-full">
+              <div class="p-4 sm:p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <div>
+                  <h3 class="font-black text-slate-800 text-sm tracking-tight flex items-center gap-2">
+                    <i class="fas fa-history text-amber-500"></i> Riwayat Permohonan Terakhir ULP
+                  </h3>
+                  <p class="text-[11px] text-slate-400 mt-0.5">Daftar permohonan yang telah dikirimkan oleh unit Anda
+                  </p>
+                </div>
+                <button @click="loadBpmData()" class="p-2 text-slate-400 hover:text-[#005C9A] rounded-xl hover:bg-slate-100 transition-colors" title="Refresh Data">
+                  <i class="fas fa-sync-alt text-xs"></i>
+                </button>
+              </div>
+
+              <div class="w-full overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse text-xs min-w-[700px]">
+                  <thead class="bg-slate-50 border-b text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                    <tr>
+                      <th class="p-3 sm:p-4 pl-4 sm:pl-6 w-48">Kode / Judul Permohonan</th>
+                      <th class="p-3 sm:p-4 w-32">Jenis Pekerjaan</th>
+                      <th class="p-3 sm:p-4 w-32">Posisi Tahapan</th>
+                      <th class="p-3 sm:p-4 w-36">Durasi Pengerjaan</th>
+                      <th class="p-3 sm:p-4 pr-4 sm:pr-6 text-right w-20">Detail</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 text-slate-700">
+                    <template x-for="item in bpmList.slice(0, 5)" :key="item.id">
+                      <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="p-3 sm:p-4 pl-4 sm:pl-6 font-bold text-[#005C9A]">
+                          <span x-text="item.kode" class="font-mono block text-slate-400 text-[10px]"></span>
+                          <span x-text="item.judul" class="text-xs text-slate-800 line-clamp-2"></span>
+                        </td>
+                        <td class="p-3 sm:p-4 whitespace-nowrap">
+                          <span :class="item.isPFK ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-sky-50 text-[#005C9A] border-sky-200'" class="px-2 py-0.5 rounded-xl font-bold border text-[10px]" x-text="item.isPFK ? 'PFK' : 'Non-PFK'"></span>
+                        </td>
+                        <td class="p-3 sm:p-4 whitespace-nowrap">
+                          <span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-xl font-bold text-[10px]" x-text="'Step ' + Math.min(item.step || 1, 10) + '/10'"></span>
+                        </td>
+                        <td class="p-3 sm:p-4 text-slate-500 font-medium text-[11px] whitespace-nowrap"
+                          x-text="calculateDuration(item.tglPengajuan || item.created_at, item.tglSelesai)"></td>
+                        <td class="p-3 sm:p-4 pr-4 sm:pr-6 text-right whitespace-nowrap">
+                          <button @click="openProcessDetail(item)" class="p-2 text-slate-400 hover:text-[#005C9A] hover:bg-sky-50 rounded-xl transition-all">
+                            <i class="fas fa-eye text-xs"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+
+                <div x-show="bpmList.length === 0" class="p-8 text-center text-slate-400 text-xs">
+                  Belum ada riwayat permohonan.
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 1. DASHBOARD VIEW -->
+          <div x-show="view === 'dashboard'" x-transition:enter="transition ease-out duration-300"
+            class="space-y-6 pb-10">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div>
+                <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                  Dashboard <span class="text-[#005C9A]" x-text="getRoleDashboardTitle()"></span>
+                </h2>
+                <p class="text-slate-500 text-xs sm:text-sm">Selamat datang, berikut adalah ringkasan kerja dan fokus utama tim Anda.</p>
+              </div>
+              <div
+                class="inline-flex items-center bg-white px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl shadow-sm border border-slate-200/80 text-xs font-bold text-slate-600">
+                <i class="far fa-calendar-alt mr-2 text-[#00A2E2] text-sm"></i>
+                <span x-text="new Date().toLocaleDateString('id-ID', { dateStyle: 'full' })"></span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              <div
+                class="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200/60 relative overflow-hidden group hover:shadow-md transition-all">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Total Arsip Digital</p>
+                    <h3 class="text-2xl sm:text-3xl font-black text-[#005C9A] mt-2 tracking-tight" x-text="stats.totalArsip || 0">0
+                    </h3>
+                  </div>
+                  <div class="p-3 sm:p-3.5 bg-sky-50 text-[#005C9A] rounded-2xl">
+                    <i class="fas fa-database text-base sm:text-lg"></i>
+                  </div>
+                </div>
+                <div
+                  class="mt-4 text-[11px] text-slate-400 font-semibold bg-slate-50 p-2 rounded-xl border border-slate-100">
+                  Database Berkas Terintegrasi</div>
+              </div>
+
+              <div
+                class="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200/60 relative overflow-hidden group hover:shadow-md transition-all">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <p class="text-amber-500 text-[10px] font-bold uppercase tracking-wider"
+                      x-text="getRoleTaskLabel()"></p>
+                    <h3 class="text-2xl sm:text-3xl font-black text-amber-500 mt-2 tracking-tight" x-text="getRoleTaskCount()">0
+                    </h3>
+                  </div>
+                  <div class="p-3 sm:p-3.5 bg-amber-50 text-amber-500 rounded-2xl">
+                    <i class="fas fa-tasks text-base sm:text-lg"></i>
+                  </div>
+                </div>
+                <div
+                  class="mt-4 text-[11px] text-slate-400 font-semibold bg-slate-50 p-2 rounded-xl border border-slate-100">
+                  Memerlukan Tindakan Tim</div>
+              </div>
+
+              <div
+                class="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200/60 relative overflow-hidden group hover:shadow-md transition-all">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <p class="text-emerald-600 text-[10px] font-bold uppercase tracking-wider">Pekerjaan Selesai (BPM)
+                    </p>
+                    <h3 class="text-2xl sm:text-3xl font-black text-emerald-600 mt-2 tracking-tight"
+                      x-text="bpmList.filter(b => b.step > 10).length">0</h3>
+                  </div>
+                  <div class="p-3 sm:p-3.5 bg-emerald-50 text-emerald-600 rounded-2xl">
+                    <i class="fas fa-check-double text-base sm:text-lg"></i>
+                  </div>
+                </div>
+                <div
+                  class="mt-4 text-[11px] text-slate-400 font-semibold bg-slate-50 p-2 rounded-xl border border-slate-100">
+                  Sudah Masuk Pengarsipan</div>
+              </div>
+
+              <div
+                class="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200/60 relative overflow-hidden group hover:shadow-md transition-all">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Otoritas Akses</p>
+                    <h3 class="text-lg sm:text-xl font-black text-slate-800 mt-2 tracking-tight"
+                      x-text="currentUser.role || 'User'">-</h3>
+                  </div>
+                  <div class="p-3 sm:p-3.5 bg-slate-100 text-[#005C9A] rounded-2xl">
+                    <i class="fas fa-user-shield text-base sm:text-lg"></i>
+                  </div>
+                </div>
+                <div
+                  class="mt-4 text-[11px] text-slate-400 font-semibold bg-slate-50 p-2 rounded-xl border border-slate-100"
+                  x-text="'User: @' + currentUser.username"></div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div class="lg:col-span-2 space-y-6">
+
+                <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200">
+                  <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-xs sm:text-sm font-bold text-slate-800 flex items-center">
+                      <i class="fas fa-list-check text-[#005C9A] mr-2"></i> Daftar Antrean Pekerjaan Utama Tim Anda
+                    </h4>
+                    <button @click="navigate('bpm')" class="text-xs text-[#00A2E2] font-bold hover:underline">Lihat Semua Alur &rarr;</button>
+                  </div>
+
+                  <div class="space-y-3">
+                    <template x-for="item in getRoleFilteredBpm()" :key="item.id">
+                      <div
+                        class="p-3.5 rounded-2xl border border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                        <div class="space-y-1">
+                          <span class="text-[9px] font-mono font-bold text-[#005C9A] bg-sky-50 px-2 py-0.5 rounded-md border border-sky-100" x-text="item.kode"></span>
+                          <h5 class="font-bold text-slate-800 text-xs" x-text="item.judul"></h5>
+                          <p class="text-[10px] text-slate-400" x-text="item.statusDetail"></p>
+                        </div>
+                        <button @click="openProcessDetail(item)" class="w-full sm:w-auto px-4 py-2 bg-[#005C9A] text-white rounded-xl text-xs font-bold shadow-sm hover:bg-[#004b7e]">
+                          Proses
+                        </button>
+                      </div>
+                    </template>
+
+                    <div x-show="getRoleFilteredBpm().length === 0" class="py-8 text-center text-slate-400 text-xs">
+                      <i class="fas fa-clipboard-check text-2xl mb-2 opacity-30 block"></i>
+                      Tidak ada antrean tugas khusus untuk tim Anda saat ini.
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  class="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 h-80 flex flex-col justify-between overflow-hidden">
+                  <div class="flex justify-between items-center mb-2">
+                    <h4 class="text-xs sm:text-sm font-bold text-slate-800 flex items-center">
+                      <i class="fas fa-chart-pie text-[#005C9A] mr-2"></i> Kategori Proporsi Berkas
+                    </h4>
+                    <span class="text-[10px] text-slate-400 font-medium">Berdasarkan Kategori</span>
+                  </div>
+                  <div class="flex-1 w-full relative min-h-0 flex items-center justify-center p-2">
+                    <canvas id="archiveChart" x-init="$nextTick(() => renderChart())"></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <div class="lg:col-span-1">
+                <div
+                  class="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 h-full max-h-[520px] overflow-hidden flex flex-col">
+                  <div class="flex justify-between items-center mb-5">
+                    <h4 class="text-xs sm:text-sm font-bold text-slate-800">Aktivitas Terkini</h4>
+                    <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  </div>
+                  <div class="overflow-y-auto pr-1 space-y-4 flex-1 custom-scrollbar">
+                    <template x-for="(log, i) in (view === 'dashboard' ? stats.recentLogs : [])" :key="i">
+                      <div class="flex gap-3 relative">
+                        <div
+                          class="flex-shrink-0 w-8 h-8 rounded-xl bg-slate-100 text-[#005C9A] flex items-center justify-center text-xs font-extrabold shadow-sm border border-slate-200">
+                          <span x-text="(log.user || '?').toString().charAt(0).toUpperCase()"></span>
+                        </div>
+                        <div class="border-b border-slate-100 pb-3 flex-1">
+                          <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-bold text-slate-800" x-text="log.user"></span>
+                            <span class="text-[9px] text-slate-400 font-mono" x-text="log.waktu"></span>
+                          </div>
+                          <p class="text-xs text-slate-500 mt-1 leading-normal">
+                            <span class="font-semibold text-[#005C9A]" x-text="log.aksi"></span>:
+                            <span x-text="log.detail"></span>
+                          </p>
+                        </div>
+                      </div>
+                    </template>
+                    <div x-show="!stats.recentLogs || stats.recentLogs.length === 0"
+                      class="flex flex-col items-center justify-center h-32 text-slate-400">
+                      <p class="text-xs font-medium">Belum ada aktivitas terdeteksi.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. ALUR BPM SURVEY VIEW -->
+          <div x-show="view === 'bpm'" x-transition:enter="transition ease-out duration-300" class="space-y-6 pb-10">
+            <div
+              class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm">
+              <div>
+                <h2 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">Daftar Agenda BPM Survey</h2>
+                <p class="text-slate-400 text-xs mt-1">Pilih agenda untuk melihat alur proses 10 step secara detail</p>
+              </div>
+              <button @click="navigate('create-bpm')" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white px-5 py-3 rounded-2xl text-xs font-bold shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-2">
+                <i class="fas fa-plus"></i> Buat Permohonan Survey Baru
+              </button>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden w-full">
+              <div class="w-full overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left border-collapse text-xs min-w-[750px]">
+                  <thead class="bg-slate-50 border-b text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                    <tr>
+                      <th class="p-3 sm:p-4 pl-4 sm:pl-6 w-48">Kode Agenda / Perihal</th>
+                      <th class="p-3 sm:p-4 w-44">Pemohon & Lokasi</th>
+                      <th class="p-3 sm:p-4 w-36">Branch Pekerjaan</th>
+                      <th class="p-3 sm:p-4 w-40">Progres Step</th>
+                      <th class="p-3 sm:p-4 w-28">Status Alur</th>
+                      <th class="p-3 sm:p-4 text-right pr-4 sm:pr-6 w-28">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 text-slate-700">
+                    <template x-for="item in bpmList" :key="item.id">
+                      <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="p-3 sm:p-4 pl-4 sm:pl-6 font-bold text-[#005C9A]">
+                          <span x-text="item.kode || 'PLN-PFK-20260728'" class="font-mono block text-slate-400 text-[10px]"></span>
+                          <span x-text="item.judul" class="text-xs sm:text-sm text-slate-800 line-clamp-2"></span>
+                        </td>
+                        <td class="p-3 sm:p-4">
+                          <p class="font-bold text-slate-800 text-xs" x-text="item.uploader || 'ULP/NPS'"></p>
+                          <p class="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
+                            <i class="fas fa-map-marker-alt text-rose-500"></i>
+                            <span x-text="item.lokasi || 'Cemorokandang'" class="truncate max-w-[120px]"></span>
+                          </p>
+                        </td>
+                        <td class="p-3 sm:p-4 whitespace-nowrap">
+                          <span :class="item.isPFK ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-sky-50 text-[#005C9A] border-sky-200'" class="px-2 py-0.5 rounded-xl font-bold border text-[10px]" x-text="item.isPFK ? 'Branch 2 - PFK' : 'Branch 1 - Non PFK'"></span>
+                        </td>
+
+                        <td class="p-3 sm:p-4 whitespace-nowrap">
+                          <div class="flex items-center gap-2">
+                            <div class="w-16 sm:w-20 bg-slate-100 rounded-full h-2 overflow-hidden border">
+                              <div class="bg-emerald-500 h-full rounded-full transition-all duration-300"
+                                :style="`width: ${Math.min(((item.step || 1) / 10) * 100, 100)}%`"></div>
+                            </div>
+                            <span class="font-mono font-bold text-[10px] text-slate-600" 
+                              x-text="`${Math.min(Math.round(((item.step || 1)/10)*100), 100)}% (${Math.min(item.step || 1, 10)}/10)`"></span>
+                          </div>
+                        </td>
+
+                        <td class="p-3 sm:p-4 whitespace-nowrap">
+                          <template x-if="(item.step || 1) > 10">
+                            <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-xl font-bold text-[10px] inline-flex items-center gap-1">
+                              <i class="fas fa-check-circle"></i> Selesai
+                            </span>
+                          </template>
+                          <template x-if="(item.step || 1) <= 10">
+                            <span class="bg-sky-50 text-[#00A2E2] border border-sky-100 px-2 py-0.5 rounded-xl font-bold text-[10px] inline-flex items-center gap-1">
+                              <span class="w-1.5 h-1.5 rounded-full bg-[#00A2E2] animate-pulse"></span> Aktif
+                            </span>
+                          </template>
+                        </td>
+
+                        <td class="p-3 sm:p-4 pr-4 sm:pr-6 text-right whitespace-nowrap">
+                          <button @click="openProcessDetail(item)" class="bg-[#005C9A] hover:bg-[#004b7e] text-white px-3 py-1.5 rounded-xl font-bold text-xs shadow-sm inline-flex items-center gap-1 ml-auto">
+                            <i class="fas fa-external-link-alt text-[9px]"></i> Detail
+                          </button>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+                <div x-show="bpmList.length === 0" class="p-16 text-center text-slate-400 text-xs font-medium">
+                  <i class="fas fa-project-diagram text-2xl mb-2 block opacity-30"></i>
+                  Belum ada alur permohonan survey yang terdaftar.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. ARCHIVES BOX VIEW -->
+          <div x-show="view === 'archives'" x-transition:enter="transition ease-out duration-300"
+            class="flex flex-col space-y-4 pb-10 w-full">
+
+            <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-sm border border-slate-200 flex flex-col gap-3">
+              
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-9 h-9 rounded-2xl bg-sky-50 text-[#005C9A] flex items-center justify-center text-base shadow-inner border border-sky-100 flex-shrink-0">
+                    <i class="fas fa-archive"></i>
+                  </div>
+                  <div>
+                    <h2 class="text-sm sm:text-base font-black text-slate-800 leading-tight">Kotak Arsip Digital</h2>
+                    <p class="text-[10px] sm:text-xs text-slate-400">Pusat dokumentasi PLN</p>
+                  </div>
+                </div>
+                <button @click="openModal('archive')" class="bg-[#005C9A] hover:bg-[#004b7e] text-white p-2.5 sm:px-4 sm:py-2.5 rounded-2xl text-xs font-bold shadow-md flex items-center gap-1.5">
+                  <i class="fas fa-plus text-xs"></i> <span class="hidden sm:inline">Tambah Dokumen</span>
+                </button>
+              </div>
+
+              <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl w-full justify-between">
+                <i class="far fa-calendar-alt text-slate-400 text-xs"></i>
+                <input x-model="archiveFilter.startDate" type="date" title="Dari Tanggal" class="bg-transparent text-xs text-slate-600 outline-none font-medium cursor-pointer w-full">
+                <span class="text-slate-300 text-xs font-bold">-</span>
+                <input x-model="archiveFilter.endDate" type="date" title="Sampai Tanggal" class="bg-transparent text-xs text-slate-600 outline-none font-medium cursor-pointer w-full">
+                <button @click="archiveFilter.startDate = ''; archiveFilter.endDate = ''; pagination.currentPage = 1;"
+                        x-show="archiveFilter.startDate || archiveFilter.endDate"
+                        class="text-slate-400 hover:text-rose-500 text-xs px-1" title="Reset Filter Tanggal">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <!-- ELEMEN PENCARIAN -->
+                <div class="relative w-full">
+                  <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                  <input x-model="searchQuery" @input="pagination.currentPage = 1" type="text" placeholder="Cari berkas/nomor/ordner..." class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:bg-white focus:border-[#005C9A]">
+                </div>
+
+                <div class="relative w-full">
+                  <select x-model="archiveFilter.category" @change="pagination.currentPage = 1" class="w-full pl-3 pr-7 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none appearance-none focus:bg-white">
+                    <option value="">Semua Kategori</option>
+                    <template x-for="cat in masterData.categories" :key="cat">
+                      <option :value="cat" x-text="cat"></option>
+                    </template>
+                  </select>
+                  <i class="fas fa-chevron-down absolute right-3 top-2.5 text-slate-400 text-[9px] pointer-events-none"></i>
+                </div>
+
+                <div class="flex items-center justify-between gap-2">
+                  <select x-model="pagination.perPage" @change="pagination.currentPage = 1" class="bg-slate-50 border border-slate-200 text-slate-600 text-xs rounded-xl px-2.5 py-1.5 outline-none flex-1">
+                    <option value="5">5 Baris</option>
+                    <option value="10">10 Baris</option>
+                    <option value="25">25 Baris</option>
+                  </select>
+                  <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                    <button @click="archiveViewMode = 'list'" :class="archiveViewMode === 'list' ? 'bg-white text-[#005C9A] shadow-sm font-bold' : 'text-slate-400'" class="p-1 rounded-lg text-xs w-7 h-7 flex items-center justify-center"><i class="fas fa-list"></i></button>
+                    <button @click="archiveViewMode = 'grid'" :class="archiveViewMode === 'grid' ? 'bg-white text-[#005C9A] shadow-sm font-bold' : 'text-slate-400'" class="p-1 rounded-lg text-xs w-7 h-7 flex items-center justify-center"><i class="fas fa-th-large"></i></button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div
+              class="flex flex-wrap items-center gap-2 bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm overflow-x-auto custom-scrollbar">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-1 flex items-center whitespace-nowrap"><i class="fas fa-cabinet-filing text-[#005C9A] mr-1.5 text-xs"></i> Rak:</span>
+
+              <button @click="selectedLemari = 'All'; pagination.currentPage = 1"
+                :class="selectedLemari === 'All' ? 'bg-[#005C9A] text-white font-bold border-[#005C9A] shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200/60 hover:bg-slate-100'"
+                class="px-3 py-1 rounded-xl text-xs font-semibold border transition-all whitespace-nowrap">
+                Semua Lemari
+              </button>
+
+              <template x-for="lem in masterData.lemaris" :key="lem">
+                <button @click="selectedLemari = lem; pagination.currentPage = 1"
+                  :class="selectedLemari === lem ? 'bg-[#00A2E2] text-white font-bold border-[#00A2E2] shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200/60 hover:bg-slate-100'"
+                  class="px-3 py-1 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 whitespace-nowrap">
+                  <span class="w-1.5 h-1.5 rounded-full bg-sky-300"></span> <span x-text="lem"></span>
+                </button>
+              </template>
+            </div>
+
+            <div class="flex-1 overflow-y-auto min-h-[350px] custom-scrollbar">
+              <template x-if="archiveViewMode === 'list'">
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden w-full">
+                  <div class="w-full overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse min-w-[700px]">
+                      <thead
+                        class="bg-slate-50/70 border-b border-slate-200 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                        <tr>
+                          <th class="px-4 py-3 sm:px-6 sm:py-4">Informasi Utama Dokumen</th>
+                          <th class="px-4 py-3 sm:px-6 sm:py-4">Kategori Klasifikasi</th>
+                          <th class="px-4 py-3 sm:px-6 sm:py-4">Lokasi / Ordner</th>
+                          <th class="px-4 py-3 sm:px-6 sm:py-4">Pengupload</th>
+                          <th class="px-4 py-3 sm:px-6 sm:py-4">Tanggal Masuk</th>
+                          <th class="px-4 py-3 sm:px-6 sm:py-4 text-right">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-100 text-xs sm:text-sm text-slate-700">
+                        <template x-for="(item, i) in (view === 'archives' ? paginatedData : [])" :key="item.id || i">
+                          <tr class="hover:bg-slate-50/50 transition-colors group">
+                            <td class="px-4 py-3 sm:px-6 sm:py-4">
+                              <div class="flex items-center">
+                                <div
+                                  class="flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center text-base sm:text-lg shadow-sm border"
+                                  :class="getFileIcon(item.jenis).bg">
+                                  <i :class="getFileIcon(item.jenis).icon + ' ' + getFileIcon(item.jenis).text"></i>
+                                </div>
+                                <div class="ml-3">
+                                  <div
+                                    class="text-[9px] font-mono font-bold text-[#005C9A] bg-sky-50 px-1.5 py-0.5 rounded-md border border-sky-100 w-fit mb-0.5"
+                                    x-text="item.nomor"></div>
+                                  <div
+                                    class="font-bold text-slate-900 line-clamp-1 group-hover:text-[#005C9A] transition-colors"
+                                    x-text="item.nama"></div>
+                                  <div class="text-[11px] text-slate-400 line-clamp-1 font-medium italic"
+                                    x-text="item.perihal || 'Tidak ada deskripsi ringkas'"></div>
+                                </div>
+                              </div>
+                            </td>
+                            <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap">
+                              <span class="px-2.5 py-1 text-xs rounded-xl border bg-slate-50 text-slate-600 font-bold border-slate-200/60" x-text="item.kategori"></span>
+                            </td>
+                            <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap">
+                              <div class="flex flex-col gap-1 items-start">
+                                <span class="px-2.5 py-0.5 text-xs rounded-xl border bg-amber-50 text-amber-700 font-bold border-amber-200/60" x-text="item.lemari || 'Utama'"></span>
+                                <span class="px-2 py-0.5 text-[10px] rounded-lg border bg-purple-50 text-purple-700 font-bold border-purple-200/60 flex items-center gap-1" x-show="item.ordner">
+                                  <i class="fas fa-folder text-[9px]"></i> <span x-text="item.ordner"></span>
+                                </span>
+                              </div>
+                            </td>
+                            <td class="px-4 py-3 sm:px-6 sm:py-4 text-xs font-semibold text-slate-600 whitespace-nowrap" x-text="item.uploader"></td>
+                            <td class="px-4 py-3 sm:px-6 sm:py-4 text-xs text-slate-400 font-medium whitespace-nowrap"
+                              x-text="(item.tanggal || '').split(' ')[0]"></td>
+
+                            <td class="px-4 py-3 sm:px-6 sm:py-4 text-right space-x-0.5 whitespace-nowrap">
+                              <template x-if="!item.links || item.links.length <= 1">
+                                <a :href="item.link || (item.links && item.links[0])" target="_blank"
+                                  class="inline-flex p-1.5 text-slate-400 hover:text-[#005C9A] hover:bg-sky-50 rounded-xl transition-all"
+                                  title="Unduh File Berkas">
+                                  <i class="fas fa-download text-xs"></i>
+                                </a>
+                              </template>
+
+                              <template x-if="item.links && item.links.length > 1">
+                                <div class="relative inline-block text-left" x-data="{ openLinks: false }">
+                                  <button @click="openLinks = !openLinks" @click.away="openLinks = false" class="inline-flex items-center gap-1 px-2 py-1 bg-sky-50 text-[#005C9A] hover:bg-sky-100 rounded-xl text-xs font-bold transition-all border border-sky-100" title="Klik untuk memilih file lampiran">
+                                    <i class="fas fa-paperclip text-xs"></i>
+                                    <span x-text="item.links.length"></span>
+                                    <i class="fas fa-chevron-down text-[9px]"></i>
+                                  </button>
+
+                                  <div x-show="openLinks" x-transition
+                                    class="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 p-2 text-left">
+                                    <div class="px-3 py-1.5 border-b border-slate-100 mb-1">
+                                      <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                                        Daftar File Terlampir</p>
+                                    </div>
+                                    <div class="max-h-40 overflow-y-auto custom-scrollbar space-y-1">
+                                      <template x-for="(l, idx) in item.links" :key="idx">
+                                        <a :href="l" target="_blank"
+                                          class="flex items-center justify-between p-2 rounded-xl hover:bg-sky-50 text-slate-700 hover:text-[#005C9A] transition-colors text-xs font-medium">
+                                          <span class="truncate flex items-center gap-2">
+                                            <i class="fas fa-file-alt text-[#005C9A]"></i>
+                                            <span x-text="'Lampiran #' + (idx + 1)"></span>
+                                          </span>
+                                          <i class="fas fa-external-link-alt text-[10px] opacity-50"></i>
+                                        </a>
+                                      </template>
+                                    </div>
+                                  </div>
+                                </div>
+                              </template>
+
+                              <template x-if="canEdit(item)">
+                                <button @click="editItem(item, 'archive')" class="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all" title="Edit / Kelola Berkas"><i class="fas fa-pen text-xs"></i></button>
+                              </template>
+                              <template x-if="canEdit(item)">
+                                <button @click="deleteItem(item.id, 'archives')" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Hapus Berkas"><i class="fas fa-trash text-xs"></i></button>
+                              </template>
+                            </td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                    <div x-show="paginatedData.length === 0"
+                      class="p-16 text-center text-slate-400 text-xs font-medium">
+                      <i class="fas fa-folder-open text-2xl mb-2 block opacity-30"></i>
+                      Berkas dokumen kosong atau tidak ditemukan sesuai filter.
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+              <template x-if="archiveViewMode === 'grid'">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                  <template x-for="(item, i) in (view === 'archives' ? paginatedData : [])" :key="item.id || i">
+                    <div
+                      class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm flex flex-col justify-between group hover:shadow-md transition-all relative overflow-hidden">
+                      <div>
+                        <div class="flex justify-between items-start mb-3">
+                          <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-sm border"
+                            :class="getFileIcon(item.jenis).bg">
+                            <i :class="getFileIcon(item.jenis).icon + ' ' + getFileIcon(item.jenis).text"></i>
+                          </div>
+                          <span class="text-[9px] font-mono font-bold bg-slate-50 border px-2 py-0.5 rounded-md text-slate-400" x-text="item.nomor"></span>
+                        </div>
+                        <div class="flex gap-1.5 flex-wrap">
+                          <span class="text-[9px] font-bold text-[#005C9A] bg-sky-50 px-2 py-0.5 rounded-lg uppercase border border-sky-100" x-text="item.kategori"></span>
+                          <span class="text-[9px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg uppercase border border-amber-100" x-text="item.lemari || 'Utama'"></span>
+                          <span class="text-[9px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-lg uppercase border border-purple-100" x-show="item.ordner" x-text="item.ordner"></span>
+                        </div>
+                        <h3
+                          class="font-bold text-slate-800 text-xs sm:text-sm mt-3 line-clamp-2 min-h-[36px] group-hover:text-[#005C9A] transition-colors"
+                          x-text="item.nama"></h3>
+                        <p class="text-[11px] text-slate-400 mt-1 line-clamp-1 italic font-medium"
+                          x-text="item.perihal || 'Tidak ada deskripsi'"></p>
+                      </div>
+                      <div class="flex items-center justify-between pt-3 border-t border-slate-100 mt-4">
+                        <span class="text-[10px] text-slate-400 font-bold truncate max-w-[100px]" x-text="'@' + item.uploader"></span>
+
+                        <div class="flex gap-0.5 items-center">
+                          <template x-if="!item.links || item.links.length <= 1">
+                            <a :href="item.link || (item.links && item.links[0])" target="_blank"
+                              class="p-1.5 text-slate-400 hover:text-[#005C9A] rounded-lg hover:bg-slate-50"
+                              title="Unduh File"><i class="fas fa-download text-xs"></i></a>
+                          </template>
+
+                          <template x-if="item.links && item.links.length > 1">
+                            <div class="relative inline-block" x-data="{ openGridLinks: false }">
+                              <button @click="openGridLinks = !openGridLinks" @click.away="openGridLinks = false" class="p-1.5 text-[#005C9A] bg-sky-50 hover:bg-sky-100 rounded-lg text-xs font-bold flex items-center gap-1 border border-sky-100" title="Klik untuk daftar lampiran">
+                                <i class="fas fa-paperclip text-xs"></i>
+                                <span x-text="item.links.length"></span>
+                              </button>
+
+                              <div x-show="openGridLinks" x-transition
+                                class="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 p-2 text-left">
+                                <p
+                                  class="text-[9px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 border-b border-slate-100 mb-1">
+                                  Lampiran Dokumen</p>
+                                <template x-for="(l, idx) in item.links" :key="idx">
+                                  <a :href="l" target="_blank"
+                                    class="flex items-center justify-between p-1.5 rounded-lg hover:bg-sky-50 text-slate-700 hover:text-[#005C9A] text-xs">
+                                    <span x-text="'Lampiran #' + (idx + 1)"></span>
+                                    <i class="fas fa-download text-[10px]"></i>
+                                  </a>
+                                </template>
+                              </div>
+                            </div>
+                          </template>
+
+                          <template x-if="canEdit(item)">
+                            <button @click="editItem(item, 'archive')" class="p-1.5 text-slate-400 hover:text-amber-500 rounded-lg hover:bg-slate-50"><i class="fas fa-cog text-xs"></i></button>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+
+            <!-- Pagination -->
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs">
+              <span class="text-slate-500 font-semibold">Halaman <b class="text-[#005C9A]" x-text="pagination.currentPage"></b> dari <span class="text-slate-800 font-bold" x-text="totalPages"></span></span>
+              <div class="flex gap-1.5 w-full sm:w-auto justify-center">
+                <button @click="prevPage" :disabled="pagination.currentPage === 1" class="px-4 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 font-bold disabled:opacity-40 transition-all hover:bg-slate-100 flex-1 sm:flex-initial">Sebelumnya</button>
+                <button @click="nextPage" :disabled="pagination.currentPage === totalPages" class="px-4 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-600 font-bold disabled:opacity-40 transition-all hover:bg-slate-100 flex-1 sm:flex-initial">Selanjutnya</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. PEGAWAI VIEW -->
+          <div x-show="view === 'users'"
+            class="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden w-full">
+            <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-slate-50/60">
+              <div>
+                <h3 class="font-black text-slate-800 tracking-tight">Daftar Hak Akses Akun Pegawai</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Otorisasi akun personil internal lingkungan PLN</p>
+              </div>
+              <button @click="openModal('user')" class="w-full sm:w-auto bg-[#005C9A] hover:bg-[#004b7e] text-white px-4 py-2.5 rounded-2xl text-xs font-bold shadow-md shadow-[#005C9A]/10 transition-all flex items-center justify-center">
+                <i class="fas fa-user-plus mr-1.5 text-[10px]"></i> Registrasi Pegawai Baru
+              </button>
+            </div>
+            <div class="w-full overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-sm border-collapse min-w-[650px]">
+                <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase font-bold tracking-wider border-b">
+                  <tr>
+                    <th class="p-4 pl-6">ID Username / NIP</th>
+                    <th class="p-4">Nama Lengkap</th>
+                    <th class="p-4">Alamat Email Korporat</th>
+                    <th class="p-4">Otoritas Role</th>
+                    <th class="p-4">Status Keaktifan</th>
+                    <th class="p-4 text-right pr-6">Aksi Operasi</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                  <template x-for="(employee, index) in paginatedData" :key="index">
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                      <td class="p-4 pl-6 font-bold text-[#005C9A] font-mono"
+                        x-text="employee.username || employee[0] || ''"></td>
+                      <td class="p-4 font-bold text-slate-900"
+                        x-text="employee.nama_lengkap || employee.fullname || employee[1] || ''"></td>
+                      <td class="p-4 text-slate-500 font-mono text-xs" x-text="employee.email || employee[2] || '-'">
+                      </td>
+                      <td class="p-4">
+                        <span class="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-lg text-[11px] font-bold border border-slate-200/60" x-text="employee.role || employee[3] || 'User'"></span>
+                      </td>
+                      <td class="p-4">
+                        <span :class="(employee.status === 'Active' || employee.status === 'Aktif' || employee[4] === 'Active' || employee[4] === 'Aktif') ? 'bg-emerald-50 text-emerald-700 border-emerald-200/60' : 'bg-rose-50 text-rose-700 border-rose-200/60'" class="px-2.5 py-0.5 rounded-xl text-xs border font-bold inline-flex items-center gap-1.5 shadow-sm">
+                          <span class="w-1.5 h-1.5 rounded-full" :class="(employee.status === 'Active' || employee.status === 'Aktif' || employee[4] === 'Active' || employee[4] === 'Aktif') ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                        <span x-text="employee.status || employee[4] || 'Active'"></span>
+                        </span>
+                      </td>
+                      <td class="p-4 pr-6 text-right space-x-0.5 whitespace-nowrap">
+                        <button @click="editItem(employee, 'user')" class="text-amber-600 hover:bg-amber-50 p-2 rounded-xl transition-all"><i class="fas fa-pencil-alt text-xs"></i></button>
+                        <button @click="deleteItem(employee.username || employee[0], 'users')" class="text-rose-600 hover:bg-rose-50 p-2 rounded-xl transition-all"><i class="fas fa-trash text-xs"></i></button>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 5. LOG AUDIT VIEW -->
+          <div x-show="view === 'logs'" class="bg-white rounded-3xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
+            <div
+              class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <h3 class="font-black text-slate-800 tracking-tight">Sistem Jejak Log Audit</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Monitoring otentisitas manipulasi berkas arsip korporat</p>
+              </div>
+              <div class="flex gap-2 w-full sm:w-auto">
+                <select x-model="logFilter.time" class="bg-slate-50 border border-slate-200 text-xs rounded-2xl px-3 py-2 outline-none cursor-pointer focus:bg-white flex-1 sm:flex-initial">
+                  <option value="all">Semua Waktu</option>
+                  <option value="today">Hari Ini</option>
+                  <option value="week">Minggu Ini</option>
+                </select>
+                <input x-model="logFilter.search" type="text" placeholder="Cari aktivitas/user..." class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-2xl text-xs outline-none w-full sm:w-48 focus:bg-white focus:border-[#005C9A] flex-1 sm:flex-initial">
+              </div>
+            </div>
+
+            <div class="divide-y divide-slate-100 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
+              <template x-for="(log, i) in (view === 'logs' ? paginatedData : [])" :key="i">
+                <div
+                  class="py-3.5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 text-xs text-slate-600 hover:bg-slate-50/30 px-2 rounded-xl transition-colors">
+                  <div>
+                    <span class="px-2 py-0.5 rounded-md font-bold bg-slate-100 border text-slate-700 font-mono text-[11px]" x-text="'@' + (log.user || log[0] || 'User')"></span>
+                    Tindakan <b class="text-[#005C9A] font-bold" x-text="log.aksi || log[1] || 'Aktivitas'"></b> &rarr;
+                    <span class="text-slate-500 font-medium" x-text="log.detail || log[2] || '-'"></span>
+                  </div>
+                  <span class="text-[10px] font-mono text-slate-400 bg-slate-50 border px-2 py-0.5 rounded-lg w-fit flex items-center gap-1" x-text="log.waktu || log[3] || '-'"></span>
+                </div>
+              </template>
+
+              <div x-show="!paginatedData || paginatedData.length === 0" class="py-16 text-center text-slate-400">
+                <i class="fas fa-stream text-2xl mb-2 opacity-30"></i>
+                <p class="text-xs font-medium">Belum ada catatan aktivitas log audit terdeteksi.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. CONFIGURATION MASTER VIEW -->
+          <div x-show="view === 'settings'" class="space-y-6 pb-20">
+            <div>
+              <h2 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">Konfigurasi Variabel Klasifikasi Berkas</h2>
+              <p class="text-slate-400 text-xs mt-0.5">Definisikan nilai acuan dasar bagi penomoran, kategori, lemari, dan ordner.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-start">
+
+              <!-- KATEGORI -->
+              <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-visible h-auto">
+                <div class="p-4 bg-[#005C9A] text-white flex items-center gap-2 rounded-t-3xl">
+                  <i class="fas fa-tags text-sm"></i>
+                  <h3 class="font-bold text-xs uppercase tracking-wider">Klasifikasi Kategori</h3>
+                </div>
+                <div class="p-4 sm:p-5 space-y-4">
+                  <div class="flex gap-2">
+                    <input x-model="tempSetting.category" @keydown.enter.prevent="addSetting('Category')" type="text" placeholder="Kategori Baru..." class="flex-1 px-3 py-2 border rounded-2xl text-xs outline-none bg-slate-50 focus:bg-white focus:border-[#005C9A]">
+                    <button type="button" @click="addSetting('Category')" class="bg-[#005C9A] hover:opacity-95 text-white px-3.5 py-2 rounded-2xl text-xs font-bold shadow-sm"><i class="fas fa-plus"></i></button>
+                  </div>
+                  <div class="flex flex-wrap gap-1.5 pt-1">
+                    <template x-for="cat in masterData.categories" :key="cat">
+                      <span class="inline-flex items-center gap-1.5 bg-sky-50/60 border border-sky-100 px-2.5 py-1 rounded-xl text-xs font-bold text-[#005C9A]">
+                        <span x-text="cat"></span>
+                      <i @click="removeSetting('Category', cat)" class="fas fa-times text-slate-300 hover:text-rose-500 cursor-pointer text-[10px]"></i>
+                      </span>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+              <!-- EKSTENSI -->
+              <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-visible h-auto">
+                <div class="p-4 bg-[#00A2E2] text-white flex items-center gap-2 rounded-t-3xl">
+                  <i class="fas fa-file-code text-sm"></i>
+                  <h3 class="font-bold text-xs uppercase tracking-wider">Format Ekstensi</h3>
+                </div>
+                <div class="p-4 sm:p-5 space-y-4">
+                  <div class="flex gap-2">
+                    <input x-model="tempSetting.extension" @keydown.enter.prevent="addSetting('Extension')" type="text" placeholder="Context: PDF..." class="flex-1 px-3 py-2 border rounded-2xl text-xs outline-none bg-slate-50 uppercase focus:bg-white focus:border-[#00A2E2]">
+                    <button type="button" @click="addSetting('Extension')" class="bg-[#00A2E2] hover:opacity-95 text-white px-3.5 py-2 rounded-2xl text-xs font-bold shadow-sm"><i class="fas fa-plus"></i></button>
+                  </div>
+                  <div class="flex flex-wrap gap-1.5 pt-1">
+                    <template x-for="ext in masterData.extensions" :key="ext">
+                      <span class="inline-flex items-center gap-1.5 bg-slate-50 border px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-slate-600">
+                        <span x-text="ext"></span>
+                      <i @click="removeSetting('Extension', ext)" class="fas fa-times text-slate-300 hover:text-rose-500 cursor-pointer text-[10px]"></i>
+                      </span>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+              <!-- NOMOR IDENTITAS -->
+              <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-visible h-auto">
+                <div class="p-4 bg-amber-500 text-white flex items-center gap-2 rounded-t-3xl">
+                  <i class="fas fa-list-ol text-sm"></i>
+                  <h3 class="font-bold text-xs uppercase tracking-wider">Nomor Identitas Berkas</h3>
+                </div>
+                <div class="p-4 sm:p-5 space-y-4">
+                  <div class="flex gap-2">
+                    <input x-model="tempSetting.nomor" @keydown.enter.prevent="addSetting('Nomor')" type="text" placeholder="Contoh: 001/PLN/2026..." class="flex-1 px-3 py-2 border rounded-2xl text-xs outline-none bg-slate-50 uppercase focus:bg-white focus:border-amber-500">
+                    <button type="button" @click="addSetting('Nomor')" class="bg-amber-500 hover:opacity-95 text-white px-3.5 py-2 rounded-2xl text-xs font-bold shadow-sm"><i class="fas fa-plus"></i></button>
+                  </div>
+                  <div class="flex flex-wrap gap-1.5 pt-1">
+                    <template x-for="nom in masterData.nomors" :key="nom">
+                      <span class="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-100 px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-amber-700">
+                        <span x-text="nom"></span>
+                      <i @click="removeSetting('Nomor', nom)" class="fas fa-times text-amber-300 hover:text-rose-500 cursor-pointer text-[10px]"></i>
+                      </span>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+              <!-- LEMARI -->
+              <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-visible h-auto">
+                <div class="p-4 bg-emerald-600 text-white flex items-center gap-2 rounded-t-3xl">
+                  <i class="fas fa-box-archive text-sm"></i>
+                  <h3 class="font-bold text-xs uppercase tracking-wider">Lokasi Lemari Rak</h3>
+                </div>
+                <div class="p-4 sm:p-5 space-y-4">
+                  <div class="flex gap-2">
+                    <input x-model="tempSetting.lemari" @keydown.enter.prevent="addSetting('Lemari')" type="text" placeholder="Lemari / Rak Baru..." class="flex-1 px-3 py-2 border rounded-2xl text-xs outline-none bg-slate-50 focus:bg-white focus:border-emerald-600">
+                    <button type="button" @click="addSetting('Lemari')" class="bg-emerald-600 hover:opacity-95 text-white px-3.5 py-2 rounded-2xl text-xs font-bold shadow-sm"><i class="fas fa-plus"></i></button>
+                  </div>
+                  <div class="flex flex-wrap gap-1.5 pt-1">
+                    <template x-for="lem in masterData.lemaris" :key="lem">
+                      <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-xl text-xs font-bold text-emerald-800">
+                        <span x-text="lem"></span>
+                      <i @click="removeSetting('Lemari', lem)" class="fas fa-times text-emerald-300 hover:text-rose-500 cursor-pointer text-[10px]"></i>
+                      </span>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ORDNER -->
+              <div class="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-visible h-auto">
+                <div class="p-4 bg-purple-600 text-white flex items-center gap-2 rounded-t-3xl">
+                  <i class="fas fa-folder-closed text-sm"></i>
+                  <h3 class="font-bold text-xs uppercase tracking-wider">Ordner / Map Berkas</h3>
+                </div>
+                <div class="p-4 sm:p-5 space-y-4">
+                  <div class="flex gap-2">
+                    <input x-model="tempSetting.ordner" @keydown.enter.prevent="addSetting('Ordner')" type="text" placeholder="Ordner Baru..." class="flex-1 px-3 py-2 border rounded-2xl text-xs outline-none bg-slate-50 focus:bg-white focus:border-purple-600">
+                    <button type="button" @click="addSetting('Ordner')" class="bg-purple-600 hover:opacity-95 text-white px-3.5 py-2 rounded-2xl text-xs font-bold shadow-sm"><i class="fas fa-plus"></i></button>
+                  </div>
+                  <div class="flex flex-wrap gap-1.5 pt-1">
+                    <template x-for="ord in masterData.ordners" :key="ord">
+                      <span class="inline-flex items-center gap-1.5 bg-purple-50 border border-purple-100 px-2.5 py-1 rounded-xl text-xs font-bold text-purple-800">
+                        <span x-text="ord"></span>
+                      <i @click="removeSetting('Ordner', ord)" class="fas fa-times text-purple-300 hover:text-rose-500 cursor-pointer text-[10px]"></i>
+                      </span>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- 7. GENERATE REPORT VIEW -->
+          <div x-show="view === 'reports'" x-transition:enter="transition ease-out duration-300"
+            class="space-y-4 pb-10">
+            <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 max-w-xl mx-auto mt-2 sm:mt-6 shadow-sm">
+              <div class="text-center mb-6">
+                <div
+                  class="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-50 text-emerald-600 mb-3 border border-emerald-100 shadow-inner">
+                  <i class="fas fa-file-excel text-xl sm:text-2xl"></i>
+                </div>
+                <h3 class="text-base sm:text-lg font-black text-slate-800 tracking-tight">Unduh Laporan Rekapitulasi Berkas</h3>
+                <p class="text-slate-400 text-xs px-2 sm:px-4 mt-1 font-medium">Ekspor data kompilasi spreadsheet berkas dokumen untuk keperluan audit kerja berkala.</p>
+              </div>
+
+              <form @submit.prevent="downloadReport" class="space-y-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Dari Tanggal</label>
+                    <input x-model="reportForm.start" type="date" class="w-full px-3 py-2 rounded-2xl border border-slate-200 text-sm font-semibold outline-none focus:border-[#005C9A] bg-slate-50/50" required>
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Sampai Tanggal</label>
+                    <input x-model="reportForm.end" type="date" class="w-full px-3 py-2 rounded-2xl border border-slate-200 text-sm font-semibold outline-none focus:border-[#005C9A] bg-slate-50/50" required>
+                  </div>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-2xl text-xs shadow-lg shadow-emerald-600/10 hover:opacity-95 transition-transform flex justify-center items-center gap-2 uppercase tracking-wider" :disabled="isLoading">
+                  <span x-show="!isLoading"><i class="fas fa-download"></i> EXPORT REKAP EXCEL (.XLSX)</span>
+                  <span x-show="isLoading"><i class="fas fa-spinner fa-spin mr-1"></i>Menyusun File...</span>
+                </button>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </template>
+
+  <!-- MODAL DETAIL PROSES BPM -->
+  <div x-show="modals.bpmDetail" x-transition.opacity
+    class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
+    x-cloak>
+    <div
+      class="bg-[#f8fafc] rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-6xl max-h-[95vh] sm:max-h-[92vh] flex flex-col border border-slate-200 overflow-hidden my-auto">
+
+      <div class="bg-white px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-200 flex justify-between items-center flex-shrink-0">
+        <div class="flex items-center gap-2 sm:gap-3 overflow-hidden">
+          <div
+            class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center font-bold border border-amber-200 flex-shrink-0">
+            <i class="fas fa-file-invoice text-sm sm:text-base"></i>
+          </div>
+          <div class="overflow-hidden">
+            <div class="flex items-center gap-2">
+              <h3 class="font-extrabold text-sm sm:text-base text-slate-900 truncate" x-text="selectedBpmItem?.judul || 'Permohonan'"></h3>
+            </div>
+            <div class="flex items-center gap-1.5 sm:gap-2 mt-0.5 flex-wrap">
+              <span class="text-[10px] sm:text-xs font-mono text-slate-400" x-text="selectedBpmItem?.kode || 'PLN-PFK'"></span>
+              <span class="px-2 py-0.5 bg-sky-50 text-[#00A2E2] font-bold text-[9px] sm:text-[10px] rounded-full border border-sky-100" x-text="selectedBpmItem?.isPFK ? 'Branch 2 - PFK' : 'Branch 1 - Non PFK'"></span>
+              
+              <template x-if="(selectedBpmItem?.step || 1) > 10">
+                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold text-[9px] sm:text-[10px] rounded-full border border-emerald-200 flex items-center gap-1">
+                  <i class="fas fa-check-circle"></i> Selesai
+                </span>
+              </template>
+              <template x-if="(selectedBpmItem?.step || 1) <= 10">
+                <span class="px-2 py-0.5 bg-sky-50 text-[#00A2E2] font-bold text-[9px] sm:text-[10px] rounded-full border border-sky-100 flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-[#00A2E2]"></span> Aktif
+                </span>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <button @click="modals.bpmDetail = false" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition-all border border-slate-200 flex items-center gap-1.5 flex-shrink-0">
+          <i class="fas fa-arrow-left text-[10px]"></i> <span class="hidden sm:inline">Kembali</span>
+        </button>
+      </div>
+
+      <div class="p-4 sm:p-6 overflow-y-auto flex-1 custom-scrollbar space-y-4 sm:space-y-6">
+        <div class="flex justify-between items-center text-xs font-bold text-slate-500 px-1">
+          <span>Progress Keseluruhan</span>
+          <span class="font-mono text-slate-700" 
+            x-text="`${Math.min(Math.round(((selectedBpmItem?.step || 1) / 10) * 100), 100)}% · Step ${Math.min(selectedBpmItem?.step || 1, 10)}/10`"></span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 space-y-4">
+            
+            <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 flex items-center justify-between shadow-sm">
+              <h4 class="font-black text-slate-800 text-xs tracking-tight flex items-center gap-2">
+                <i class="fas fa-sync-alt text-[#00A2E2]"></i> Alur Proses & Status Step
+              </h4>
+              <div class="flex gap-1">
+                <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-xl text-[9px] sm:text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Pengajuan</span>
+                <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-xl text-[9px] sm:text-[10px] font-bold bg-amber-200 text-amber-900 border border-amber-300">Survey</span>
+                <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-xl text-[9px] sm:text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Manajemen</span>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <template x-for="stepObj in bpmStepsList" :key="stepObj.no">
+                <div class="bg-white rounded-2xl p-3.5 sm:p-4 border transition-all duration-200 flex gap-3 sm:gap-4 items-start relative shadow-sm"
+                  :class="selectedBpmItem?.step === stepObj.no ? 'border-amber-300 ring-2 ring-amber-400/20 bg-amber-50/10' : 'border-slate-200'">
+
+                  <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center font-black text-xs flex-shrink-0 shadow-sm mt-0.5"
+                    :class="selectedBpmItem?.step === stepObj.no ? 'bg-amber-500 text-white' : (selectedBpmItem?.step > stepObj.no ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500')">
+                    <span x-text="selectedBpmItem?.step > stepObj.no ? '✓' : stepObj.no"></span>
+                  </div>
+
+                  <div class="flex-1 space-y-1.5 sm:space-y-2">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                      <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded-lg text-[9px] sm:text-[10px] font-bold border bg-amber-100 text-amber-800 border-amber-200" x-text="stepObj.team"></span>
+                        <span class="text-[9px] sm:text-[10px] font-bold text-slate-400" x-text="stepObj.role"></span>
+                      </div>
+
+                      <template x-if="selectedBpmItem?.step === stepObj.no && selectedBpmItem?.step <= 10">
+                        <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold border border-indigo-100 flex items-center gap-1">
+                          <i class="fas fa-play text-[8px]"></i> Aktif
+                        </span>
+                      </template>
+                      <template x-if="selectedBpmItem?.step > stepObj.no">
+                        <span class="text-emerald-600 font-bold text-[10px]"><i class="fas fa-check"></i> Selesai</span>
+                      </template>
+                      <template x-if="selectedBpmItem?.step < stepObj.no">
+                        <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 text-[9px] sm:text-[10px]">
+                          <i class="fas fa-hourglass-start"></i>
+                        </div>
+                      </template>
+                    </div>
+
+                    <h5 class="font-bold text-xs text-slate-800" x-text="stepObj.title"></h5>
+                    <p class="text-[11px] text-slate-400 leading-relaxed font-medium" x-text="stepObj.desc"></p>
+
+                    <template x-if="selectedBpmItem?.step === stepObj.no && selectedBpmItem?.step <= 10">
+                      <div class="pt-2 flex flex-col sm:flex-row gap-2 w-full">
+                        <button @click="advanceBpmStep(selectedBpmItem)" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 active:bg-emerald-700 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5">
+                          <i class="fas fa-check"></i> Tandai Selesai
+                        </button>
+                        <button @click="openCatatanModal(selectedBpmItem)" type="button" class="w-full sm:w-auto px-4 py-2 bg-slate-50 text-slate-700 active:bg-slate-100 hover:bg-slate-100 border border-slate-200 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                          <i class="fas fa-play text-[9px] text-[#00A2E2]"></i> Mulai & Beri Catatan
+                        </button>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <div class="space-y-5">
+            <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3.5">
+              <h4 class="font-black text-slate-800 text-xs tracking-tight flex items-center gap-2 border-b pb-3">
+                <i class="fas fa-info-circle text-[#00A2E2]"></i> Informasi Proses
+              </h4>
+              <div class="space-y-2.5 text-xs">
+                <div class="flex justify-between items-center py-1">
+                  <span class="text-slate-400 font-medium">Nomor</span>
+                  <span class="font-mono font-bold text-slate-700" x-text="selectedBpmItem?.kode || '-'"></span>
+                </div>
+                <div class="flex justify-between items-center py-1">
+                  <span class="text-slate-400 font-medium">Pemohon</span>
+                  <span class="font-bold text-slate-800" x-text="selectedBpmItem?.uploader || '-'"></span>
+                </div>
+                <div class="flex justify-between items-center py-1">
+                  <span class="text-slate-400 font-medium">Lokasi</span>
+                  <span class="font-bold text-slate-800 flex items-center gap-1">
+                    <i class="fas fa-map-marker-alt text-rose-500 text-[10px]"></i>
+                    <span x-text="selectedBpmItem?.lokasi || '-'"></span>
+                  </span>
+                </div>
+                <div class="flex justify-between items-center py-1">
+                  <span class="text-slate-400 font-medium">Branch</span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-[#00A2E2] border border-sky-100" x-text="selectedBpmItem?.isPFK ? 'Branch 2 - PFK' : 'Branch 1 - Non PFK'"></span>
+                </div>
+                <div class="flex justify-between items-center py-1">
+                  <span class="text-slate-400 font-medium">Status</span>
+                  <template x-if="(selectedBpmItem?.step || 1) > 10">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                      <i class="fas fa-check-circle"></i> Selesai
+                    </span>
+                  </template>
+                  <template x-if="(selectedBpmItem?.step || 1) <= 10">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-[#00A2E2] border border-sky-100 flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#00A2E2]"></span> Aktif
+                    </span>
+                  </template>
+                </div>
+                <div class="pt-2 border-t text-slate-500">
+                  <span class="text-slate-400 font-medium block mb-1">Keterangan</span>
+                  <p class="text-[11px] text-slate-600 font-medium" x-text="selectedBpmItem?.statusDetail || '-'"></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3.5">
+              <div class="flex items-center justify-between">
+                <h4 class="font-black text-slate-800 text-xs tracking-tight flex items-center gap-2">
+                  <i class="fas fa-upload text-[#00A2E2]"></i> Upload Dokumen
+                </h4>
+                <span x-show="isBpmUploading" class="text-[10px] text-amber-600 font-bold flex items-center gap-1">
+                  <i class="fas fa-spinner fa-spin"></i> Mengunggah...
+                </span>
+              </div>
+
+              <div @click="$refs.bpmFileInput.click()"
+                   @dragover.prevent="isDraggingBpm = true"
+                   @dragleave.prevent="isDraggingBpm = false"
+                   @drop.prevent="handleBpmDrop($event)"
+                   :class="isDraggingBpm ? 'border-[#00A2E2] bg-sky-50/50' : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/60'"
+                   class="border-2 border-dashed rounded-2xl p-5 sm:p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[130px] relative group">
+                
+                <input type="file" x-ref="bpmFileInput" @change="handleBpmFileSelect($event)" class="hidden" multiple />
+
+                <template x-if="!selectedBpmFiles || selectedBpmFiles.length === 0">
+                  <div class="flex flex-col items-center">
+                    <i class="fas fa-folder text-amber-400 text-3xl sm:text-4xl mb-2 group-hover:scale-110 transition-transform"></i>
+                    <p class="text-xs font-bold text-slate-600">Klik atau Tarik File ke Sini</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5">PDF, DOCX, XLSX, JPG (Maks. 10MB)</p>
+                  </div>
+                </template>
+
+                <template x-if="selectedBpmFiles && selectedBpmFiles.length > 0">
+                  <div class="w-full space-y-2">
+                    <i class="fas fa-file-arrow-up text-[#00A2E2] text-2xl sm:text-3xl mb-1"></i>
+                    <div class="max-h-24 overflow-y-auto custom-scrollbar space-y-1 text-left w-full">
+                      <template x-for="(file, idx) in selectedBpmFiles" :key="idx">
+                        <div class="flex justify-between items-center bg-white p-2 rounded-xl border text-[11px] font-medium text-slate-700">
+                          <span class="truncate max-w-[140px] sm:max-w-[160px]" x-text="file.name"></span>
+                          <span class="text-[9px] text-slate-400 font-mono" x-text="(file.size/1024).toFixed(0) + ' KB'"></span>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+              </div>
+
+              <button x-show="selectedBpmFiles && selectedBpmFiles.length > 0"
+                      @click="uploadBpmFiles()"
+                      :disabled="isBpmUploading"
+                      class="w-full py-2.5 bg-[#005C9A] hover:bg-[#004b7e] text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2">
+                <span x-show="!isBpmUploading"><i class="fas fa-cloud-arrow-up"></i> Unggah Ke Sistem</span>
+                <span x-show="isBpmUploading"><i class="fas fa-spinner fa-spin"></i> Memproses Upload...</span>
+              </button>
+
+              <div x-show="selectedBpmItem?.links && selectedBpmItem.links.length > 0" class="pt-2 border-t border-slate-100 space-y-2">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dokumen Terlampir:</p>
+                <div class="space-y-1.5 max-h-32 overflow-y-auto custom-scrollbar">
+                  <template x-for="(link, idx) in selectedBpmItem?.links" :key="idx">
+                    <a :href="link" target="_blank" class="flex items-center justify-between p-2 rounded-xl bg-sky-50/60 border border-sky-100 text-[#005C9A] hover:bg-sky-100 transition-colors text-xs font-semibold">
+                      <span class="flex items-center gap-2 truncate">
+                        <i class="fas fa-file-alt"></i>
+                        <span x-text="'Lampiran #' + (idx + 1)"></span>
+                      </span>
+                      <i class="fas fa-external-link-alt text-[10px] opacity-70"></i>
+                    </a>
+                  </template>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- POPUP MODALS -->
+  <div x-show="modals.archive || modals.user || modals.profile || modals.forgot" x-transition.opacity
+    class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto" x-cloak>
+
+    <!-- LUPA PASSWORD MODAL -->
+    <div x-show="modals.forgot"
+      class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-100 transform transition-all my-auto">
+      <div class="bg-[#005C9A] px-5 py-4 flex justify-between items-center text-white">
+        <h3 class="font-bold text-xs uppercase tracking-wider flex items-center">
+          <i class="fas fa-key mr-2 text-amber-300"></i> Lupa Password Akun
+        </h3>
+        <button type="button" @click="modals.forgot = false" class="text-white/80 hover:text-white"><i class="fas fa-times text-sm"></i></button>
+      </div>
+      <div class="p-5 sm:p-6">
+        <div x-show="forgotStep === 1" class="space-y-4">
+          <p class="text-xs text-slate-500 leading-relaxed font-medium">Masukkan email korporat Anda yang terdaftar pada sistem utama PLN untuk menerima kode verifikasi OTP.</p>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Alamat Email Pegawai</label>
+            <input x-model="forgotForm.email" @keydown.enter.prevent="requestOtp" type="email" placeholder="username@pln.co.id" class="w-full px-4 py-2.5 text-sm rounded-2xl border border-slate-200 outline-none focus:border-[#005C9A] bg-slate-50">
+          </div>
+          <button type="button" @click.prevent="requestOtp" class="w-full bg-[#005C9A] hover:opacity-95 text-white py-3 rounded-2xl text-xs font-bold uppercase tracking-wider" :disabled="isLoading">
+            <span x-show="!isLoading">KIRIM KODE OTP VERIFIKASI</span>
+            <span x-show="isLoading"><i class="fas fa-circle-notch fa-spin mr-1"></i>Memproses...</span>
+          </button>
+        </div>
+
+        <div x-show="forgotStep === 2" class="space-y-4">
+          <div
+            class="bg-emerald-50 border border-emerald-200/50 rounded-2xl p-3.5 text-xs text-emerald-800 font-medium flex items-center gap-2">
+            <i class="fas fa-envelope-circle-check text-base text-emerald-600"></i>
+            <span>Kode OTP terkirim ke: <b x-text="forgotForm.email" class="font-bold"></b></span>
+          </div>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Masukan Kode OTP</label>
+              <input x-model="forgotForm.otp" type="text" placeholder="XXXXXX" class="w-full px-4 py-2.5 border rounded-2xl text-center font-bold tracking-[0.4em] text-slate-800 bg-slate-50 font-mono text-base" maxlength="6">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Sandi Baru Sesi Enkripsi</label>
+              <input x-model="forgotForm.newPass" type="password" class="w-full px-4 py-2.5 border border-slate-200 rounded-2xl text-sm outline-none focus:border-emerald-600 bg-slate-50">
+            </div>
+          </div>
+          <div class="mt-4 flex flex-col gap-2">
+            <button type="button" @click.prevent="submitReset" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-2xl text-xs font-bold uppercase tracking-wider shadow-md shadow-emerald-600/10">SIMPAN PASSWORD BARU</button>
+            <button type="button" @click.prevent="forgotStep = 1" class="text-center text-slate-400 hover:text-slate-600 font-bold text-xs py-1.5">Ganti Alamat Email</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPLOAD/EDIT ARCHIVE MODAL (DIREVISI: MENDUKUNG MULTIPLE ATTACHMENTS) -->
+    <div x-show="modals.archive" @click.away="modals.archive = false"
+      class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden border border-slate-100 my-auto" x-transition>
+      <div class="bg-[#005C9A] px-5 py-4 flex justify-between items-center text-white">
+        <h3 class="font-bold text-xs uppercase tracking-wider flex items-center">
+          <i class="fas fa-cloud-upload-alt mr-2"></i>
+          <span x-text="form.archive.id ? 'Ubah & Kelola Berkas Dokumen' : 'Unggah Lembar Dokumen Berkas Baru'"></span>
+        </h3>
+        <button @click="modals.archive = false" class="text-white/70 hover:text-white"><i class="fas fa-times text-sm"></i></button>
+      </div>
+
+      <form @submit.prevent="saveArchive" class="p-5 sm:p-6 space-y-4 text-sm max-h-[85vh] overflow-y-auto custom-scrollbar">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1.5">Nomor Kode Berkas</label>
+            <select x-model="form.archive.nomor" class="w-full px-3 py-2.5 border border-slate-200 rounded-2xl outline-none font-mono text-xs bg-slate-50 focus:bg-white focus:border-[#005C9A]" required>
+              <option value="" disabled>Pilih Kode Nomor</option>
+              <template x-for="nom in masterData.nomors" :key="nom">
+                <option :value="nom" x-text="nom"></option>
+              </template>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1.5">Judul / Nama Dokumen</label>
+            <input x-model="form.archive.nama" type="text" class="w-full px-3 py-2 border border-slate-200 rounded-2xl bg-slate-50 focus:bg-white focus:border-[#005C9A]" required>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1.5">Perihal / Deskripsi Ringkas Berkas</label>
+          <textarea x-model="form.archive.perihal" rows="2" class="w-full px-3 py-2 border border-slate-200 rounded-2xl resize-none text-xs bg-slate-50 focus:bg-white focus:border-[#005C9A]"></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1.5">Kategori Bidang</label>
+            <select x-model="form.archive.kategori" class="w-full px-3 py-2 border border-slate-200 rounded-2xl text-xs bg-slate-50 focus:bg-white focus:border-[#005C9A]" required>
+              <option value="" disabled>Pilih Jenis</option>
+              <template x-for="cat in masterData.categories" :key="cat">
+                <option :value="cat" x-text="cat"></option>
+              </template>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1.5">Lokasi Lemari</label>
+            <select x-model="form.archive.lemari" class="w-full px-3 py-2 border border-slate-200 rounded-2xl text-xs bg-slate-50 focus:bg-white focus:border-[#005C9A]" required>
+              <option value="" disabled>Pilih Lemari</option>
+              <template x-for="lem in masterData.lemaris" :key="lem">
+                <option :value="lem" x-text="lem"></option>
+              </template>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1.5">Ordner / Map</label>
+            <select x-model="form.archive.ordner" class="w-full px-3 py-2 border border-slate-200 rounded-2xl text-xs bg-slate-50 focus:bg-white focus:border-[#005C9A]" required>
+              <option value="" disabled>Pilih Ordner</option>
+              <template x-for="ord in masterData.ordners" :key="ord">
+                <option :value="ord" x-text="ord"></option>
+              </template>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1.5">Ekstensi File</label>
+            <input x-model="form.archive.jenis" list="extensionList" type="text" class="w-full px-3 py-2 border border-slate-200 rounded-2xl text-xs uppercase bg-slate-50 focus:bg-white focus:border-[#005C9A]" required>
+          </div>
+        </div>
+
+        <!-- UPLOAD BANYAK LAMPIRAN BERKAS -->
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1.5">Lampiran Berkas Fisik Digital <span class="text-slate-400 font-normal">(Bisa pilih lebih dari 1 file)</span></label>
+          <label for="dropzone-file-archive" class="flex flex-col items-center justify-center w-full min-h-[96px] p-4 border-2 border-slate-200 border-dashed rounded-2xl cursor-pointer bg-slate-50/50 hover:bg-sky-50/40 focus:border-[#005C9A] transition-colors">
+            <template x-if="filesData.length === 0">
+              <div class="text-center">
+                <p class="text-xs text-slate-600 font-bold"><i class="fas fa-plus-circle text-[#005C9A] mr-1"></i> Pilih Berkas Lampiran (Bisa Banyak File)</p>
+                <p class="text-[10px] text-slate-400 mt-1">Gunakan Ctrl/Shift untuk memilih beberapa dokumen sekaligus</p>
+              </div>
+            </template>
+            <template x-if="filesData.length > 0">
+              <div class="w-full space-y-2">
+                <p class="text-xs font-bold text-[#005C9A] flex items-center gap-1">
+                  <i class="fas fa-paperclip"></i> Terpilih <span x-text="filesData.length"></span> Lampiran Siap Diunggah:
+                </p>
+                <div class="max-h-28 overflow-y-auto custom-scrollbar space-y-1">
+                  <template x-for="(f, idx) in filesData" :key="idx">
+                    <div class="flex items-center justify-between bg-white px-3 py-1.5 rounded-xl border border-slate-200 text-xs text-slate-700">
+                      <span class="truncate max-w-[220px] font-medium" x-text="f.name"></span>
+                      <button type="button" @click.stop.prevent="removeSelectedArchiveFile(idx)" class="text-slate-400 hover:text-rose-500 text-xs p-1" title="Hapus dari daftar">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+            <input id="dropzone-file-archive" type="file" class="hidden" multiple @change="handleFileUpload" />
+          </label>
+        </div>
+
+        <!-- DAFTAR LAMPIRAN TERDAFTAR (JIKA MODE EDIT DOKUMEN) -->
+        <template x-if="form.archive.links && form.archive.links.length > 0">
+          <div class="pt-2 border-t border-slate-100 space-y-1.5">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">File Lampiran Saat Ini:</p>
+            <div class="max-h-24 overflow-y-auto custom-scrollbar space-y-1">
+              <template x-for="(l, idx) in form.archive.links" :key="idx">
+                <div class="flex justify-between items-center bg-sky-50/60 p-2 rounded-xl border border-sky-100 text-xs font-semibold text-[#005C9A]">
+                  <span class="flex items-center gap-2 truncate">
+                    <i class="fas fa-file-alt"></i>
+                    <span x-text="'Lampiran #' + (idx + 1)"></span>
+                  </span>
+                  <a :href="l" target="_blank" class="text-[10px] hover:underline flex items-center gap-1">Buka <i class="fas fa-external-link-alt text-[9px]"></i></a>
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
+
+        <div class="pt-4 flex flex-col sm:flex-row justify-end gap-2 border-t border-slate-100">
+          <button type="button" @click="modals.archive = false" class="w-full sm:w-auto px-4 py-2.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-600">BATAL</button>
+          <button type="submit" class="w-full sm:w-auto px-5 py-2.5 text-xs font-bold bg-[#005C9A] hover:opacity-95 text-white rounded-xl shadow-md" :disabled="isUploading">
+            <span x-show="!isUploading"><i class="fas fa-save mr-1.5"></i> SIMPAN DOKUMEN</span>
+            <span x-show="isUploading"><i class="fas fa-spinner fa-spin mr-1.5"></i> Mengunggah Berkas...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- REGISTRATION USER MODAL -->
+    <div x-show="modals.user" @click.away="modals.user = false"
+      class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 my-auto" x-transition>
+      <div class="bg-[#005C9A] px-5 py-4 flex justify-between items-center text-white">
+        <h3 class="font-bold text-xs uppercase tracking-wider flex items-center"><i class="fas fa-user-cog mr-2"></i>
+          <span x-text="form.user.isEdit ? 'Ubah Informasi Akun Pegawai' : 'Registrasi Akun Pegawai Baru'"></span>
+        </h3>
+        <button @click="modals.user = false" class="text-white/70 hover:text-white"><i class="fas fa-times text-sm"></i></button>
+      </div>
+      <form @submit.prevent="saveUser" class="p-5 sm:p-6 space-y-3.5 text-xs max-h-[85vh] overflow-y-auto custom-scrollbar">
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">NIP / ID Username <span class="text-rose-500">*</span></label>
+          <input x-model="form.user.username" type="text" class="w-full px-3 py-2.5 border border-slate-200 rounded-2xl outline-none focus:border-[#005C9A] font-mono text-sm" :disabled="form.user.isEdit" required>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Nama Lengkap Pegawai <span class="text-rose-500">*</span></label>
+          <input x-model="form.user.nama_lengkap" type="text" class="w-full px-3 py-2.5 border border-slate-200 rounded-2xl outline-none focus:border-[#005C9A] font-medium text-sm" required>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Alamat Email Korporat</label>
+          <input x-model="form.user.email" type="email" placeholder="nama.pegawai@pln.co.id" class="w-full px-3 py-2.5 border border-slate-200 rounded-2xl outline-none focus:border-[#005C9A] font-medium text-sm">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Kata Sandi / Kredensial Sesi <span class="text-rose-500">*</span></label>
+          <input x-model="form.user.password" type="text" class="w-full px-3 py-2.5 border border-slate-200 rounded-2xl outline-none focus:border-[#005C9A] font-mono text-sm" required>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Otoritas Kategori Role</label>
+            <select x-model="form.user.role" class="w-full px-3 py-2.5 border border-slate-200 bg-white rounded-2xl font-semibold">
+              <option value="User">User</option>
+              <option value="Admin">Admin</option>
+              <option value="Pengajuan ULP">Pengajuan ULP</option>
+              <option value="Survey Rensis">Survey Rensis</option>
+              <option value="Asman Manajemen">Asman Manajemen</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-600 mb-1">Status Aktivasi Akun</label>
+            <select x-model="form.user.status" class="w-full px-3 py-2.5 border border-slate-200 bg-white rounded-2xl font-semibold">
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+        <div class="pt-4 flex flex-col sm:flex-row justify-end gap-2 border-t border-slate-100 mt-3">
+          <button type="button" @click="modals.user = false" class="w-full sm:w-auto px-4 py-2.5 font-bold bg-slate-100 text-slate-600 rounded-xl">BATAL</button>
+          <button type="submit" class="w-full sm:w-auto px-5 py-2.5 font-bold bg-[#005C9A] hover:bg-[#004b7e] text-white rounded-xl shadow-md transition-all flex items-center justify-center gap-2" :disabled="isLoading">
+            <span x-show="!isLoading"><i class="fas fa-save"></i> SIMPAN DATA PEGAWAI</span>
+            <span x-show="isLoading"><i class="fas fa-spinner fa-spin"></i> Memproses...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- MANAGE PROFILE MODAL -->
+    <div x-show="modals.profile" @click.away="modals.profile = false"
+      class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 my-auto" x-transition>
+      <div class="bg-[#005C9A] px-5 py-4 flex justify-between items-center text-white">
+        <h3 class="font-bold text-xs uppercase tracking-wider flex items-center"><i class="fas fa-id-card mr-2"></i>
+          Pengaturan Informasi Profil Mandiri</h3>
+        <button @click="modals.profile = false" class="text-white/70 hover:text-white"><i class="fas fa-times text-sm"></i></button>
+      </div>
+      <form @submit.prevent="saveProfile" class="p-5 sm:p-6 space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-600 mb-1.5">Nama Lengkap Personil</label>
+          <input x-model="form.profile.nama_lengkap" type="text" class="w-full px-3 py-2.5 border border-slate-200 rounded-2xl text-sm font-semibold focus:border-[#005C9A]" required>
+        </div>
+        <div class="pt-4 flex flex-col sm:flex-row justify-end gap-2 border-t border-slate-100">
+          <button type="button" @click="modals.profile = false" class="w-full sm:w-auto px-4 py-2.5 font-bold bg-slate-100 text-slate-600 rounded-xl">BATAL</button>
+          <button type="submit" class="w-full sm:w-auto px-5 py-2.5 font-bold bg-[#005C9A] text-white rounded-xl shadow shadow-[#005C9A]/10">SIMPAN PERUBAHAN</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <datalist id="extensionList">
+    <template x-for="ext in masterData.extensions" :key="ext">
+      <option :value="ext"></option>
+    </template>
+  </datalist>
+
+  <!-- LOGIKA JAVASCRIPT DENGAN UPLOAD MULTIPLE ATTACHMENTS -->
+  <script>
+    let chartInstance = null;
+
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('app', () => ({
+            isAuthenticated: false,
+            sidebarOpen: true,
+            view: 'dashboard',
+            viewTitle: 'Dashboard Utama',
+            isLoading: false,
+            isUploading: false,
+            archiveViewMode: 'list',
+
+            isDraggingBpm: false,
+            isBpmUploading: false,
+            selectedBpmFiles: [],
+
+            currentUser: { username: '', role: '', nama_lengkap: '', token: '' },
+            stats: { totalArsip: 0, myArsip: 0, sharedWithMe: 0, totalUsers: 0, recentLogs: [] },
+            archives: [],
+            bpmList: [],
+            users: [],
+            logs: [],
+            notifications: [],
+            unreadCount: 0,
+            masterData: { categories: ['PFK', 'ESTETIKA', 'Pelanggan TM', 'SPKLU'], extensions: ['PDF', 'DOCX', 'XLSX'], nomors: ['001/PLN/2026'], lemaris: ['Lemari A', 'Lemari B', 'Lemari C', 'Lemari_D'], ordners: ['Ordner_01', 'Ordner_02', 'Ordner_03', 'Ordner_04'] },
+
+            loginForm: { username: '', password: '' },
+            forgotForm: { email: '', otp: '', newPass: '' },
+            forgotStep: 1,
+            searchQuery: '',
+            archiveFilter: { category: '', startDate: '', endDate: '' },
+            selectedLemari: 'All', 
+            logFilter: { time: 'all', search: '' },
+            reportForm: { start: '', end: '' },
+
+            modals: { archive: false, user: false, profile: false, forgot: false, bpmDetail: false },
+            selectedBpmItem: null,
+
+            bpmStepsList: [
+              { no: 1, team: 'Tim Pengajuan', role: 'ULP/NPS', title: 'Kirim Surat Permohonan Survey & RAB', desc: 'ULP/NPS mengirimkan surat permohonan survey & RAB (Pekerjaan PFK)' },
+              { no: 2, team: 'Tim Pengajuan', role: 'Admin Perencanaan', title: 'Terima & Entry Data Permohonan', desc: 'Admin menerima surat permohonan dan melakukan entry data' },
+              { no: 3, team: 'Tim Pengajuan', role: 'Admin Perencanaan', title: 'Penugasan Petugas Survey', desc: 'Admin menugaskan Surveyor untuk Pekerjaan PFK' },
+              { no: 4, team: 'Tim Survey', role: 'Surveyor', title: 'Survey ke Lokasi (PFK)', desc: 'Surveyor melakukan survey lapangan untuk pekerjaan PFK' },
+              { no: 5, team: 'Tim Survey', role: 'Surveyor', title: 'Pembuatan Rincian Anggaran Biaya (RAB)', desc: 'Surveyor membuat RAB untuk pekerjaan PFK' },
+              { no: 6, team: 'Tim Survey', role: 'TL Rensis', title: 'Koreksi Rincian Anggaran Biaya (RAB)', desc: 'TL Rensis melakukan koreksi RAB untuk pekerjaan PFK' },
+              { no: 7, team: 'Tim Manajemen', role: 'Asman Ren', title: 'Persetujuan RAB + TTD (PFK)', desc: 'Asman Ren menyetujui dan menandatangani dokumen RAB untuk PFK' },
+              { no: 8, team: 'Tim Pengajuan', role: 'Admin Perencanaan', title: 'AMS ke User (Pemohon) - PFK', desc: 'Admin mengirimkan AMS ke User (ULP/NPS) untuk Permohonan SPKLU, ESTETIKA, Plg TM cc. Bidang Konstruksi' },
+              { no: 9, team: 'Tim Pengajuan', role: 'Admin Perencanaan', title: 'Upload & Input Hasil RAB', desc: 'Admin mengunggah hasil RAB ke sistem arsip digital' },
+              { no: 10, team: 'Tim Manajemen', role: 'Aplikasi Arsip Digital', title: 'Penyimpanan Digital Arsip (MOM & RAB)', desc: 'Sistem menyimpan arsip digital RAB secara otomatis' }
+            ],
+
+            form: {
+                archive: { id: '', nomor: '', nama: '', perihal: '', kategori: '', lemari: '', ordner: '', jenis: '', links: [], share_to: [] },
+                user: { username: '', nama_lengkap: '', email: '', password: '', role: 'User', status: 'Active', isEdit: false },
+                profile: { nama_lengkap: '', password_lama: '', password_baru: '' }
+            },
+            bpmForm: { kode: '', judul: '', isPFK: false },
+
+            fileData: { name: '', bytes: '', type: '' },
+            filesData: [], // Tempat menampung banyak file yang diunggah
+            tempSetting: { category: '', extension: '', nomor: '', lemari: '', ordner: '' },
+            pagination: { currentPage: 1, perPage: 10 },
+
+            canEdit(item) {
+                if (!item) return false;
+                if (this.currentUser.role === 'Admin') return true;
+                return item.uploader === this.currentUser.username;
+            },
+
+            openModal(type) {
+                if (type === 'archive') {
+                    this.form.archive = { id: '', nomor: '', nama: '', perihal: '', kategori: '', lemari: 'Lemari_A', ordner: 'Ordner_01', jenis: 'PDF', links: [], share_to: [] };
+                    this.fileData = { name: '', bytes: '', type: '' };
+                    this.filesData = [];
+                    this.modals.archive = true;
+                } else if (type === 'user') {
+                    this.form.user = { username: '', nama_lengkap: '', email: '', password: '', role: 'User', status: 'Active', isEdit: false };
+                    this.modals.user = true;
+                }
+            },
+
+            editItem(item, type) {
+                if (type === 'archive') {
+                    this.form.archive = { ...item };
+                    this.fileData = { name: '', bytes: '', type: '' };
+                    this.filesData = [];
+                    this.modals.archive = true;
+                } else if (type === 'user') {
+                    this.form.user = { ...item, isEdit: true };
+                    this.modals.user = true;
+                }
+            },
+
+            deleteItem(id, type) {
+                Swal.fire({
+                    title: 'Apakah Anda Yakin?',
+                    text: "Data yang dihapus tidak dapat dikembalikan!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#e11d48',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Ya, Hapus Data!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.callServer('apiHandler', ['deleteData', { token: this.currentUser.token, type: type, id: id }])
+                            .then(() => {
+                                Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
+                                this.navigate(this.view);
+                            })
+                            .catch(err => Swal.fire('Gagal Hapus', typeof err === 'string' ? err : 'Gagal menghapus data', 'error'));
+                    }
+                });
+            },
+
+            addSetting(type) {
+                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'Nomor': 'nomors', 'Lemari': 'lemaris', 'Ordner': 'ordners' };
+                let inputKey = type.toLowerCase();
+                let val = this.tempSetting[inputKey];
+
+                if (!val || !val.trim()) {
+                    Swal.fire({ icon: 'warning', title: 'Nilai Tidak Boleh Kosong', timer: 1200, showConfirmButton: false });
+                    return;
+                }
+
+                let targetArrayKey = keyMap[type];
+                if (this.masterData[targetArrayKey]) {
+                    if (!this.masterData[targetArrayKey].includes(val.trim())) {
+                        this.masterData[targetArrayKey].push(val.trim());
+                        this.saveMasterSettings();
+                    }
+                    this.tempSetting[inputKey] = '';
+                }
+            },
+
+            removeSetting(type, val) {
+                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'Nomor': 'nomors', 'Lemari': 'lemaris', 'Ordner': 'ordners' };
+                let targetArrayKey = keyMap[type];
+                if (this.masterData[targetArrayKey]) {
+                    this.masterData[targetArrayKey] = this.masterData[targetArrayKey].filter(item => item !== val);
+                    this.saveMasterSettings();
+                }
+            },
+
+            saveMasterSettings() {
+                this.callServer('apiHandler', ['saveSettings', { token: this.currentUser.token, data: this.masterData }])
+                    .then(() => {
+                        Swal.fire({ icon: 'success', title: 'Konfigurasi Diperbarui', timer: 1000, showConfirmButton: false });
+                    })
+                    .catch(err => {
+                        console.error("Gagal simpan konfigurasi master:", err);
+                    });
+            },
+
+            saveUser() {
+                this.isLoading = true;
+                this.callServer('apiHandler', ['saveData', { token: this.currentUser.token, type: 'users', data: this.form.user }])
+                    .then(() => {
+                        Swal.fire({ icon: 'success', title: 'Data Pegawai Berhasil Disimpan!', timer: 1500, showConfirmButton: false });
+                        this.modals.user = false;
+                        this.navigate('users');
+                    })
+                    .catch(err => Swal.fire('Gagal Menyimpan', typeof err === 'string' ? err : 'Terjadi kesalahan saat menyimpan data pegawai.', 'error'))
+                    .finally(() => this.isLoading = false);
+            },
+
+            handleFileUpload(e) {
+                const files = Array.from(e.target.files);
+                if (files.length > 0) {
+                    this.filesData = [];
+                    let readCount = 0;
+                    files.forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = (evt) => {
+                            this.filesData.push({
+                                name: file.name,
+                                bytes: evt.target.result.split(',')[1],
+                                type: file.type
+                            });
+                            readCount++;
+                            if (readCount === files.length && this.filesData.length > 0) {
+                                this.fileData = this.filesData[0];
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                }
+            },
+
+            removeSelectedArchiveFile(index) {
+                this.filesData.splice(index, 1);
+                if (this.filesData.length > 0) {
+                    this.fileData = this.filesData[0];
+                } else {
+                    this.fileData = { name: '', bytes: '', type: '' };
+                }
+            },
+
+            saveArchive() {
+                this.isUploading = true;
+                const payload = {
+                    ...this.form.archive,
+                    fileObj: this.fileData.bytes ? {
+                        base64: this.fileData.bytes,
+                        name: this.fileData.name,
+                        mimeType: this.fileData.type
+                    } : null,
+                    files: this.filesData.map(f => ({
+                        base64: f.bytes,
+                        name: f.name,
+                        mimeType: f.type
+                    }))
+                };
+
+                this.callServer('apiHandler', ['saveData', { token: this.currentUser.token, type: 'archives', data: payload }])
+                    .then(() => {
+                        Swal.fire({ icon: 'success', title: 'Dokumen Berhasil Disimpan!', timer: 1500, showConfirmButton: false });
+                        this.modals.archive = false;
+                        this.filesData = [];
+                        this.navigate('archives');
+                    })
+                    .catch(err => Swal.fire('Gagal Menyimpan', typeof err === 'string' ? err : 'Terjadi kesalahan saat menyimpan arsip.', 'error'))
+                    .finally(() => this.isUploading = false);
+            },
+
+            redirectByRole() {
+                const role = (this.currentUser.role || '').toLowerCase();
+                if (role.includes('pengajuan') || role.includes('ulp')) {
+                    this.navigate('create-bpm');
+                } else if (role.includes('survey') || role.includes('rensis')) {
+                    this.navigate('bpm');
+                } else if (role.includes('arsip') || role.includes('manajemen')) {
+                    this.navigate('archives');
+                } else {
+                    this.navigate('dashboard');
+                }
+            },
+
+            getRoleDashboardTitle() {
+                const role = (this.currentUser.role || '').toLowerCase();
+                if (role.includes('survey')) return 'Tim Survey & RAB';
+                if (role.includes('asman') || role.includes('manajemen')) return 'Tim Manajemen & Approval';
+                if (role.includes('ulp') || role.includes('pengajuan')) return 'Tim ULP / Pengajuan';
+                return 'Monitoring Utama';
+            },
+
+            getRoleTaskLabel() {
+                const role = (this.currentUser.role || '').toLowerCase();
+                if (role.includes('survey')) return 'Antrean Survey (Step 4-6)';
+                if (role.includes('asman') || role.includes('manajemen')) return 'Antrean Approval (Step 7)';
+                if (role.includes('ulp') || role.includes('pengajuan')) return 'Permohonan Berjalan (Step 1-3)';
+                return 'Total Permohonan Berjalan';
+            },
+
+            getRoleTaskCount() { return this.getRoleFilteredBpm().length; },
+
+            getRoleFilteredBpm() {
+                const role = (this.currentUser.role || '').toLowerCase();
+                if (role.includes('survey')) return this.bpmList.filter(b => b.step >= 4 && b.step <= 6);
+                if (role.includes('asman') || role.includes('manajemen')) return this.bpmList.filter(b => b.step === 7);
+                if (role.includes('ulp') || role.includes('pengajuan')) return this.bpmList.filter(b => b.step <= 10);
+                return this.bpmList.filter(b => b.step <= 10);
+            },
+
+            calculateDuration(startDateStr, endDateStr) {
+                if (!startDateStr) return '-';
+                const start = new Date(startDateStr);
+                const end = endDateStr ? new Date(endDateStr) : new Date();
+                const diffMs = end - start;
+                if (diffMs < 0) return '0 Hari';
+                const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                const days = Math.floor(diffHours / 24);
+                const hours = diffHours % 24;
+                return days > 0 ? `${days} Hari ${hours} Jam` : `${hours} Jam`;
+            },
+
+            get filteredData() {
+                if (this.view === 'archives') {
+                    const q = (this.searchQuery || '').trim().toLowerCase();
+
+                    return (this.archives || []).filter(item => {
+                        if (!item) return false;
+
+                        const nama     = String(item.nama || item.judul || '').toLowerCase();
+                        const nomor    = String(item.nomor || item.kode || '').toLowerCase();
+                        const ordner   = String(item.ordner || '').toLowerCase();
+                        const perihal  = String(item.perihal || item.deskripsi || '').toLowerCase();
+                        const uploader = String(item.uploader || '').toLowerCase();
+
+                        const matchSearch = !q || 
+                            nama.includes(q) || 
+                            nomor.includes(q) || 
+                            ordner.includes(q) || 
+                            perihal.includes(q) || 
+                            uploader.includes(q);
+
+                        const matchCat = !this.archiveFilter.category || item.kategori === this.archiveFilter.category;
+
+                        let matchDate = true;
+                        if (this.archiveFilter.startDate && item.tanggal) {
+                          matchDate = matchDate && new Date(item.tanggal) >= new Date(this.archiveFilter.startDate);
+                        }
+                        if (this.archiveFilter.endDate && item.tanggal) {
+                          matchDate = matchDate && new Date(item.tanggal) <= new Date(this.archiveFilter.endDate + 'T23:59:59');
+                        }
+
+                        let matchLemari = true;
+                        if (this.selectedLemari !== 'All') {
+                            const itemLemariNorm = String(item.lemari || '').toLowerCase().replace(/[\s_]+/g, '');
+                            const selectedLemariNorm = String(this.selectedLemari || '').toLowerCase().replace(/[\s_]+/g, '');
+                            matchLemari = itemLemariNorm === selectedLemariNorm;
+                        }
+
+                        return matchSearch && matchCat && matchDate && matchLemari;
+                    });
+                } else if (this.view === 'users') {
+                    const q = (this.searchQuery || '').trim().toLowerCase();
+                    if (!q) return this.users || [];
+                    return (this.users || []).filter(u => {
+                        const uname = String(u.username || u[0] || '').toLowerCase();
+                        const fname = String(u.nama_lengkap || u.fullname || u[1] || '').toLowerCase();
+                        return uname.includes(q) || fname.includes(q);
+                    });
+                } else if (this.view === 'logs') {
+                    const q = (this.logFilter.search || '').trim().toLowerCase();
+                    return (this.logs || []).filter(log => {
+                        const uname = String(log.user || log[0] || '').toLowerCase();
+                        const detail = String(log.detail || log[2] || '').toLowerCase();
+                        return !q || uname.includes(q) || detail.includes(q);
+                    });
+                }
+                return [];
+            },
+
+            get paginatedData() {
+                if (this.view === 'dashboard' || this.view === 'bpm' || this.view === 'create-bpm') return [];
+                const start = (this.pagination.currentPage - 1) * this.pagination.perPage;
+                return this.filteredData.slice(start, start + parseInt(this.pagination.perPage));
+            },
+
+            get totalPages() { return Math.ceil(this.filteredData.length / this.pagination.perPage) || 1; },
+
+            initApp() {
+                this.isLoading = false;
+                if (window.innerWidth < 768) {
+                    this.sidebarOpen = false;
+                }
+                const savedUser = localStorage.getItem('currentUser');
+                if (savedUser) {
+                    try {
+                        const parsedUser = JSON.parse(savedUser);
+                        if (parsedUser && parsedUser.username && parsedUser.token) {
+                            this.currentUser = parsedUser;
+                            this.checkSessionOnLoad();
+                            return; 
+                        }
+                    } catch (e) { this.forceLogout(); }
+                }
+                this.forceLogout();
+            },
+
+            forceLogout() {
+                localStorage.removeItem('currentUser');
+                this.isAuthenticated = false;
+                this.currentUser = { username: '', role: '', nama_lengkap: '', token: '' };
+                this.view = 'login';
+                this.viewTitle = 'Login Sistem';
+            },
+
+            callServer(methodName, args = []) {
+                return new Promise((resolve, reject) => {
+                    if (typeof google !== 'undefined' && google.script && google.script.run) {
+                        google.script.run
+                            .withSuccessHandler(res => {
+                                try {
+                                    const parsed = typeof res === 'string' ? JSON.parse(res) : res;
+                                    if (parsed.success || parsed.status === 'success') resolve(parsed.data !== undefined ? parsed.data : parsed);
+                                    else reject(parsed.message || 'Error');
+                                } catch (e) { resolve(res); }
+                            })
+                            .withFailureHandler(err => reject(err.message || err))[methodName](...args);
+                    } else { setTimeout(() => resolve({ success: true }), 300); }
+                });
+            },
+
+            checkSessionOnLoad() {
+                this.isLoading = true;
+                this.callServer('apiHandler', ['checkSession', { token: this.currentUser?.token }])
+                    .then(data => {
+                        if (data && data.sessionActive) {
+                            this.currentUser = data.user;
+                            this.isAuthenticated = true;
+                            localStorage.setItem('currentUser', JSON.stringify(data.user));
+                            this.redirectByRole();
+                            setTimeout(() => { this.loadDashboardData(); }, 300);
+                        } else { this.forceLogout(); }
+                    })
+                    .catch(() => this.forceLogout())
+                    .finally(() => this.isLoading = false);
+            },
+
+            login() {
+                this.isLoading = true;
+                this.callServer('apiHandler', ['login', { username: this.loginForm.username, password: this.loginForm.password }])
+                    .then(res => {
+                        const userData = res.user || (res.data && res.data.user);
+                        if (userData && userData.token) {
+                            this.currentUser = userData;
+                            this.isAuthenticated = true;
+                            this.loginForm = { username: '', password: '' };
+                            localStorage.setItem('currentUser', JSON.stringify(userData));
+                            this.redirectByRole();
+                            Swal.fire({ icon: 'success', title: 'Berhasil Masuk', timer: 1500, showConfirmButton: false });
+                            this.loadDashboardData();
+                        } else throw new Error("Gagal login");
+                    })
+                    .catch(err => Swal.fire('Gagal Login', typeof err === 'string' ? err : 'Username/password salah', 'error'))
+                    .finally(() => this.isLoading = false);
+            },
+
+            logout() {
+                this.callServer('apiHandler', ['logout', { token: this.currentUser.token }]);
+                this.forceLogout();
+            },
+
+            loadDashboardData() {
+                this.callServer('apiHandler', ['getStats', { token: this.currentUser.token }])
+                    .then(res => { if (res) this.stats = res.data || res; });
+                this.loadSettings();
+                this.loadBpmData();
+                this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'users' }])
+                    .then(res => { this.users = Array.isArray(res) ? res : (res?.data || []); });
+                this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'archives' }])
+                    .then(res => {
+                        this.archives = res?.list || res?.data || (Array.isArray(res) ? res : []);
+                        this.$nextTick(() => this.renderChart());
+                    });
+            },
+
+            renderChart() {
+                const ctx = document.getElementById('archiveChart');
+                if (!ctx) return;
+
+                if (chartInstance) {
+                    chartInstance.destroy();
+                }
+
+                const categories = this.masterData.categories.length > 0 ? this.masterData.categories : ['PFK', 'ESTETIKA', 'Pelanggan TM', 'SPKLU'];
+                const counts = categories.map(cat => {
+                    const found = (this.archives || []).filter(a => a.kategori === cat).length;
+                    return found > 0 ? found : 1; 
+                });
+
+                chartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: categories,
+                        datasets: [{
+                            data: counts,
+                            backgroundColor: ['#005C9A', '#00A2E2', '#f59e0b', '#10b981', '#8b5cf6'],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    font: { family: 'Plus Jakarta Sans', size: 11 },
+                                    usePointStyle: true,
+                                    boxWidth: 8
+                                }
+                            }
+                        },
+                        cutout: '70%'
+                    }
+                });
+            },
+
+            loadBpmData() {
+                this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'bpm' }])
+                    .then(res => {
+                        let rawList = Array.isArray(res) ? res : (res?.data || res?.list || []);
+                        this.bpmList = Array.isArray(rawList) ? rawList : [];
+                    });
+            },
+
+            navigate(viewName) {
+                this.view = viewName;
+                this.pagination.currentPage = 1;
+                this.searchQuery = '';
+                this.selectedLemari = 'All';
+                if (viewName === 'dashboard') { 
+                    this.viewTitle = 'Dashboard Utama'; 
+                    this.loadDashboardData(); 
+                }
+                else if (viewName === 'create-bpm') { this.viewTitle = 'Permohonan Baru'; this.loadBpmData(); }
+                else if (viewName === 'bpm') { this.viewTitle = 'Daftar Proses BPM'; this.loadBpmData(); }
+                else if (viewName === 'archives') {
+                    this.viewTitle = 'Kotak Arsip';
+                    this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'archives' }])
+                        .then(res => { this.archives = res?.list || res?.data || (Array.isArray(res) ? res : []); });
+                } else if (viewName === 'users') {
+                    this.viewTitle = 'Manajemen Pegawai';
+                    this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'users' }])
+                        .then(res => { this.users = Array.isArray(res) ? res : (res?.data || []); });
+                } else if (viewName === 'logs') {
+                    this.viewTitle = 'Log Aktivitas';
+                    this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'logs' }])
+                        .then(res => { this.logs = res?.list || res?.data || (Array.isArray(res) ? res : []); });
+                } else if (viewName === 'settings') { this.viewTitle = 'Konfigurasi Master'; this.loadSettings(); }
+            },
+
+            saveBpm() {
+                this.isLoading = true;
+                const bpmPayload = {
+                    kode: this.bpmForm.kode || ('PLN-PFK-' + Date.now().toString().slice(-8)),
+                    judul: this.bpmForm.judul,
+                    isPFK: Boolean(this.bpmForm.isPFK),
+                    step: 1,
+                    statusDetail: 'Kirim Surat Permohonan Survey & RAB'
+                };
+                this.callServer('apiHandler', ['saveData', { token: this.currentUser.token, type: 'bpm', data: bpmPayload }])
+                    .then(() => {
+                        this.loadBpmData();
+                        this.navigate('bpm');
+                    })
+                    .finally(() => this.isLoading = false);
+            },
+
+            openProcessDetail(item) {
+                this.selectedBpmItem = item;
+                this.selectedBpmFiles = [];
+                if (!this.selectedBpmItem.step) this.selectedBpmItem.step = 1;
+                this.modals.bpmDetail = true;
+            },
+
+            advanceBpmStep(item) {
+                if (item.step > 10) return;
+
+                const nextStep = item.step + 1;
+                let newStatusDetail = 'Selesai 100% - Arsip Tersimpan';
+                if (nextStep <= 10) {
+                    const targetStepObj = this.bpmStepsList.find(s => s.no === nextStep);
+                    newStatusDetail = targetStepObj?.title || 'Progres Berjalan';
+                }
+
+                this.callServer('apiHandler', ['saveData', { 
+                    token: this.currentUser.token, 
+                    type: 'bpm', 
+                    data: { 
+                        id: item.id, 
+                        step: nextStep, 
+                        statusDetail: newStatusDetail 
+                    } 
+                }]).then(() => {
+                    item.step = nextStep;
+                    item.statusDetail = newStatusDetail;
+                    Swal.fire({
+                        icon: 'success',
+                        title: nextStep > 10 ? 'Agenda Selesai 100%!' : 'Progres Berhasil Diperbarui!',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    this.loadBpmData();
+                }).catch(err => {
+                    Swal.fire('Gagal', typeof err === 'string' ? err : 'Gagal memperbarui step.', 'error');
+                });
+            },
+
+            openCatatanModal(item) {
+                Swal.fire({
+                  title: 'Beri Catatan Progres',
+                  input: 'textarea',
+                  inputPlaceholder: 'Tuliskan catatan progress atau instruksi untuk step ini...',
+                  showCancelButton: true,
+                  confirmButtonText: 'Simpan Catatan',
+                  cancelButtonText: 'Batal',
+                  confirmButtonColor: '#005C9A'
+                }).then((result) => {
+                  if (result.isConfirmed && result.value) {
+                    this.callServer('apiHandler', ['saveData', { 
+                      token: this.currentUser.token, 
+                      type: 'bpm', 
+                      data: { 
+                        id: item.id, 
+                        statusDetail: result.value 
+                      } 
+                    }]).then(() => {
+                      item.statusDetail = result.value;
+                      Swal.fire({ icon: 'success', title: 'Catatan Berhasil Disimpan!', timer: 1500, showConfirmButton: false });
+                      this.loadBpmData();
+                    });
+                  }
+                });
+            },
+
+            handleBpmFileSelect(e) {
+                const files = Array.from(e.target.files);
+                if (files.length > 0) {
+                    this.selectedBpmFiles = files;
+                }
+            },
+
+            handleBpmDrop(e) {
+                this.isDraggingBpm = false;
+                const files = Array.from(e.dataTransfer.files);
+                if (files.length > 0) {
+                    this.selectedBpmFiles = files;
+                }
+            },
+
+            uploadBpmFiles() {
+                if (!this.selectedBpmFiles || this.selectedBpmFiles.length === 0) return;
+                this.isBpmUploading = true;
+
+                const promises = this.selectedBpmFiles.map(file => {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (evt) => {
+                            const base64Data = evt.target.result.split(',')[1];
+                            resolve({
+                                name: file.name,
+                                mimeType: file.type,
+                                base64: base64Data
+                            });
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                });
+
+                Promise.all(promises)
+                    .then(fileObjs => {
+                        const payload = {
+                            id: this.selectedBpmItem.id || this.selectedBpmItem.kode,
+                            fileObj: fileObjs[0],
+                            files: fileObjs,
+                            judul: this.selectedBpmItem.judul
+                        };
+
+                        return this.callServer('apiHandler', ['saveData', {
+                            token: this.currentUser.token,
+                            type: 'bpm',
+                            data: payload
+                        }]);
+                    })
+                    .then(() => {
+                        Swal.fire({ icon: 'success', title: 'Dokumen Berhasil Diunggah!', timer: 1500, showConfirmButton: false });
+                        this.selectedBpmFiles = [];
+                        this.loadBpmData();
+                    })
+                    .catch(err => {
+                        Swal.fire('Gagal Upload', typeof err === 'string' ? err : 'Terjadi kesalahan saat mengunggah berkas.', 'error');
+                    })
+                    .finally(() => {
+                        this.isBpmUploading = false;
+                    });
+            },
+
+            loadSettings() {
+                this.callServer('apiHandler', ['getSettings', { token: this.currentUser.token }])
+                    .then(res => {
+                        const master = res?.data || res;
+                        if (master) {
+                            this.masterData.categories = master.categories || ['PFK', 'ESTETIKA', 'Pelanggan TM', 'SPKLU'];
+                            this.masterData.extensions = master.extensions || ['PDF', 'DOCX', 'XLSX'];
+                            this.masterData.nomors = master.nomors || ['001/PLN/2026'];
+                            this.masterData.lemaris = master.lemaris || ['Lemari A', 'Lemari B', 'Lemari C', 'Lemari_D'];
+                            this.masterData.ordners = master.ordners || ['Ordner_01', 'Ordner_02', 'Ordner_03', 'Ordner_04'];
+                        }
+                    });
+            },
+
+            prevPage() { if (this.pagination.currentPage > 1) this.pagination.currentPage--; },
+            nextPage() { if (this.pagination.currentPage < this.totalPages) this.pagination.currentPage++; },
+            getFileIcon(type) {
+                if (!type) return { icon: 'fas fa-file', bg: 'bg-slate-100', text: 'text-slate-400' };
+                const t = type.toLowerCase();
+                if (t.includes('pdf')) return { icon: 'fas fa-file-pdf', bg: 'bg-rose-50 border-rose-100', text: 'text-rose-500' };
+                if (t.includes('xls')) return { icon: 'fas fa-file-excel', bg: 'bg-emerald-50 border-emerald-100', text: 'text-emerald-600' };
+                return { icon: 'fas fa-file-alt', bg: 'bg-sky-50 border-sky-100', text: 'text-[#005C9A]' };
+            }
+        }));
+    });
+  </script>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+</body>
+
+</html>
