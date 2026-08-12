@@ -113,7 +113,7 @@ function getOrCreateLemariSheet(ss, rawLemariName) {
 }
 
 /**
- * HELPER: Dapatkan atau buat Sheet khusus BPM (Ditambahkan Header Link di Kolom 14 / N)
+ * HELPER: Dapatkan atau buat Sheet khusus BPM
  */
 function getOrCreateBpmSheet(ss) {
   let sheet = ss.getSheetByName('BPM');
@@ -121,15 +121,9 @@ function getOrCreateBpmSheet(ss) {
     sheet = ss.insertSheet('BPM');
     sheet.appendRow([
       'ID', 'Kode', 'Judul', 'IsPFK', 'Step', 'StatusDetail', 'Tanggal', 'Pemohon',
-      'Lokasi', 'Tgl_Pengajuan', 'Tgl_Survey', 'Tgl_Manajemen', 'Tgl_Selesai', 'Link'
+      'Lokasi', 'Tgl_Pengajuan', 'Tgl_Survey', 'Tgl_Manajemen', 'Tgl_Selesai'
     ]);
     sheet.setFrozenRows(1);
-  } else {
-    // Pastikan header Link di kolom 14 (N) jika sheet lama belum punya
-    let headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    if (headers.length < 14) {
-      sheet.getRange(1, 14).setValue('Link');
-    }
   }
   return sheet;
 }
@@ -170,6 +164,7 @@ function apiHandler(action, payload) {
       case 'deleteData': return deleteData(ss, payload);
       case 'getSettings': return getSettings(ss, payload);
       case 'saveSetting': return saveSetting(ss, payload);
+      case 'saveSettings': return saveMasterSettings(ss, payload); // Endpoint baru untuk menyimpan seluruh array master
       case 'deleteSetting': return deleteSetting(ss, payload);
       case 'generateReport': return generateReport(ss, payload);
       case 'getNotifications': return getNotifications(ss, payload);
@@ -404,7 +399,7 @@ function getDashboardStats(ss, { token }) {
   };
 }
 
-// --- GET DATA (PARSING BPM DENGAN VARIABLE LINK) ---
+// --- GET DATA ---
 function getData(ss, { token, type }) {
   const user = validateToken(ss, token);
   let result = [];
@@ -447,7 +442,7 @@ function getData(ss, { token, type }) {
 
           if (user.role === 'Admin' || isOwner || isShared) {
             let rawLinkString = row[8] ? row[8].toString() : '';
-            let linkArray = rawLinkString ? rawLinkString.split(',').map(l => l.trim()).filter(Boolean) : [];
+            let linkArray = rawLinkString ? rawLinkString.split(', ').map(l => l.trim()).filter(Boolean) : [];
 
             result.push({
               id: row[0],
@@ -475,22 +470,17 @@ function getData(ss, { token, type }) {
     rawData.shift(); // Hapus header
     
     rawData.forEach(row => {
-      if (row[0] || row[1] || row[2]) { // Cek kelayakan baris
+      if (row[0] || row[1] || row[2]) {
         let safeIso = function(val) {
           if (!val) return null;
           let d = new Date(val);
           return isNaN(d.getTime()) ? null : d.toISOString();
         };
 
-        // Membaca boolean IsPFK dengan aman dari string "TRUE"/"FALSE"
         let rawIsPfk = row[3];
         let isPfkVal = typeof rawIsPfk === 'string' 
           ? rawIsPfk.trim().toUpperCase() === 'TRUE' 
           : Boolean(rawIsPfk);
-
-        // Membaca array link lampiran dari Kolom ke-14 (Kolom N)
-        let rawLinkString = row[13] ? row[13].toString() : '';
-        let linkArray = rawLinkString ? rawLinkString.split(',').map(l => l.trim()).filter(Boolean) : [];
 
         result.push({
           id: String(row[0] || Date.now()),
@@ -502,13 +492,11 @@ function getData(ss, { token, type }) {
           tanggal: formatDate(row[6]),
           uploader: row[7] ? String(row[7]) : 'System',
           pemohon: row[7] ? String(row[7]) : 'System',
-          lokasi: row[8] ? String(row[8]) : 'cemorokandang',
+          lokasi: row[8] ? String(row[8]) : 'Cemorokandang',
           tglPengajuan: safeIso(row[9]) || safeIso(row[6]) || new Date().toISOString(),
           tglSurvey: safeIso(row[10]),
           tglManajemen: safeIso(row[11]),
-          tglSelesai: safeIso(row[12]),
-          links: linkArray,
-          link: linkArray[0] || '#'
+          tglSelesai: safeIso(row[12])
         });
       }
     });
@@ -542,7 +530,7 @@ function getData(ss, { token, type }) {
   };
 }
 
-// --- SAVE DATA (SUPPORT MULTIPLE FILES UPLOAD & DYNAMIC LINKS) ---
+// --- SAVE DATA (SUPPORT MULTIPLE FILES & BPM UPDATE) ---
 function saveData(ss, { token, type, data }) {
   const user = validateToken(ss, token);
 
@@ -554,44 +542,38 @@ function saveData(ss, { token, type, data }) {
 
     const targetSheet = getOrCreateLemariSheet(ss, targetLemariName);
 
-    // 1. Ambil link yang sudah ada sebelumnya (apabila mode Edit)
+    // Kumpulkan link yang sudah ada sebelumnya
     let finalLinks = Array.isArray(data.links) ? data.links : (Array.isArray(data.existingLinks) ? data.existingLinks : []);
 
-    // 2. PENANGANAN MULTIPLE FILES (Diambil dari array `data.files` frontend)
-    if (data.files && Array.isArray(data.files) && data.files.length > 0) {
-      data.files.forEach(fileItem => {
-        if (fileItem && fileItem.base64) {
+    // Proses upload jamak jika ada array files dari frontend
+    if (Array.isArray(data.files) && data.files.length > 0) {
+      data.files.forEach(fObj => {
+        if (fObj && fObj.base64) {
           try {
-            const uploadedUrl = uploadToDrive(fileItem, fileItem.name || data.nama, data.kategori, user.nama_lengkap);
-            if (uploadedUrl && !finalLinks.includes(uploadedUrl)) {
-              finalLinks.push(uploadedUrl);
-            }
+            const uploadedUrl = uploadToDrive(fObj, fObj.name || data.nama, data.kategori, user.nama_lengkap);
+            finalLinks.push(uploadedUrl);
           } catch (e) {
-            throw new Error("Gagal upload file ke Drive: " + e.message);
+            console.warn("Gagal upload salah satu file: " + e.message);
           }
         }
       });
-    } 
-    // 3. FALLBACK SINGLE FILE (Jika frontend hanya mengirim `data.fileObj`)
-    else if (data.fileObj && data.fileObj.base64) {
+    } else if (data.fileObj && data.fileObj.base64) {
+      // Fallback untuk single fileObj
       try {
         const uploadedUrl = uploadToDrive(data.fileObj, data.fileObj.name || data.nama, data.kategori, user.nama_lengkap);
-        if (uploadedUrl && !finalLinks.includes(uploadedUrl)) {
-          finalLinks.push(uploadedUrl);
-        }
+        finalLinks.push(uploadedUrl);
       } catch (e) {
         throw new Error("Gagal upload file ke Drive: " + e.message);
       }
     }
 
-    // Validasi wajib memiliki minimal 1 lampiran
     if (finalLinks.length === 0) {
       throw new Error("Dokumen wajib memiliki setidaknya satu file lampiran.");
     }
 
-    const combinedLinksStr = finalLinks.join(',');
+    const combinedLinksStr = finalLinks.join(', ');
 
-    if (data.id) { // Mode Edit Arsip
+    if (data.id) { // Mode Edit
       let found = false;
       const lemariList = getLemariListFromMaster(ss);
 
@@ -638,7 +620,7 @@ function saveData(ss, { token, type, data }) {
         if (found) break;
       }
       if (!found) throw new Error("Data tidak ditemukan.");
-      logActivity(ss, user.username, 'Edit Arsip', `Mengubah arsip: ${data.nama} (${finalLinks.length} lampiran)`);
+      logActivity(ss, user.username, 'Edit Arsip', `Mengubah arsip: ${data.nama} (Lemari: ${targetLemariName}, Ordner: ${targetOrdner})`);
     } else { // Mode Baru
       targetSheet.appendRow([
         id,
@@ -654,7 +636,7 @@ function saveData(ss, { token, type, data }) {
         user.username,
         data.shared || 'Public'
       ]);
-      logActivity(ss, user.username, 'Upload Arsip', `Menambah arsip: ${data.nama} dengan ${finalLinks.length} lampiran`);
+      logActivity(ss, user.username, 'Upload Arsip', `Menambah arsip: ${data.nama} di ${targetLemariName} (${targetOrdner})`);
     }
 
     if (data.shared && data.shared !== 'Public') {
@@ -679,7 +661,7 @@ function saveData(ss, { token, type, data }) {
     let rowIndex = -1;
 
     for (let i = 1; i < rows.length; i++) {
-      if (rows[i][0].toString() === (data.id || '').toString() || rows[i][1].toString() === (data.id || '').toString()) {
+      if (rows[i][0].toString() === (data.id || '').toString()) {
         rowIndex = i + 1;
         break;
       }
@@ -687,79 +669,50 @@ function saveData(ss, { token, type, data }) {
 
     const now = new Date();
 
-    if (rowIndex > 0) { // Update status step BPM atau Upload Lampiran BPM
+    // Jika ada file yang diunggah dari modal detail BPM
+    let uploadedLinks = [];
+    if (Array.isArray(data.files) && data.files.length > 0) {
+      data.files.forEach(fObj => {
+        if (fObj && fObj.base64) {
+          try {
+            const url = uploadToDrive(fObj, fObj.name || (data.judul + '_lampiran'), 'BPM Survey', user.nama_lengkap);
+            uploadedLinks.push(url);
+          } catch(e) { console.warn("Gagal lampirkan file BPM: " + e.message); }
+        }
+      });
+    } else if (data.fileObj && data.fileObj.base64) {
+      try {
+        const url = uploadToDrive(data.fileObj, data.fileObj.name || (data.judul + '_lampiran'), 'BPM Survey', user.nama_lengkap);
+        uploadedLinks.push(url);
+      } catch(e) { console.warn("Gagal lampirkan file BPM: " + e.message); }
+    }
+
+    if (rowIndex > 0) { // Update status step BPM
       let rowData = rows[rowIndex - 1];
-      let stepVal = parseInt(data.step) || parseInt(rowData[4]) || 1;
+      let stepVal = data.step !== undefined ? parseInt(data.step) : (parseInt(rowData[4]) || 1);
 
       let tglPengajuan = rowData[9]  || rowData[6] || now;
       let tglSurvey    = rowData[10] || (stepVal >= 4 ? now : '');
       let tglManajemen = rowData[11] || (stepVal >= 7 ? now : '');
       let tglSelesai   = rowData[12] || (stepVal >= 10 ? now : '');
 
-      // PENANGANAN UNTUK MULTIPLE / SINGLE FILE UPLOAD DARI MODAL DETAIL BPM
-      const filesToUpload = (data.files && Array.isArray(data.files) && data.files.length > 0) ? data.files : (data.fileObj && data.fileObj.base64 ? [data.fileObj] : []);
-
-      if (filesToUpload.length > 0) {
-        try {
-          let newUploadedUrls = [];
-
-          filesToUpload.forEach(fObj => {
-            // 1. Upload file fisik ke Drive
-            const uploadedUrl = uploadToDrive(fObj, fObj.name || data.nama || rowData[2], 'BPM Survey', user.nama_lengkap);
-            newUploadedUrls.push(uploadedUrl);
-
-            // 2. Masukkan metadata berkas ke Sheet Kotak Arsip Digital (Lemari_A)
-            const targetSheet = getOrCreateLemariSheet(ss, 'Lemari_A');
-            const archiveId = Utilities.getUuid();
-            const extName = (fObj.name || '').split('.').pop().toUpperCase() || 'PDF';
-
-            targetSheet.appendRow([
-              archiveId,
-              rowData[1], // Menggunakan Kode BPM sebagai Nomor Arsip
-              fObj.name || rowData[2],
-              'Lampiran File Dokumen BPM untuk: ' + rowData[2],
-              'BPM Survey',
-              'Lemari_A',
-              'Ordner_01',
-              extName,
-              uploadedUrl,
-              now,
-              user.username,
-              'Public'
-            ]);
-          });
-
-          // 3. GABUNGKAN LINK GOOGLE DRIVE KE SHEET BPM KOLOM N (KOLOM KE-14)
-          let existingLink = bpmSheet.getRange(rowIndex, 14).getValue();
-          let existingLinksArray = existingLink ? existingLink.toString().split(',').map(s => s.trim()) : [];
-          let mergedLinks = existingLinksArray.concat(newUploadedUrls);
-
-          bpmSheet.getRange(rowIndex, 14).setValue(mergedLinks.join(','));
-
-          logActivity(ss, user.username, 'Upload Lampiran BPM', `Mengunggah ${newUploadedUrls.length} file lampiran untuk agenda BPM: ${rowData[2]}`);
-        } catch (e) {
-          throw new Error("Gagal upload file lampiran BPM ke Drive: " + e.message);
-        }
-      } else {
-        // Update rutin status/step BPM
-        bpmSheet.getRange(rowIndex, 1, 1, 13).setValues([[
-          data.id,
-          data.kode || rowData[1],
-          data.judul || rowData[2],
-          data.isPFK !== undefined ? Boolean(data.isPFK) : rowData[3],
-          stepVal,
-          data.statusDetail || rowData[5],
-          rowData[6] || now,
-          rowData[7] || user.username,
-          data.lokasi || rowData[8] || 'cemorokandang',
-          tglPengajuan,
-          tglSurvey,
-          tglManajemen,
-          tglSelesai
-        ]]);
-
-        logActivity(ss, user.username, 'Update BPM', `Memperbarui alur BPM: ${data.judul || rowData[2]} ke Step ${stepVal}`);
-      }
+      bpmSheet.getRange(rowIndex, 1, 1, 13).setValues([[
+        data.id,
+        data.kode || rowData[1],
+        data.judul || rowData[2],
+        data.isPFK !== undefined ? Boolean(data.isPFK) : rowData[3],
+        stepVal,
+        data.statusDetail || rowData[5],
+        rowData[6] || now,
+        rowData[7] || user.username,
+        data.lokasi || rowData[8] || 'Cemorokandang',
+        tglPengajuan,
+        tglSurvey,
+        tglManajemen,
+        tglSelesai
+      ]]);
+      
+      logActivity(ss, user.username, 'Update BPM', `Memperbarui alur BPM: ${data.judul || rowData[2]} ke Step ${stepVal}`);
     } else { // Permohonan BPM Baru
       const newId = Date.now().toString();
       bpmSheet.appendRow([
@@ -771,12 +724,11 @@ function saveData(ss, { token, type, data }) {
         data.statusDetail || 'Kirim Surat Permohonan Survey & RAB',
         now,
         user.username,
-        data.lokasi || 'cemorokandang',
+        data.lokasi || 'Cemorokandang',
         now, // Tgl_Pengajuan
         '',  // Tgl_Survey
         '',  // Tgl_Manajemen
-        '',  // Tgl_Selesai
-        ''   // Link
+        ''   // Tgl_Selesai
       ]);
       logActivity(ss, user.username, 'Pengajuan BPM', `Membuat permohonan survey baru: ${data.judul}`);
     }
@@ -834,7 +786,7 @@ function deleteData(ss, { token, type, id }) {
             throw new Error("Anda tidak berhak menghapus file ini.");
           }
           deletedName = data[i][2];
-          const rawLinks = data[i][8] ? data[i][8].toString().split(',') : [];
+          const rawLinks = data[i][8] ? data[i][8].toString().split(', ') : [];
           rawLinks.forEach(link => deleteFileFromDrive(link));
 
           currentSheet.deleteRow(i + 1);
@@ -943,6 +895,43 @@ function saveSetting(ss, { token, type, value }) {
 
   logActivity(ss, user.username, 'Update Setting', `Menambah ${type}: ${cleanVal}`);
   return { status: 'success' };
+}
+
+// SIMPAN SELURUH OBYEK MASTER DATA
+function saveMasterSettings(ss, { token, data }) {
+  const user = validateToken(ss, token);
+  if (user.role !== 'Admin') throw new Error("Akses Ditolak.");
+
+  let sheet = ss.getSheetByName('Settings');
+  if (!sheet) {
+    sheet = ss.insertSheet('Settings');
+    sheet.appendRow(['Type', 'Value']);
+  } else {
+    sheet.clearContents();
+    sheet.appendRow(['Type', 'Value']);
+  }
+
+  const mapKeys = {
+    categories: 'Category',
+    extensions: 'Extension',
+    nomors: 'Nomor',
+    lemaris: 'Lemari',
+    ordners: 'Ordner'
+  };
+
+  Object.keys(mapKeys).forEach(key => {
+    if (Array.isArray(data[key])) {
+      data[key].forEach(val => {
+        let clean = val.toString().trim();
+        if (mapKeys[key] === 'Lemari') clean = clean.replace(/\s+/g, '_');
+        sheet.appendRow([mapKeys[key], clean]);
+        if (mapKeys[key] === 'Lemari') getOrCreateLemariSheet(ss, clean);
+      });
+    }
+  });
+
+  logActivity(ss, user.username, 'Update Master Data', 'Menyimpan konfigurasi master variabel baru.');
+  return { status: 'success', success: true };
 }
 
 function deleteSetting(ss, { token, type, value }) {
