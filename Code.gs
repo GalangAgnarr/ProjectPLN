@@ -113,7 +113,7 @@ function getOrCreateLemariSheet(ss, rawLemariName) {
 }
 
 /**
- * HELPER: Dapatkan atau buat Sheet khusus BPM
+ * HELPER: Dapatkan atau buat Sheet khusus BPM (TER-UPDATE DENGAN KOLOM FORM LENGKAP)
  */
 function getOrCreateBpmSheet(ss) {
   let sheet = ss.getSheetByName('BPM');
@@ -121,9 +121,20 @@ function getOrCreateBpmSheet(ss) {
     sheet = ss.insertSheet('BPM');
     sheet.appendRow([
       'ID', 'Kode', 'Judul', 'IsPFK', 'Step', 'StatusDetail', 'Tanggal', 'Pemohon',
-      'Lokasi', 'Tgl_Pengajuan', 'Tgl_Survey', 'Tgl_Manajemen', 'Tgl_Selesai'
+      'Lokasi', 'Alamat', 'ULP', 'JumlahUnit', 'TarifDaya', 'NomorSurat', 'TanggalSurat', 'PIC',
+      'Tgl_Pengajuan', 'Tgl_Survey', 'Tgl_Manajemen', 'Tgl_Selesai', 'StepTimestamps', 'Lampiran'
     ]);
     sheet.setFrozenRows(1);
+  } else {
+    // Pastikan header diperbarui jika sheet sudah ada sebelumnya
+    const headerRow = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    if (headerRow.length < 22) {
+      sheet.getRange(1, 1, 1, 22).setValues([[
+        'ID', 'Kode', 'Judul', 'IsPFK', 'Step', 'StatusDetail', 'Tanggal', 'Pemohon',
+        'Lokasi', 'Alamat', 'ULP', 'JumlahUnit', 'TarifDaya', 'NomorSurat', 'TanggalSurat', 'PIC',
+        'Tgl_Pengajuan', 'Tgl_Survey', 'Tgl_Manajemen', 'Tgl_Selesai', 'StepTimestamps', 'Lampiran'
+      ]]);
+    }
   }
   return sheet;
 }
@@ -156,15 +167,20 @@ function apiHandler(action, payload) {
       case 'login': return loginUser(ss, payload);
       case 'logout': return logoutUser(ss, payload);
       case 'requestPasswordOTP': return requestOtp(ss, payload);
+      case 'requestOtp': return requestOtp(ss, payload);
       case 'verifyOTPAndResetPassword': return resetPassword(ss, payload);
+      case 'resetPassword': return resetPassword(ss, payload);
       case 'updateProfile': return updateUserProfile(ss, payload);
+      case 'saveProfile': return saveProfile(ss, payload);
       case 'getStats': return getDashboardStats(ss, payload);
+      case 'getDashboardStats': return getDashboardStats(ss, payload);
+      case 'uploadBpmAttachments': return uploadBpmAttachments(ss, payload);
       case 'getData': return getData(ss, payload);
       case 'saveData': return saveData(ss, payload);
       case 'deleteData': return deleteData(ss, payload);
       case 'getSettings': return getSettings(ss, payload);
       case 'saveSetting': return saveSetting(ss, payload);
-      case 'saveSettings': return saveMasterSettings(ss, payload); // Endpoint baru untuk menyimpan seluruh array master
+      case 'saveSettings': return saveMasterSettings(ss, payload);
       case 'deleteSetting': return deleteSetting(ss, payload);
       case 'generateReport': return generateReport(ss, payload);
       case 'getNotifications': return getNotifications(ss, payload);
@@ -324,6 +340,18 @@ function updateUserProfile(ss, { token, nama_lengkap, password_lama, password_ba
   throw new Error("Data user tidak ditemukan.");
 }
 
+// Adapter: frontend mengirim payload ter-nested { token, profile: {...} },
+// sedangkan updateUserProfile menerima field langsung.
+function saveProfile(ss, { token, profile }) {
+  profile = profile || {};
+  return updateUserProfile(ss, {
+    token: token,
+    nama_lengkap: profile.nama_lengkap,
+    password_lama: profile.password_lama,
+    password_baru: profile.password_baru
+  });
+}
+
 // --- DASHBOARD STATS ---
 function getDashboardStats(ss, { token }) {
   const user = validateToken(ss, token);
@@ -399,7 +427,7 @@ function getDashboardStats(ss, { token }) {
   };
 }
 
-// --- GET DATA ---
+// --- GET DATA (DI-UPDATE DENGAN BACAAN SELURUH FIELD BPM) ---
 function getData(ss, { token, type }) {
   const user = validateToken(ss, token);
   let result = [];
@@ -409,7 +437,7 @@ function getData(ss, { token, type }) {
     if (!sheet) return { status: 'success', data: [], list: [] };
 
     let rawData = sheet.getDataRange().getValues();
-    rawData.shift(); // Hapus header
+    rawData.shift();
     
     rawData.forEach(row => {
       if (row[0]) {
@@ -467,7 +495,7 @@ function getData(ss, { token, type }) {
   else if (type === 'bpm') {
     const bpmSheet = getOrCreateBpmSheet(ss);
     let rawData = bpmSheet.getDataRange().getValues();
-    rawData.shift(); // Hapus header
+    rawData.shift();
     
     rawData.forEach(row => {
       if (row[0] || row[1] || row[2]) {
@@ -482,21 +510,45 @@ function getData(ss, { token, type }) {
           ? rawIsPfk.trim().toUpperCase() === 'TRUE' 
           : Boolean(rawIsPfk);
 
+        let stepTimestamps = {};
+        if (row[20]) {
+          try {
+            stepTimestamps = JSON.parse(row[20]);
+          } catch(e) {
+            stepTimestamps = {};
+          }
+        }
+
+        let rawLampiranStr = row[21] ? row[21].toString() : '';
+        let lampiranArr = rawLampiranStr ? rawLampiranStr.split(', ').map(l => l.trim()).filter(Boolean) : [];
+
         result.push({
           id: String(row[0] || Date.now()),
           kode: row[1] ? String(row[1]) : '-',
           judul: row[2] ? String(row[2]) : 'Permohonan Survey',
+          permohonan: row[2] ? String(row[2]) : 'Permohonan Survey',
           isPFK: isPfkVal,
           step: parseInt(row[4]) || 1,
           statusDetail: row[5] ? String(row[5]) : 'Kirim Surat Permohonan Survey & RAB',
           tanggal: formatDate(row[6]),
           uploader: row[7] ? String(row[7]) : 'System',
           pemohon: row[7] ? String(row[7]) : 'System',
-          lokasi: row[8] ? String(row[8]) : 'Cemorokandang',
-          tglPengajuan: safeIso(row[9]) || safeIso(row[6]) || new Date().toISOString(),
-          tglSurvey: safeIso(row[10]),
-          tglManajemen: safeIso(row[11]),
-          tglSelesai: safeIso(row[12])
+          lokasi: row[8] ? String(row[8]) : '-',
+          namaLokasi: row[8] ? String(row[8]) : '-',
+          alamat: row[9] ? String(row[9]) : '-',
+          ulp: row[10] ? String(row[10]) : '-',
+          jumlahUnit: row[11] ? String(row[11]) : '-',
+          tarifDaya: row[12] ? String(row[12]) : '-',
+          nomorSurat: row[13] ? String(row[13]) : '-',
+          tanggalSurat: row[14] ? String(row[14]) : '-',
+          pic: row[15] ? String(row[15]) : '-',
+          tglPengajuan: safeIso(row[16]) || safeIso(row[6]) || new Date().toISOString(),
+          tglSurvey: safeIso(row[17]),
+          tglManajemen: safeIso(row[18]),
+          tglSelesai: safeIso(row[19]),
+          stepTimestamps: stepTimestamps,
+          links: lampiranArr,
+          link: lampiranArr[0] || null
         });
       }
     });
@@ -530,7 +582,7 @@ function getData(ss, { token, type }) {
   };
 }
 
-// --- SAVE DATA (SUPPORT MULTIPLE FILES & BPM UPDATE) ---
+// --- SAVE DATA (DI-UPDATE DENGAN SIMPAN SELURUH FIELD PENGAJUAN SURVEY) ---
 function saveData(ss, { token, type, data }) {
   const user = validateToken(ss, token);
 
@@ -542,10 +594,8 @@ function saveData(ss, { token, type, data }) {
 
     const targetSheet = getOrCreateLemariSheet(ss, targetLemariName);
 
-    // Kumpulkan link yang sudah ada sebelumnya
     let finalLinks = Array.isArray(data.links) ? data.links : (Array.isArray(data.existingLinks) ? data.existingLinks : []);
 
-    // Proses upload jamak jika ada array files dari frontend
     if (Array.isArray(data.files) && data.files.length > 0) {
       data.files.forEach(fObj => {
         if (fObj && fObj.base64) {
@@ -558,7 +608,6 @@ function saveData(ss, { token, type, data }) {
         }
       });
     } else if (data.fileObj && data.fileObj.base64) {
-      // Fallback untuk single fileObj
       try {
         const uploadedUrl = uploadToDrive(data.fileObj, data.fileObj.name || data.nama, data.kategori, user.nama_lengkap);
         finalLinks.push(uploadedUrl);
@@ -669,68 +718,71 @@ function saveData(ss, { token, type, data }) {
 
     const now = new Date();
 
-    // Jika ada file yang diunggah dari modal detail BPM
-    let uploadedLinks = [];
-    if (Array.isArray(data.files) && data.files.length > 0) {
-      data.files.forEach(fObj => {
-        if (fObj && fObj.base64) {
-          try {
-            const url = uploadToDrive(fObj, fObj.name || (data.judul + '_lampiran'), 'BPM Survey', user.nama_lengkap);
-            uploadedLinks.push(url);
-          } catch(e) { console.warn("Gagal lampirkan file BPM: " + e.message); }
-        }
-      });
-    } else if (data.fileObj && data.fileObj.base64) {
-      try {
-        const url = uploadToDrive(data.fileObj, data.fileObj.name || (data.judul + '_lampiran'), 'BPM Survey', user.nama_lengkap);
-        uploadedLinks.push(url);
-      } catch(e) { console.warn("Gagal lampirkan file BPM: " + e.message); }
-    }
-
     if (rowIndex > 0) { // Update status step BPM
       let rowData = rows[rowIndex - 1];
       let stepVal = data.step !== undefined ? parseInt(data.step) : (parseInt(rowData[4]) || 1);
 
-      let tglPengajuan = rowData[9]  || rowData[6] || now;
-      let tglSurvey    = rowData[10] || (stepVal >= 4 ? now : '');
-      let tglManajemen = rowData[11] || (stepVal >= 7 ? now : '');
-      let tglSelesai   = rowData[12] || (stepVal >= 10 ? now : '');
+      let tglPengajuan = rowData[16] || rowData[6] || now;
+      let tglSurvey    = rowData[17] || (stepVal >= 4 ? now : '');
+      let tglManajemen = rowData[18] || (stepVal >= 7 ? now : '');
+      let tglSelesai   = rowData[19] || (stepVal >= 10 ? now : '');
 
-      bpmSheet.getRange(rowIndex, 1, 1, 13).setValues([[
+      let timestampsStr = data.stepTimestamps ? JSON.stringify(data.stepTimestamps) : (rowData[20] || '{}');
+
+      bpmSheet.getRange(rowIndex, 1, 1, 21).setValues([[
         data.id,
         data.kode || rowData[1],
-        data.judul || rowData[2],
+        data.permohonan || data.judul || rowData[2],
         data.isPFK !== undefined ? Boolean(data.isPFK) : rowData[3],
         stepVal,
         data.statusDetail || rowData[5],
         rowData[6] || now,
         rowData[7] || user.username,
-        data.lokasi || rowData[8] || 'Cemorokandang',
+        data.namaLokasi || data.lokasi || rowData[8] || '-',
+        data.alamat || rowData[9] || '-',
+        data.ulp || rowData[10] || '-',
+        data.jumlahUnit || rowData[11] || '-',
+        data.tarifDaya || rowData[12] || '-',
+        data.nomorSurat || rowData[13] || '-',
+        data.tanggalSurat || rowData[14] || '-',
+        data.pic || rowData[15] || '-',
         tglPengajuan,
         tglSurvey,
         tglManajemen,
-        tglSelesai
+        tglSelesai,
+        timestampsStr
       ]]);
       
-      logActivity(ss, user.username, 'Update BPM', `Memperbarui alur BPM: ${data.judul || rowData[2]} ke Step ${stepVal}`);
+      logActivity(ss, user.username, 'Update BPM', `Memperbarui alur BPM: ${data.permohonan || data.judul || rowData[2]} ke Step ${stepVal}`);
     } else { // Permohonan BPM Baru
       const newId = Date.now().toString();
+      const initialTimestampsStr = JSON.stringify(data.stepTimestamps || { 1: { start: now.toISOString(), end: null } });
+
       bpmSheet.appendRow([
         newId,
         data.kode || ('PLN-PFK-' + Math.floor(10000000 + Math.random() * 90000000)),
-        data.judul || 'Permohonan Survey',
+        data.permohonan || data.judul || 'Permohonan Survey',
         data.isPFK !== undefined ? Boolean(data.isPFK) : false,
         data.step || 1,
         data.statusDetail || 'Kirim Surat Permohonan Survey & RAB',
         now,
         user.username,
-        data.lokasi || 'Cemorokandang',
-        now, // Tgl_Pengajuan
+        data.namaLokasi || data.lokasi || '-',
+        data.alamat || '-',
+        data.ulp || '-',
+        data.jumlahUnit || '-',
+        data.tarifDaya || '-',
+        data.nomorSurat || '-',
+        data.tanggalSurat || '-',
+        data.pic || '-',
+        data.tglPengajuan || now, // Tgl_Pengajuan
         '',  // Tgl_Survey
         '',  // Tgl_Manajemen
-        ''   // Tgl_Selesai
+        '',  // Tgl_Selesai
+        initialTimestampsStr,
+        ''   // Lampiran
       ]);
-      logActivity(ss, user.username, 'Pengajuan BPM', `Membuat permohonan survey baru: ${data.judul}`);
+      logActivity(ss, user.username, 'Pengajuan BPM', `Membuat permohonan survey baru: ${data.permohonan || data.judul}`);
     }
   }
   else if (type === 'users' && user.role === 'Admin') {
@@ -754,6 +806,41 @@ function saveData(ss, { token, type, data }) {
   }
 
   return { status: 'success', success: true };
+}
+
+// --- UPLOAD LAMPIRAN BPM ---
+function uploadBpmAttachments(ss, { token, bpmId, files }) {
+  const user = validateToken(ss, token);
+  const bpmSheet = getOrCreateBpmSheet(ss);
+  const data = bpmSheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0].toString() === (bpmId || '').toString()) {
+      let existingStr = data[i][21] ? data[i][21].toString() : '';
+      let linksArr = existingStr ? existingStr.split(', ').map(l => l.trim()).filter(Boolean) : [];
+
+      if (Array.isArray(files) && files.length > 0) {
+        files.forEach(fObj => {
+          if (fObj && fObj.base64) {
+            try {
+              const uploadedUrl = uploadToDrive(fObj, fObj.name || 'Lampiran_BPM', 'BPM', user.nama_lengkap);
+              linksArr.push(uploadedUrl);
+            } catch (e) {
+              console.warn("Gagal upload salah satu lampiran BPM: " + e.message);
+            }
+          }
+        });
+      } else {
+        throw new Error("Tidak ada file yang diunggah.");
+      }
+
+      bpmSheet.getRange(i + 1, 22).setValue(linksArr.join(', '));
+      logActivity(ss, user.username, 'Upload Lampiran BPM', `Menambah ${files.length} lampiran ke BPM: ${data[i][2]}`);
+
+      return { status: 'success', success: true, data: linksArr };
+    }
+  }
+  throw new Error("Data BPM tidak ditemukan.");
 }
 
 // --- DELETE DATA ---
@@ -802,6 +889,9 @@ function deleteData(ss, { token, type, id }) {
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] == id) {
         deletedName = data[i][2];
+        const rawLampiran = data[i][21] ? data[i][21].toString().split(', ') : [];
+        rawLampiran.forEach(link => deleteFileFromDrive(link));
+
         bpmSheet.deleteRow(i + 1);
         deleted = true;
         break;
@@ -897,7 +987,6 @@ function saveSetting(ss, { token, type, value }) {
   return { status: 'success' };
 }
 
-// SIMPAN SELURUH OBYEK MASTER DATA
 function saveMasterSettings(ss, { token, data }) {
   const user = validateToken(ss, token);
   if (user.role !== 'Admin') throw new Error("Akses Ditolak.");

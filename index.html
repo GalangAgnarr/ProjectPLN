@@ -15,6 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <style>
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
@@ -72,7 +73,7 @@
         <div class="w-16 h-20 sm:w-20 sm:h-24 mb-3 sm:mb-4 flex items-center justify-center">
           <img src="https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png" class="h-20 sm:h-24 w-auto object-contain drop-shadow-sm transition-transform hover:scale-105 duration-300" alt="Logo PLN">
         </div>
-        <h3 class="text-[#005C9A] dark:text-[#00A2E2] font-extrabold text-[10px] sm:text-[11px] uppercase tracking-[0.25em] mb-1">E-Arsip & BPM Digital</h3>
+        <h3 class="text-[#005C9A] dark:text-[#00A2E2] font-extrabold text-[10px] sm:text-[11px] uppercase tracking-[0.25em] mb-1">D-Workspace PLN</h3>
         <h1 class="text-xl sm:text-2xl font-black tracking-tight" :class="isDarkMode ? 'text-white' : 'text-slate-900'">PT PLN (PERSERO)</h1>
         <p class="text-xs mt-1.5 font-medium" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">Silakan masuk menggunakan kredensial korporat Anda</p>
       </div>
@@ -133,7 +134,7 @@
 
         <div class="p-4 sm:p-5 border-b border-[#004b7e]/30 dark:border-slate-800 bg-[#004b7e]/10 dark:bg-slate-900/30">
           <div class="flex items-center gap-4 cursor-pointer group p-2 rounded-2xl hover:bg-white/5 transition-all"
-            @click="modals.profile = true; if(window.innerWidth < 768) sidebarOpen = false;" title="Klik untuk edit profil">
+            @click="openProfileModal(); if(window.innerWidth < 768) sidebarOpen = false;" title="Klik untuk edit profil">
             <div class="relative flex-shrink-0">
               <div
                 class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#FFF200] text-[#005C9A] flex items-center justify-center text-lg font-black shadow-md ring-4 ring-white/10 group-hover:ring-[#00A2E2]/50 transition-all">
@@ -352,7 +353,7 @@
               <p class="text-sm font-bold" :class="isDarkMode ? 'text-white' : 'text-slate-800'" x-text="currentUser.nama_lengkap"></p>
               <p class="text-xs text-[#00A2E2] font-bold mt-0.5" x-text="currentUser.role"></p>
             </div>
-            <div @click="modals.profile = true"
+            <div @click="openProfileModal()"
               class="h-9 w-9 sm:h-11 sm:w-11 rounded-2xl bg-gradient-to-br from-[#005C9A] to-[#00A2E2] flex items-center justify-center text-white font-black shadow-md ring-4 ring-slate-100 dark:ring-slate-800 cursor-pointer hover:scale-105 transition-all text-sm sm:text-base"
               title="Edit Profil">
               <span x-text="(currentUser.nama_lengkap || currentUser.username || 'U').toString().charAt(0).toUpperCase()"></span>
@@ -406,15 +407,13 @@
               </div>
             </div>
 
+            <!-- FORMULIR PENGAJUAN SURVEY BARU -->
             <div class="rounded-3xl p-5 sm:p-8 border shadow-sm relative overflow-hidden transition-colors"
-              :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'">
-              <div
-                class="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none">
-              </div>
+              :class="isDarkMode ? 'bg-slate-800/90 border-slate-700/80 text-white' : 'bg-white border-slate-200 text-slate-800'">
+              <div class="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
 
-              <div class="flex items-center gap-4 mb-6 border-b pb-6" :class="isDarkMode ? 'border-slate-700' : 'border-slate-100'">
-                <div
-                  class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-50 dark:bg-slate-700 text-amber-500 border border-amber-200 dark:border-slate-600 flex items-center justify-center text-xl sm:text-2xl shadow-inner flex-shrink-0">
+              <div class="flex items-center gap-4 mb-6 border-b pb-6" :class="isDarkMode ? 'border-slate-700/80' : 'border-slate-100'">
+                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center text-xl sm:text-2xl shadow-inner flex-shrink-0">
                   <i class="fas fa-paper-plane"></i>
                 </div>
                 <div>
@@ -424,47 +423,142 @@
               </div>
 
               <form @submit.prevent="saveBpm" class="space-y-6">
+                <!-- LAYOUT 2 KOLOM -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
 
-                  <div class="md:col-span-2 space-y-2">
-                    <label class="block text-xs font-extrabold uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Judul Agenda / Nama Permohonan <span class="text-rose-500">*</span></label>
-                    <input x-model="bpmForm.judul" type="text" placeholder="Contoh: Survey Pasang Baru Pelanggan TM ULP Malang Kota"
-                      :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-900' : 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white'"
-                      class="w-full px-4 py-3.5 border rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-semibold transition-all" required>
+                  <!-- KOLOM KIRI -->
+                  <div class="space-y-4">
+                    <!-- Permohonan -->
+                    <div class="space-y-1.5">
+                      <label class="block text-xs font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
+                        Permohonan <span class="text-rose-500">*</span>
+                      </label>
+                      <input x-model="bpmForm.permohonan" type="text" placeholder="Detail Permohonan"
+                        :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:bg-white'"
+                        class="w-full px-4 py-3 border rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-medium transition-all" required>
+                    </div>
+
+                    <!-- Nama/Lokasi -->
+                    <div class="space-y-1.5">
+                      <label class="block text-xs font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
+                        Nama/Lokasi <span class="text-rose-500">*</span>
+                      </label>
+                      <input x-model="bpmForm.namaLokasi" type="text" placeholder="Nama / Lokasi Survey"
+                        :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:bg-white'"
+                        class="w-full px-4 py-3 border rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-medium transition-all" required>
+                    </div>
+
+                    <!-- Alamat -->
+                    <div class="space-y-1.5">
+                      <label class="block text-xs font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
+                        Alamat <span class="text-rose-500">*</span>
+                      </label>
+                      <input x-model="bpmForm.alamat" type="text" placeholder="Alamat Lengkap"
+                        :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:bg-white'"
+                        class="w-full px-4 py-3 border rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-medium transition-all" required>
+                    </div>
+
+                    <!-- ULP -->
+                    <div class="space-y-1.5">
+                      <label class="block text-xs font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
+                        ULP <span class="text-rose-500">*</span>
+                      </label>
+                      <input x-model="bpmForm.ulp" type="text" placeholder="Unit ULP (Contoh: ULP Malang Kota)"
+                        :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:bg-white'"
+                        class="w-full px-4 py-3 border rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-medium transition-all" required>
+                    </div>
+
+                    <!-- Jumlah Unit -->
+                    <div class="space-y-1.5">
+                      <label class="block text-xs font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
+                        Jumlah Unit <span class="text-rose-500">*</span>
+                      </label>
+                      <input x-model="bpmForm.jumlahUnit" type="text" placeholder="Jumlah Unit / Pelanggan"
+                        :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:bg-white'"
+                        class="w-full px-4 py-3 border rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-medium transition-all" required>
+                    </div>
+
+                    <!-- Tarif/Daya -->
+                    <div class="space-y-1.5">
+                      <label class="block text-xs font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
+                        Tarif/Daya <span class="text-rose-500">*</span>
+                      </label>
+                      <input x-model="bpmForm.tarifDaya" type="text" placeholder="Contoh: B2 / 66.000 VA"
+                        :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:bg-white'"
+                        class="w-full px-4 py-3 border rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-medium transition-all" required>
+                    </div>
                   </div>
 
-                  <div class="space-y-2">
-                    <label class="block text-xs font-extrabold uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Kategori Percabangan Alur <span class="text-rose-500">*</span></label>
-                    <select x-model="bpmForm.isPFK"
-                      :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50/50 border-slate-200 text-slate-800'"
-                      class="w-full px-4 py-3.5 border rounded-2xl font-semibold text-xs outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all cursor-pointer">
-                      <option :value="false">Non-PFK (SPKLU / Pelanggan TM / Estetika - Perlu Rapat MOM)</option>
-                      <option :value="true">Pekerjaan PFK (Langsung Ke Pengarsipan Setelah Approve)</option>
-                    </select>
-                  </div>
+                  <!-- KOLOM KANAN -->
+                  <div class="space-y-4">
+                    <!-- Nomor Surat / Nodin -->
+                    <div class="space-y-1.5">
+                      <label class="block text-xs font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
+                        Nomor Surat / Nodin <span class="text-rose-500">*</span>
+                      </label>
+                      <input x-model="bpmForm.nomorSurat" type="text" placeholder="Nomor Surat Resmi / Nodin"
+                        :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:bg-white'"
+                        class="w-full px-4 py-3 border rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-medium transition-all" required>
+                    </div>
 
-                  <div class="space-y-2">
-                    <label class="block text-xs font-extrabold uppercase tracking-wider" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'">Kode Identitas Agenda <span class="text-slate-400 font-normal">(Opsional)</span></label>
-                    <input x-model="bpmForm.kode" type="text" placeholder="BPM/00X/2026 (Otomatis dibuat jika dikosongkan)"
-                      :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-900' : 'bg-slate-50/50 border-slate-200 text-slate-800 focus:bg-white'"
-                      class="w-full px-4 py-3.5 border rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 font-mono text-xs transition-all">
+                    <!-- Tanggal Surat / Nodin -->
+                    <div class="space-y-1.5">
+                      <label class="block text-xs font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
+                        Tanggal Surat / Nodin <span class="text-rose-500">*</span>
+                      </label>
+                      <input x-model="bpmForm.tanggalSurat" type="date"
+                        :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'"
+                        class="w-full px-4 py-3 border rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-medium transition-all cursor-pointer" required>
+                    </div>
+
+                    <!-- PIC -->
+                    <div class="space-y-1.5">
+                      <label class="block text-xs font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
+                        PIC <span class="text-rose-500">*</span>
+                      </label>
+                      <input x-model="bpmForm.pic" type="text" placeholder="Penanggung Jawab / PIC Lapangan"
+                        :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:bg-white'"
+                        class="w-full px-4 py-3 border rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-medium transition-all" required>
+                    </div>
+
+                    <!-- Kategori Percabangan Alur -->
+                    <div class="space-y-1.5">
+                      <label class="block text-xs font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
+                        Kategori Percabangan Alur <span class="text-rose-500">*</span>
+                      </label>
+                      <select x-model="bpmForm.isPFK"
+                        :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'"
+                        class="w-full px-4 py-3 border rounded-2xl font-semibold text-xs outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all cursor-pointer">
+                        <option :value="false" :class="isDarkMode ? 'bg-slate-900 text-white' : 'bg-white text-slate-800'">
+                          Non-PFK (SPKLU / Pelanggan TM / Estetika - Perlu Rapat MOM)
+                        </option>
+                        <option :value="true" :class="isDarkMode ? 'bg-slate-900 text-white' : 'bg-white text-slate-800'">
+                          Pekerjaan PFK (Langsung Ke Pengarsipan Setelah Approve)
+                        </option>
+                      </select>
+                    </div>
                   </div>
 
                 </div>
 
-                <div class="bg-amber-50/70 dark:bg-slate-900/60 border border-amber-200/80 dark:border-amber-500/30 rounded-2xl p-4 flex items-start gap-3">
+                <!-- BOX INFO KUNING -->
+                <div :class="isDarkMode ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-900'"
+                  class="border rounded-2xl p-4 flex items-start gap-3 transition-colors">
                   <i class="fas fa-circle-info text-amber-500 text-base mt-0.5 flex-shrink-0"></i>
-                  <p class="text-xs text-amber-900 dark:text-amber-200 leading-relaxed font-medium">
+                  <p class="text-xs leading-relaxed font-medium">
                     Setelah diajukan, berkas permohonan akan secara otomatis masuk ke antrean alur tugas
                     <b>Step 1 (Kirim Surat Permohonan Survey & RAB)</b> untuk pengecekan lokasi serta penyusunan Rincian Anggaran Biaya.
                   </p>
                 </div>
 
-                <div class="pt-2 flex flex-col sm:flex-row items-center justify-end gap-3 border-t" :class="isDarkMode ? 'border-slate-700' : 'border-slate-100'">
-                  <button type="button" @click="redirectByRole()" :class="isDarkMode ? 'bg-slate-700 hover:bg-slate-600 text-slate-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'" class="w-full sm:w-auto px-6 py-3.5 font-bold rounded-2xl text-xs transition-colors">
+                <!-- TOMBOL AKSI -->
+                <div class="pt-2 flex flex-col sm:flex-row items-center justify-end gap-3 border-t" :class="isDarkMode ? 'border-slate-700/80' : 'border-slate-100'">
+                  <button type="button" @click="redirectByRole()"
+                    :class="isDarkMode ? 'bg-slate-700 hover:bg-slate-600 text-slate-200 border-slate-600' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200'"
+                    class="w-full sm:w-auto px-6 py-3.5 font-bold rounded-2xl text-xs transition-colors border">
                     <i class="fas fa-times mr-1"></i> BATAL
                   </button>
-                  <button type="submit" class="w-full sm:w-auto px-7 py-3.5 font-extrabold bg-amber-500 hover:bg-amber-600 text-white rounded-2xl shadow-lg shadow-amber-500/20 text-xs transition-all flex items-center justify-center gap-2" :disabled="isLoading">
+                  <button type="submit" class="w-full sm:w-auto px-7 py-3.5 font-extrabold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-2xl shadow-lg shadow-amber-500/20 text-xs transition-all flex items-center justify-center gap-2" :disabled="isLoading">
                     <span x-show="!isLoading"><i class="fas fa-paper-plane"></i> KIRIM PERMOHONAN SURVEY</span>
                     <span x-show="isLoading"><i class="fas fa-spinner fa-spin"></i> Memproses...</span>
                   </button>
@@ -495,7 +589,7 @@
                       <th class="p-3 sm:p-4 w-32">Jenis Pekerjaan</th>
                       <th class="p-3 sm:p-4 w-32">Posisi Tahapan</th>
                       <th class="p-3 sm:p-4 w-36">Durasi Pengerjaan</th>
-                      <th class="p-3 sm:p-4 pr-4 sm:pr-6 text-right w-20">Detail</th>
+                      <th class="p-3 sm:p-4 pr-4 sm:pr-6 text-right w-28">Detail & Aksi</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y text-slate-700" :class="isDarkMode ? 'divide-slate-700 text-slate-300' : 'divide-slate-100 text-slate-700'">
@@ -503,7 +597,7 @@
                       <tr :class="isDarkMode ? 'hover:bg-slate-700/40' : 'hover:bg-slate-50/50'" class="transition-colors">
                         <td class="p-3 sm:p-4 pl-4 sm:pl-6 font-bold text-[#005C9A] dark:text-sky-400">
                           <span x-text="item.kode" class="font-mono block text-slate-400 text-[10px]"></span>
-                          <span x-text="item.judul" class="text-xs line-clamp-2" :class="isDarkMode ? 'text-slate-200' : 'text-slate-800'"></span>
+                          <span x-text="item.permohonan || item.judul" class="text-xs line-clamp-2" :class="isDarkMode ? 'text-slate-200' : 'text-slate-800'"></span>
                         </td>
                         <td class="p-3 sm:p-4 whitespace-nowrap">
                           <span :class="item.isPFK ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800' : 'bg-sky-50 dark:bg-sky-900/30 text-[#005C9A] dark:text-sky-300 border-sky-200 dark:border-sky-800'" class="px-2 py-0.5 rounded-xl font-bold border text-[10px]" x-text="item.isPFK ? 'PFK' : 'Non-PFK'"></span>
@@ -514,9 +608,16 @@
                         <td class="p-3 sm:p-4 text-slate-400 font-medium text-[11px] whitespace-nowrap"
                           x-text="calculateDuration(item.tglPengajuan || item.created_at, item.tglSelesai)"></td>
                         <td class="p-3 sm:p-4 pr-4 sm:pr-6 text-right whitespace-nowrap">
-                          <button @click="openProcessDetail(item)" class="p-2 text-slate-400 hover:text-[#005C9A] hover:bg-sky-50 dark:hover:bg-slate-700 rounded-xl transition-all">
-                            <i class="fas fa-eye text-xs"></i>
-                          </button>
+                          <div class="flex items-center justify-end gap-1">
+                            <button @click="openProcessDetail(item)" class="p-2 text-slate-400 hover:text-[#005C9A] hover:bg-sky-50 dark:hover:bg-slate-700 rounded-xl transition-all" title="Lihat Detail">
+                              <i class="fas fa-eye text-xs"></i>
+                            </button>
+                            <template x-if="canEdit(item)">
+                              <button @click="deleteItem(item.id, 'bpm')" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-700 rounded-xl transition-all" title="Hapus Agenda">
+                                <i class="fas fa-trash text-xs"></i>
+                              </button>
+                            </template>
+                          </div>
                         </td>
                       </tr>
                     </template>
@@ -570,7 +671,7 @@
                 </div>
               </div>
 
-              <div @click="navigate('bpm')"
+              <div @click="redirectByRole()"
                 class="rounded-3xl p-5 sm:p-6 shadow-sm border relative overflow-hidden group hover:shadow-md hover:scale-[1.02] cursor-pointer transition-all duration-200"
                 :class="isDarkMode ? 'bg-slate-800 border-slate-700 hover:border-amber-500/50' : 'bg-white border-slate-200/60 hover:border-amber-500/40'">
                 <div class="flex justify-between items-start">
@@ -589,7 +690,7 @@
                 </div>
               </div>
 
-              <div @click="navigate('bpm'); bpmFilterStatus = 'completed';"
+              <div @click="redirectByRole()"
                 class="rounded-3xl p-5 sm:p-6 shadow-sm border relative overflow-hidden group hover:shadow-md hover:scale-[1.02] cursor-pointer transition-all duration-200"
                 :class="isDarkMode ? 'bg-slate-800 border-slate-700 hover:border-emerald-500/50' : 'bg-white border-slate-200/60 hover:border-emerald-500/40'">
                 <div class="flex justify-between items-start">
@@ -609,7 +710,7 @@
                 </div>
               </div>
 
-              <div @click="currentUser.role === 'Admin' ? navigate('users') : (modals.profile = true)"
+              <div @click="currentUser.role === 'Admin' ? navigate('users') : openProfileModal()"
                 class="rounded-3xl p-5 sm:p-6 shadow-sm border relative overflow-hidden group hover:shadow-md hover:scale-[1.02] cursor-pointer transition-all duration-200"
                 :class="isDarkMode ? 'bg-slate-800 border-slate-700 hover:border-sky-500/50' : 'bg-white border-slate-200/60 hover:border-[#005C9A]/40'">
                 <div class="flex justify-between items-start">
@@ -639,7 +740,7 @@
                     <h4 class="text-xs sm:text-sm font-bold flex items-center" :class="isDarkMode ? 'text-white' : 'text-slate-800'">
                       <i class="fas fa-list-check text-[#005C9A] dark:text-[#00A2E2] mr-2"></i> Daftar Antrean Pekerjaan Utama Tim Anda
                     </h4>
-                    <button @click="navigate('bpm')" class="text-xs text-[#00A2E2] font-bold hover:underline">Lihat Semua Alur &rarr;</button>
+                    <button @click="redirectByRole()" class="text-xs text-[#00A2E2] font-bold hover:underline">Lihat Semua Alur &rarr;</button>
                   </div>
 
                   <div class="space-y-3">
@@ -649,7 +750,7 @@
                         :class="isDarkMode ? 'bg-slate-900/50 border-slate-700 hover:bg-slate-700/30' : 'bg-slate-50/50 border-slate-100 hover:bg-slate-50'">
                         <div class="space-y-1">
                           <span class="text-[9px] font-mono font-bold text-[#005C9A] dark:text-sky-300 bg-sky-50 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-sky-100 dark:border-slate-700" x-text="item.kode"></span>
-                          <h5 class="font-bold text-xs" :class="isDarkMode ? 'text-slate-200' : 'text-slate-800'" x-text="item.judul"></h5>
+                          <h5 class="font-bold text-xs" :class="isDarkMode ? 'text-slate-200' : 'text-slate-800'" x-text="item.permohonan || item.judul"></h5>
                           <p class="text-[10px] text-slate-400" x-text="item.statusDetail"></p>
                         </div>
                         <button @click="openProcessDetail(item)" class="w-full sm:w-auto px-4 py-2 bg-[#005C9A] hover:bg-[#004b7e] text-white rounded-xl text-xs font-bold shadow-sm">
@@ -786,7 +887,7 @@
               :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'">
               <div class="relative w-full md:w-80">
                 <i class="fas fa-search absolute left-3.5 top-3 text-slate-400 text-xs"></i>
-                <input x-model="bpmSearchQuery" type="text" placeholder="Cari judul, pemohon, atau kode..."
+                <input x-model="bpmSearchQuery" type="text" placeholder="Cari permohonan, lokasi, ULP, atau kode..."
                   :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white placeholder-slate-500 focus:bg-slate-900' : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:bg-white'"
                   class="w-full pl-9 pr-4 py-2 border rounded-2xl text-xs outline-none focus:border-[#005C9A] transition-all font-medium">
               </div>
@@ -844,18 +945,18 @@
             <div class="rounded-3xl shadow-sm border overflow-hidden w-full transition-colors"
               :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'">
               <div class="w-full overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left border-collapse text-xs min-w-[800px]">
+                <table class="w-full text-left border-collapse text-xs min-w-[850px]">
                   <thead class="border-b text-slate-400 text-[10px] font-bold uppercase tracking-wider" :class="isDarkMode ? 'bg-slate-900/60 border-slate-700' : 'bg-slate-50 border-slate-200'">
                     <tr>
                       <th class="p-3 sm:p-4 pl-4 sm:pl-6 w-10 text-center">
                         <input type="checkbox" @change="toggleSelectAllBpm($event)" :checked="isAllBpmSelected" class="rounded border-slate-300 text-[#005C9A] focus:ring-[#005C9A] cursor-pointer">
                       </th>
-                      <th class="p-3 sm:p-4 w-52">Kode Agenda / Perihal</th>
-                      <th class="p-3 sm:p-4 w-48">Pemohon & Lokasi</th>
+                      <th class="p-3 sm:p-4 w-52">Kode / Permohonan</th>
+                      <th class="p-3 sm:p-4 w-48">Nama & Lokasi</th>
                       <th class="p-3 sm:p-4 w-36">Branch Pekerjaan</th>
                       <th class="p-3 sm:p-4 w-44">Progres Step</th>
                       <th class="p-3 sm:p-4 w-28">Status Alur</th>
-                      <th class="p-3 sm:p-4 text-right pr-4 sm:pr-6 w-28">Aksi</th>
+                      <th class="p-3 sm:p-4 text-right pr-4 sm:pr-6 w-36">Aksi</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y text-slate-700" :class="isDarkMode ? 'divide-slate-700/60 text-slate-300' : 'divide-slate-100 text-slate-700'">
@@ -866,7 +967,7 @@
                         </td>
                         <td class="p-3 sm:p-4">
                           <span x-text="item.kode || 'PLN-PFK-2026'" class="font-mono block text-slate-400 text-[10px] font-bold"></span>
-                          <span x-text="item.judul" class="text-xs sm:text-sm font-bold line-clamp-2 mt-0.5 transition-colors" :class="isDarkMode ? 'text-slate-100 group-hover:text-sky-400' : 'text-slate-800 group-hover:text-[#005C9A]'"></span>
+                          <span x-text="item.permohonan || item.judul" class="text-xs sm:text-sm font-bold line-clamp-2 mt-0.5 transition-colors" :class="isDarkMode ? 'text-slate-100 group-hover:text-sky-400' : 'text-slate-800 group-hover:text-[#005C9A]'"></span>
                         </td>
                         <td class="p-3 sm:p-4">
                           <div class="flex items-center gap-2">
@@ -874,10 +975,10 @@
                               <span x-text="(item.uploader || 'A').charAt(0).toUpperCase()"></span>
                             </div>
                             <div class="overflow-hidden">
-                              <p class="font-bold text-xs truncate" :class="isDarkMode ? 'text-slate-200' : 'text-slate-800'" x-text="item.uploader || 'ULP/NPS'"></p>
+                              <p class="font-bold text-xs truncate" :class="isDarkMode ? 'text-slate-200' : 'text-slate-800'" x-text="item.namaLokasi || item.lokasi || '-'"></p>
                               <p class="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 truncate">
-                                <i class="fas fa-map-marker-alt text-rose-500 text-[9px]"></i>
-                                <span x-text="item.lokasi || 'Cemorokandang'" class="truncate"></span>
+                                <i class="fas fa-building-flag text-amber-500 text-[9px]"></i>
+                                <span x-text="item.ulp || 'ULP'" class="truncate"></span>
                               </p>
                             </div>
                           </div>
@@ -912,10 +1013,21 @@
                           </template>
                         </td>
 
+                        <!-- KOLOM AKSI DENGAN TOMBOL DETAIL & HAPUS -->
                         <td class="p-3 sm:p-4 pr-4 sm:pr-6 text-right whitespace-nowrap">
-                          <button @click="openProcessDetail(item)" class="bg-[#005C9A] hover:bg-[#004b7e] text-white px-3.5 py-1.5 rounded-xl font-bold text-xs shadow-sm inline-flex items-center gap-1.5 transition-all transform hover:scale-105">
-                            <i class="fas fa-external-link-alt text-[9px]"></i> Detail
-                          </button>
+                          <div class="flex items-center justify-end gap-1.5">
+                            <button @click="openProcessDetail(item)" class="bg-[#005C9A] hover:bg-[#004b7e] text-white px-3 py-1.5 rounded-xl font-bold text-xs shadow-sm inline-flex items-center gap-1.5 transition-all transform hover:scale-105">
+                              <i class="fas fa-external-link-alt text-[9px]"></i> Detail
+                            </button>
+
+                            <template x-if="canEdit(item)">
+                              <button @click="deleteItem(item.id, 'bpm')" 
+                                      class="bg-rose-500/10 hover:bg-rose-600 text-rose-500 hover:text-white border border-rose-500/30 hover:border-rose-600 px-2.5 py-1.5 rounded-xl font-bold text-xs shadow-sm inline-flex items-center gap-1.5 transition-all transform hover:scale-105" 
+                                      title="Hapus Agenda BPM Ini">
+                                <i class="fas fa-trash-alt text-[10px]"></i> Hapus
+                              </button>
+                            </template>
+                          </div>
                         </td>
                       </tr>
                     </template>
@@ -1523,7 +1635,7 @@
               <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-800 font-black text-[10px] flex items-center justify-center">1</span>
               Pengajuan Survey Baru (Tim ULP)
             </h5>
-            <p class="text-slate-400 mt-1 leading-relaxed pl-7">Buka menu <b>Permohonan Baru</b>, isi judul agenda, kategori PFK/Non-PFK, dan simpan. Agenda akan otomatis masuk ke Step 1 alur BPM.</p>
+            <p class="text-slate-400 mt-1 leading-relaxed pl-7">Buka menu <b>Permohonan Baru</b>, isi permohonan, nama/lokasi, alamat, ULP, jumlah unit, tarif/daya, nomor/tanggal surat nodin, PIC, serta kategori PFK/Non-PFK, lalu simpan. Agenda akan otomatis masuk ke Step 1 alur BPM.</p>
           </div>
 
           <div class="p-3.5 rounded-2xl border transition-colors" :class="isDarkMode ? 'border-slate-700 bg-slate-900/40' : 'border-slate-100 bg-slate-50/50'">
@@ -1556,7 +1668,7 @@
     </div>
   </div>
 
-  <!-- MODAL DETAIL PROSES BPM (DENGAN DURASI PENGERJAAN PADA SETIAP STEP) -->
+  <!-- MODAL DETAIL PROSES BPM -->
   <div x-show="modals.bpmDetail" x-transition.opacity
     class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
     x-cloak>
@@ -1564,20 +1676,27 @@
       class="rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-6xl max-h-[95vh] sm:max-h-[92vh] flex flex-col border overflow-hidden my-auto transition-colors"
       :class="isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-[#f8fafc] border-slate-200'">
 
-      <div class="px-4 py-3 sm:px-6 sm:py-4 border-b flex justify-between items-center flex-shrink-0 transition-colors"
+      <!-- HEADER MODAL FIXED OVERFLOW -->
+      <div class="px-4 py-3 sm:px-6 sm:py-4 border-b flex items-center justify-between gap-3 flex-shrink-0 transition-colors"
         :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'">
-        <div class="flex items-center gap-2 sm:gap-3 overflow-hidden">
+        
+        <!-- Sisi Kiri: Icon & Detail Judul -->
+        <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
           <div
             class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-amber-50 dark:bg-slate-700 text-amber-500 flex items-center justify-center font-bold border border-amber-200 dark:border-slate-600 flex-shrink-0">
             <i class="fas fa-file-invoice text-sm sm:text-base"></i>
           </div>
-          <div class="overflow-hidden">
-            <div class="flex items-center gap-2">
-              <h3 class="font-extrabold text-sm sm:text-base truncate" :class="isDarkMode ? 'text-white' : 'text-slate-900'" x-text="selectedBpmItem?.judul || 'Permohonan'"></h3>
-            </div>
+          
+          <div class="min-w-0 flex-1">
+            <h3 class="font-extrabold text-sm sm:text-base truncate tracking-tight pr-2" 
+                :class="isDarkMode ? 'text-white' : 'text-slate-900'" 
+                :title="selectedBpmItem?.permohonan || selectedBpmItem?.judul"
+                x-text="selectedBpmItem?.permohonan || selectedBpmItem?.judul || 'Permohonan'"></h3>
+            
             <div class="flex items-center gap-1.5 sm:gap-2 mt-0.5 flex-wrap">
               <span class="text-[10px] sm:text-xs font-mono text-slate-400" x-text="selectedBpmItem?.kode || 'PLN-PFK'"></span>
-              <span class="px-2 py-0.5 bg-sky-50 dark:bg-slate-700 text-[#00A2E2] font-bold text-[9px] sm:text-[10px] rounded-full border border-sky-100 dark:border-slate-600" x-text="selectedBpmItem?.isPFK ? 'Branch 2 - PFK' : 'Branch 1 - Non PFK'"></span>
+              <span class="px-2 py-0.5 bg-sky-50 dark:bg-slate-700 text-[#00A2E2] font-bold text-[9px] sm:text-[10px] rounded-full border border-sky-100 dark:border-slate-600" 
+                    x-text="selectedBpmItem?.isPFK ? 'Branch 2 - PFK' : 'Branch 1 - Non PFK'"></span>
               
               <template x-if="(selectedBpmItem?.step || 1) > 10">
                 <span class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 font-bold text-[9px] sm:text-[10px] rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
@@ -1593,9 +1712,18 @@
           </div>
         </div>
 
-        <button @click="modals.bpmDetail = false" :class="isDarkMode ? 'bg-slate-700 hover:bg-slate-600 text-slate-200 border-slate-600' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200'" class="px-3 py-1.5 sm:px-4 sm:py-2 font-bold text-xs rounded-xl transition-all border flex items-center gap-1.5 flex-shrink-0">
-          <i class="fas fa-arrow-left text-[10px]"></i> <span class="hidden sm:inline">Kembali</span>
-        </button>
+        <!-- Sisi Kanan: Tombol Cetak & Kembali -->
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <button @click="printSurveyForm(selectedBpmItem)"
+                  class="px-3 py-1.5 sm:px-4 sm:py-2 font-bold text-xs rounded-xl transition-all border flex items-center gap-1.5 bg-[#005C9A] hover:bg-[#004b7e] text-white border-[#005C9A]">
+            <i class="fas fa-print text-[10px]"></i> <span class="hidden sm:inline">Cetak Formulir</span>
+          </button>
+          <button @click="modals.bpmDetail = false" 
+                  :class="isDarkMode ? 'bg-slate-700 hover:bg-slate-600 text-slate-200 border-slate-600' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200'" 
+                  class="px-3 py-1.5 sm:px-4 sm:py-2 font-bold text-xs rounded-xl transition-all border flex items-center gap-1.5">
+            <i class="fas fa-arrow-left text-[10px]"></i> <span class="hidden sm:inline">Kembali</span>
+          </button>
+        </div>
       </div>
 
       <div class="p-4 sm:p-6 overflow-y-auto flex-1 custom-scrollbar space-y-4 sm:space-y-6">
@@ -1663,6 +1791,22 @@
                       <p class="text-[11px] text-slate-400 leading-relaxed font-medium mt-0.5" x-text="stepObj.desc"></p>
                     </div>
 
+                    <!-- UPLOAD BUKTI SURVEY KHUSUS STEP 4 (SURVEY KE LOKASI) -->
+                    <template x-if="stepObj.no === 4">
+                      <div class="pt-1.5 flex flex-wrap items-center gap-2">
+                        <button @click="$refs.bpmFileInput.click(); $refs.bpmFileInput.scrollIntoView({behavior:'smooth', block:'center'})"
+                                type="button"
+                                class="px-3 py-1.5 rounded-xl text-[11px] font-bold border flex items-center gap-1.5 transition-all"
+                                :class="isDarkMode ? 'bg-amber-900/30 text-amber-300 border-amber-800 hover:bg-amber-900/50' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'">
+                          <i class="fas fa-camera"></i> Upload Foto / Form Survey Hasil Cetak
+                        </button>
+                        <span x-show="selectedBpmItem?.links && selectedBpmItem.links.length > 0"
+                              class="text-[10px] font-bold text-emerald-500 flex items-center gap-1">
+                          <i class="fas fa-paperclip"></i> <span x-text="selectedBpmItem?.links?.length + ' lampiran tersimpan'"></span>
+                        </span>
+                      </div>
+                    </template>
+
                     <!-- BLOK INFORMASI TANGGAL & DURASI PENGERJAAN STEP -->
                     <div class="pt-1.5 flex flex-wrap items-center gap-2 text-[10px] font-mono">
                       
@@ -1712,38 +1856,94 @@
 
           <!-- SIDEBAR INFORMASI & UPLOAD -->
           <div class="space-y-5">
+
+            <!-- SIDEBAR RINGKASAN AGENDA -->
             <div class="rounded-3xl p-4 sm:p-5 border shadow-sm space-y-3.5 transition-colors"
               :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'">
               <h4 class="font-black text-xs tracking-tight flex items-center gap-2 border-b pb-3" :class="isDarkMode ? 'text-white border-slate-700' : 'text-slate-800 border-slate-100'">
                 <i class="fas fa-info-circle text-[#00A2E2]"></i> Ringkasan Agenda
               </h4>
+              
               <div class="space-y-2.5 text-xs">
-                <div class="flex justify-between items-center py-1">
-                  <span class="text-slate-400 font-medium">Nomor</span>
+                <!-- Kode System -->
+                <div class="flex justify-between items-center py-1 border-b" :class="isDarkMode ? 'border-slate-700/60' : 'border-slate-100'">
+                  <span class="text-slate-400 font-medium">Nomor Kode</span>
                   <span class="font-mono font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'" x-text="selectedBpmItem?.kode || '-'"></span>
                 </div>
-                <div class="flex justify-between items-center py-1">
-                  <span class="text-slate-400 font-medium">Pemohon</span>
-                  <span class="font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-800'" x-text="selectedBpmItem?.uploader || '-'"></span>
+
+                <!-- Permohonan -->
+                <div class="flex justify-between items-start py-1 border-b gap-2" :class="isDarkMode ? 'border-slate-700/60' : 'border-slate-100'">
+                  <span class="text-slate-400 font-medium whitespace-nowrap">Permohonan</span>
+                  <span class="font-bold text-right line-clamp-2" :class="isDarkMode ? 'text-slate-200' : 'text-slate-800'" x-text="selectedBpmItem?.permohonan || selectedBpmItem?.judul || '-'"></span>
                 </div>
-                <div class="flex justify-between items-center py-1">
-                  <span class="text-slate-400 font-medium">Lokasi</span>
-                  <span class="font-bold flex items-center gap-1" :class="isDarkMode ? 'text-slate-200' : 'text-slate-800'">
+
+                <!-- Nama / Lokasi -->
+                <div class="flex justify-between items-start py-1 border-b gap-2" :class="isDarkMode ? 'border-slate-700/60' : 'border-slate-100'">
+                  <span class="text-slate-400 font-medium whitespace-nowrap">Nama / Lokasi</span>
+                  <span class="font-bold text-right flex items-center justify-end gap-1" :class="isDarkMode ? 'text-slate-200' : 'text-slate-800'">
                     <i class="fas fa-map-marker-alt text-rose-500 text-[10px]"></i>
-                    <span x-text="selectedBpmItem?.lokasi || '-'"></span>
+                    <span x-text="selectedBpmItem?.namaLokasi || selectedBpmItem?.lokasi || '-'"></span>
                   </span>
                 </div>
-                <div class="flex justify-between items-center py-1">
+
+                <!-- Alamat -->
+                <div class="flex justify-between items-start py-1 border-b gap-2" :class="isDarkMode ? 'border-slate-700/60' : 'border-slate-100'">
+                  <span class="text-slate-400 font-medium whitespace-nowrap">Alamat</span>
+                  <span class="font-semibold text-right text-[11px] line-clamp-2" :class="isDarkMode ? 'text-slate-300' : 'text-slate-700'" x-text="selectedBpmItem?.alamat || '-'"></span>
+                </div>
+
+                <!-- ULP -->
+                <div class="flex justify-between items-center py-1 border-b" :class="isDarkMode ? 'border-slate-700/60' : 'border-slate-100'">
+                  <span class="text-slate-400 font-medium">ULP</span>
+                  <span class="font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-800'" x-text="selectedBpmItem?.ulp || '-'"></span>
+                </div>
+
+                <!-- Jumlah Unit -->
+                <div class="flex justify-between items-center py-1 border-b" :class="isDarkMode ? 'border-slate-700/60' : 'border-slate-100'">
+                  <span class="text-slate-400 font-medium">Jumlah Unit</span>
+                  <span class="font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-800'" x-text="selectedBpmItem?.jumlahUnit || '-'"></span>
+                </div>
+
+                <!-- Tarif / Daya -->
+                <div class="flex justify-between items-center py-1 border-b" :class="isDarkMode ? 'border-slate-700/60' : 'border-slate-100'">
+                  <span class="text-slate-400 font-medium">Tarif / Daya</span>
+                  <span class="font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-800'" x-text="selectedBpmItem?.tarifDaya || '-'"></span>
+                </div>
+
+                <!-- Nomor Surat / Nodin -->
+                <div class="flex justify-between items-center py-1 border-b gap-2" :class="isDarkMode ? 'border-slate-700/60' : 'border-slate-100'">
+                  <span class="text-slate-400 font-medium whitespace-nowrap">Nomor Surat / Nodin</span>
+                  <span class="font-mono font-bold text-right text-[11px] truncate max-w-[140px]" :class="isDarkMode ? 'text-slate-200' : 'text-slate-800'" x-text="selectedBpmItem?.nomorSurat || '-'"></span>
+                </div>
+
+                <!-- Tanggal Surat / Nodin -->
+                <div class="flex justify-between items-center py-1 border-b" :class="isDarkMode ? 'border-slate-700/60' : 'border-slate-100'">
+                  <span class="text-slate-400 font-medium">Tanggal Surat / Nodin</span>
+                  <span class="font-medium" :class="isDarkMode ? 'text-slate-200' : 'text-slate-800'" x-text="selectedBpmItem?.tanggalSurat || '-'"></span>
+                </div>
+
+                <!-- PIC -->
+                <div class="flex justify-between items-center py-1 border-b" :class="isDarkMode ? 'border-slate-700/60' : 'border-slate-100'">
+                  <span class="text-slate-400 font-medium">PIC</span>
+                  <span class="font-bold text-[#005C9A] dark:text-sky-300" x-text="selectedBpmItem?.pic || '-'"></span>
+                </div>
+
+                <!-- Akumulasi Durasi -->
+                <div class="flex justify-between items-center py-1 border-b" :class="isDarkMode ? 'border-slate-700/60' : 'border-slate-100'">
                   <span class="text-slate-400 font-medium">Total Akumulasi Durasi</span>
                   <span class="font-mono font-bold text-amber-500" x-text="calculateDuration(selectedBpmItem?.tglPengajuan || selectedBpmItem?.created_at, selectedBpmItem?.tglSelesai)"></span>
                 </div>
-                <div class="flex justify-between items-center py-1">
+
+                <!-- Branch -->
+                <div class="flex justify-between items-center py-1 border-b" :class="isDarkMode ? 'border-slate-700/60' : 'border-slate-100'">
                   <span class="text-slate-400 font-medium">Branch</span>
-                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-slate-700 text-[#00A2E2] border border-sky-100 dark:border-slate-600" x-text="selectedBpmItem?.isPFK ? 'Branch 2 - PFK' : 'Branch 1 - Non PFK'"></span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-slate-700 text-[#00A2E2] border border-sky-100 dark:border-slate-600" x-text="selectedBpmItem?.isPFK ? 'Branch 2 – PFK' : 'Branch 1 – Non PFK'"></span>
                 </div>
-                <div class="pt-2 border-t text-slate-500" :class="isDarkMode ? 'border-slate-700' : 'border-slate-100'">
+
+                <!-- Catatan Terakhir -->
+                <div class="pt-2 text-slate-500">
                   <span class="text-slate-400 font-medium block mb-1">Catatan Terakhir</span>
-                  <p class="text-[11px] font-medium" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'" x-text="selectedBpmItem?.statusDetail || '-'"></p>
+                  <p class="text-[11px] font-medium leading-relaxed p-2 rounded-xl border" :class="isDarkMode ? 'bg-slate-900/60 border-slate-700 text-slate-300' : 'bg-slate-50 border-slate-100 text-slate-600'" x-text="selectedBpmItem?.statusDetail || '-'"></p>
                 </div>
               </div>
             </div>
@@ -2133,7 +2333,7 @@
     </template>
   </datalist>
 
-  <!-- LOGIKA JAVASCRIPT INTEGRASI DURASI STEP -->
+  <!-- LOGIKA JAVASCRIPT & ALPINEJS COMPONENT -->
   <script>
     let chartInstance = null;
 
@@ -2198,12 +2398,33 @@
                 user: { username: '', nama_lengkap: '', email: '', password: '', role: 'User', status: 'Active', isEdit: false },
                 profile: { nama_lengkap: '', password_lama: '', password_baru: '' }
             },
-            bpmForm: { kode: '', judul: '', isPFK: false },
+            
+            bpmForm: { 
+                permohonan: '', 
+                namaLokasi: '', 
+                alamat: '', 
+                ulp: '', 
+                jumlahUnit: '', 
+                tarifDaya: '', 
+                nomorSurat: '', 
+                tanggalSurat: '', 
+                pic: '', 
+                isPFK: false 
+            },
 
             fileData: { name: '', bytes: '', type: '' },
             filesData: [], 
             tempSetting: { category: '', extension: '', nomor: '', lemari: '', ordner: '' },
             pagination: { currentPage: 1, perPage: 10 },
+
+            getFileIcon(type) {
+                const t = (type || '').toLowerCase();
+                if (t.includes('pdf')) return { icon: 'fas fa-file-pdf', text: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800' };
+                if (t.includes('doc')) return { icon: 'fas fa-file-word', text: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800' };
+                if (t.includes('xls')) return { icon: 'fas fa-file-excel', text: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800' };
+                if (t.includes('jpg') || t.includes('png') || t.includes('jpeg')) return { icon: 'fas fa-file-image', text: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800' };
+                return { icon: 'fas fa-file-alt', text: 'text-sky-500', bg: 'bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800' };
+            },
 
             // FUNGSI KOMPUTASI TIMESTAMPS DAN DURASI PER STEP
             getStepsWithTimestamps(item) {
@@ -2289,9 +2510,9 @@
             bulkExportBpm() {
                 if (this.selectedBpmIds.length === 0) return;
                 const items = this.bpmList.filter(b => this.selectedBpmIds.includes(b.id));
-                let csvContent = "data:text/csv;charset=utf-8,ID,Kode,Judul,Branch,Step,Status,Lokasi,Pemohon\n";
+                let csvContent = "data:text/csv;charset=utf-8,ID,Kode,Permohonan,Nama/Lokasi,Alamat,ULP,Jumlah Unit,Tarif/Daya,Nomor Surat,Tanggal Surat,PIC,Branch,Step,Status\n";
                 items.forEach(i => {
-                    csvContent += `"${i.id}","${i.kode}","${i.judul}","${i.isPFK ? 'PFK' : 'Non-PFK'}","${i.step}","${i.statusDetail}","${i.lokasi}","${i.uploader}"\n`;
+                    csvContent += `"${i.id}","${i.kode}","${i.permohonan || i.judul}","${i.namaLokasi || i.lokasi}","${i.alamat || ''}","${i.ulp || ''}","${i.jumlahUnit || ''}","${i.tarifDaya || ''}","${i.nomorSurat || ''}","${i.tanggalSurat || ''}","${i.pic || ''}","${i.isPFK ? 'PFK' : 'Non-PFK'}","${i.step}","${i.statusDetail}"\n`;
                 });
                 const encodedUri = encodeURI(csvContent);
                 const link = document.createElement("a");
@@ -2307,10 +2528,12 @@
                 const q = (this.bpmSearchQuery || '').trim().toLowerCase();
                 return (this.bpmList || []).filter(item => {
                     const matchQ = !q || 
-                        String(item.judul || '').toLowerCase().includes(q) ||
-                        String(item.kode || '').toLowerCase().includes(q) ||
-                        String(item.uploader || '').toLowerCase().includes(q) ||
-                        String(item.lokasi || '').toLowerCase().includes(q);
+                        String(item.permohonan || item.judul || '').toLowerCase().includes(q) ||
+                        String(item.namaLokasi || item.lokasi || '').toLowerCase().includes(q) ||
+                        String(item.ulp || '').toLowerCase().includes(q) ||
+                        String(item.nomorSurat || '').toLowerCase().includes(q) ||
+                        String(item.pic || '').toLowerCase().includes(q) ||
+                        String(item.kode || '').toLowerCase().includes(q);
 
                     let matchStatus = true;
                     const step = item.step || 1;
@@ -2333,7 +2556,7 @@
 
             openModal(type) {
                 if (type === 'archive') {
-                    this.form.archive = { id: '', nomor: '', nama: '', perihal: '', kategori: '', lemari: 'Lemari_A', ordner: 'Ordner_01', jenis: 'PDF', links: [], share_to: [] };
+                    this.form.archive = { id: '', nomor: '', nama: '', perihal: '', kategori: '', lemari: 'Lemari A', ordner: 'Ordner_01', jenis: 'PDF', links: [], share_to: [] };
                     this.fileData = { name: '', bytes: '', type: '' };
                     this.filesData = [];
                     this.modals.archive = true;
@@ -2341,6 +2564,11 @@
                     this.form.user = { username: '', nama_lengkap: '', email: '', password: '', role: 'User', status: 'Active', isEdit: false };
                     this.modals.user = true;
                 }
+            },
+
+            openProfileModal() {
+                this.form.profile.nama_lengkap = this.currentUser.nama_lengkap || this.currentUser.username || '';
+                this.modals.profile = true;
             },
 
             editItem(item, type) {
@@ -2371,7 +2599,11 @@
                         this.callServer('apiHandler', ['deleteData', { token: this.currentUser.token, type: type, id: id }])
                             .then(() => {
                                 Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
-                                this.navigate(this.view);
+                                if (type === 'bpm') {
+                                    this.loadBpmData();
+                                } else {
+                                    this.navigate(this.view);
+                                }
                             })
                             .catch(err => Swal.fire('Gagal Hapus', typeof err === 'string' ? err : 'Gagal menghapus data', 'error'));
                     }
@@ -2421,6 +2653,99 @@
                     })
                     .catch(err => Swal.fire('Gagal Menyimpan', typeof err === 'string' ? err : 'Terjadi kesalahan saat menyimpan data pegawai.', 'error'))
                     .finally(() => this.isLoading = false);
+            },
+
+            requestOtp() {
+                if (!this.forgotForm.email) {
+                    Swal.fire('Peringatan', 'Masukkan alamat email pegawai terlebih dahulu.', 'warning');
+                    return;
+                }
+                this.isLoading = true;
+                this.callServer('apiHandler', ['requestOtp', { email: this.forgotForm.email }])
+                    .then(() => {
+                        this.forgotStep = 2;
+                        Swal.fire({ icon: 'success', title: 'Kode OTP Terkirim', text: 'Silakan periksa email Anda.', timer: 1500, showConfirmButton: false });
+                    })
+                    .catch(err => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Mengirim OTP',
+                            text: typeof err === 'string' ? err : 'Email tidak terdaftar atau server tidak dapat dihubungi.'
+                        });
+                    })
+                    .finally(() => this.isLoading = false);
+            },
+
+            submitReset() {
+                if (!this.forgotForm.otp || !this.forgotForm.newPass) {
+                    Swal.fire('Peringatan', 'Lengkapi kode OTP dan kata sandi baru.', 'warning');
+                    return;
+                }
+                this.isLoading = true;
+                this.callServer('apiHandler', ['resetPassword', { email: this.forgotForm.email, otp: this.forgotForm.otp, newPass: this.forgotForm.newPass }])
+                    .then(() => {
+                        Swal.fire('Berhasil', 'Password berhasil diperbarui. Silakan masuk.', 'success');
+                        this.modals.forgot = false;
+                        this.forgotStep = 1;
+                        this.forgotForm = { email: '', otp: '', newPass: '' };
+                    })
+                    .catch(err => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Reset Password',
+                            text: typeof err === 'string' ? err : 'Kode OTP salah/kadaluarsa atau server tidak dapat dihubungi.'
+                        });
+                    })
+                    .finally(() => this.isLoading = false);
+            },
+
+            saveProfile() {
+                if (!this.form.profile.nama_lengkap) return;
+                this.isLoading = true;
+                this.callServer('apiHandler', ['saveProfile', { token: this.currentUser.token, profile: this.form.profile }])
+                    .then(() => {
+                        this.currentUser.nama_lengkap = this.form.profile.nama_lengkap;
+                        localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                        Swal.fire({ icon: 'success', title: 'Profil Diperbarui!', timer: 1500, showConfirmButton: false });
+                        this.modals.profile = false;
+                    })
+                    .catch(err => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Memperbarui Profil',
+                            text: typeof err === 'string' ? err : 'Password lama salah atau server tidak dapat dihubungi.'
+                        });
+                    })
+                    .finally(() => this.isLoading = false);
+            },
+
+            downloadReport() {
+                if (!this.reportForm.start || !this.reportForm.end) {
+                    Swal.fire('Peringatan', 'Pilih rentang tanggal terlebih dahulu.', 'warning');
+                    return;
+                }
+                this.isLoading = true;
+                setTimeout(() => {
+                    let csvContent = "data:text/csv;charset=utf-8,ID,Nomor,Nama,Kategori,Lemari,Ordner,Uploader,Tanggal\n";
+                    (this.archives || []).forEach(a => {
+                        csvContent += `"${a.id || ''}","${a.nomor || ''}","${a.nama || ''}","${a.kategori || ''}","${a.lemari || ''}","${a.ordner || ''}","${a.uploader || ''}","${a.tanggal || ''}"\n`;
+                    });
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", `Rekap_Arsip_${this.reportForm.start}_sd_${this.reportForm.end}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    this.isLoading = false;
+                    Swal.fire({ icon: 'success', title: 'Laporan Rekap Diunduh (.CSV)', timer: 1500, showConfirmButton: false });
+                }, 800);
+            },
+
+            markNotificationsRead(all = false) {
+                if (!this.notifications) return;
+                this.notifications.forEach(n => n.isRead = true);
+                this.unreadCount = 0;
             },
 
             handleFileUpload(e) {
@@ -2622,6 +2947,14 @@
 
             get totalPages() { return Math.ceil(this.filteredData.length / this.pagination.perPage) || 1; },
 
+            nextPage() {
+                if (this.pagination.currentPage < this.totalPages) this.pagination.currentPage++;
+            },
+
+            prevPage() {
+                if (this.pagination.currentPage > 1) this.pagination.currentPage--;
+            },
+
             initApp() {
                 const savedTheme = localStorage.getItem('themeMode');
                 if (savedTheme) {
@@ -2666,82 +2999,389 @@
                                 } catch (e) { resolve(res); }
                             })
                             .withFailureHandler(err => reject(err.message || err))[methodName](...args);
-                    } else { setTimeout(() => resolve({ success: true }), 300); }
+                    } else { 
+                        setTimeout(() => resolve({ success: true, data: [] }), 300); 
+                    }
                 });
             },
 
             checkSessionOnLoad() {
-                this.isLoading = true;
-                this.callServer('apiHandler', ['checkSession', { token: this.currentUser?.token }])
-                    .then(data => {
-                        if (data && data.sessionActive) {
-                            this.currentUser = data.user;
+                this.callServer('apiHandler', ['checkSession', { token: this.currentUser.token }])
+                    .then(res => {
+                        if (res && res.sessionActive && res.user) {
+                            this.currentUser = res.user;
+                            localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
                             this.isAuthenticated = true;
-                            localStorage.setItem('currentUser', JSON.stringify(data.user));
-                            this.redirectByRole();
-                            setTimeout(() => { this.loadDashboardData(); }, 300);
-                        } else { this.forceLogout(); }
+                            this.navigate('dashboard');
+                            this.loadMasterSettings();
+                        } else {
+                            this.forceLogout();
+                        }
                     })
-                    .catch(() => this.forceLogout())
-                    .finally(() => this.isLoading = false);
+                    .catch(() => {
+                        this.forceLogout();
+                    });
             },
 
             login() {
+                if (!this.loginForm.username || !this.loginForm.password) return;
                 this.isLoading = true;
-                this.callServer('apiHandler', ['login', { username: this.loginForm.username, password: this.loginForm.password }])
+                this.callServer('apiHandler', ['login', this.loginForm])
                     .then(res => {
-                        const userData = res.user || (res.data && res.data.user);
-                        if (userData && userData.token) {
-                            this.currentUser = userData;
-                            this.isAuthenticated = true;
-                            this.loginForm = { username: '', password: '' };
-                            localStorage.setItem('currentUser', JSON.stringify(userData));
-                            this.redirectByRole();
-                            Swal.fire({ icon: 'success', title: 'Berhasil Masuk', timer: 1500, showConfirmButton: false });
-                            this.loadDashboardData();
-                        } else throw new Error("Gagal login");
+                        this.currentUser = res.user;
+                        localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                        this.isAuthenticated = true;
+                        this.navigate('dashboard');
+                        this.loadMasterSettings();
                     })
-                    .catch(err => Swal.fire('Gagal Login', typeof err === 'string' ? err : 'Username/password salah', 'error'))
+                    .catch(err => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Login Gagal',
+                            text: typeof err === 'string' ? err : 'Username atau password salah, atau server tidak dapat dihubungi.'
+                        });
+                    })
                     .finally(() => this.isLoading = false);
             },
 
             logout() {
-                this.callServer('apiHandler', ['logout', { token: this.currentUser.token }]);
-                this.forceLogout();
+                const token = this.currentUser.token;
+                this.callServer('apiHandler', ['logout', { token: token }])
+                    .catch(() => {})
+                    .finally(() => this.forceLogout());
+            },
+
+            navigate(viewName) {
+                this.view = viewName;
+                this.pagination.currentPage = 1;
+                const titles = {
+                    'dashboard': 'Dashboard Utama',
+                    'create-bpm': 'Permohonan Survey Baru',
+                    'bpm': 'Daftar Proses BPM Survey',
+                    'archives': 'Kotak Arsip Digital',
+                    'users': 'Manajemen Pegawai',
+                    'logs': 'Log Aktivitas Sistem',
+                    'settings': 'Konfigurasi Master Data',
+                    'reports': 'Unduh Laporan Kerja'
+                };
+                this.viewTitle = titles[viewName] || 'E-Arsip PLN';
+
+                if (viewName === 'dashboard') {
+                    this.loadDashboardData();
+                } else if (viewName === 'bpm' || viewName === 'create-bpm') {
+                    this.loadBpmData();
+                } else if (viewName === 'archives') {
+                    this.loadArchiveData();
+                } else if (viewName === 'users') {
+                    this.loadUserData();
+                } else if (viewName === 'logs') {
+                    this.loadLogData();
+                }
+            },
+
+            loadMasterSettings() {
+                this.callServer('apiHandler', ['getSettings', { token: this.currentUser.token }])
+                    .then(data => { if (data) this.masterData = { ...this.masterData, ...data }; })
+                    .catch(() => {});
             },
 
             loadDashboardData() {
-                this.callServer('apiHandler', ['getStats', { token: this.currentUser.token }])
-                    .then(res => { if (res) this.stats = res.data || res; });
-                this.loadSettings();
-                this.loadBpmData();
-                this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'users' }])
-                    .then(res => { this.users = Array.isArray(res) ? res : (res?.data || []); });
-                this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'archives' }])
+                this.callServer('apiHandler', ['getDashboardStats', { token: this.currentUser.token }])
                     .then(res => {
-                        this.archives = res?.list || res?.data || (Array.isArray(res) ? res : []);
+                        if (res) this.stats = res;
                         this.$nextTick(() => this.renderChart());
+                    })
+                    .catch(() => this.$nextTick(() => this.renderChart()));
+            },
+
+            loadBpmData() {
+                this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'bpm' }])
+                    .then(data => { this.bpmList = Array.isArray(data) ? data : []; })
+                    .catch(() => {});
+            },
+
+            loadArchiveData() {
+                this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'archives' }])
+                    .then(data => { this.archives = Array.isArray(data) ? data : []; })
+                    .catch(() => {});
+            },
+
+            loadUserData() {
+                this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'users' }])
+                    .then(data => { this.users = Array.isArray(data) ? data : []; })
+                    .catch(() => {});
+            },
+
+            loadLogData() {
+                this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'logs' }])
+                    .then(data => { this.logs = Array.isArray(data) ? data : []; })
+                    .catch(() => {});
+            },
+
+            saveBpm() {
+                this.isLoading = true;
+                const payload = {
+                    ...this.bpmForm,
+                    step: 1,
+                    statusDetail: 'Step 1: Kirim Surat Permohonan Survey & RAB',
+                    uploader: this.currentUser.username,
+                    tglPengajuan: new Date().toISOString()
+                };
+
+                this.callServer('apiHandler', ['saveData', { token: this.currentUser.token, type: 'bpm', data: payload }])
+                    .then(() => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Permohonan Survey Berhasil Dibuat!',
+                            text: 'Cetak formulir survey untuk dibawa petugas ke lapangan?',
+                            showCancelButton: true,
+                            confirmButtonText: '<i class="fas fa-print"></i> Cetak Formulir',
+                            cancelButtonText: 'Nanti Saja',
+                            confirmButtonColor: '#005C9A'
+                        }).then(result => {
+                            if (result.isConfirmed) this.printSurveyForm(payload);
+                        });
+                        this.bpmForm = { permohonan: '', namaLokasi: '', alamat: '', ulp: '', jumlahUnit: '', tarifDaya: '', nomorSurat: '', tanggalSurat: '', pic: '', isPFK: false };
+                        this.loadBpmData();
+                    })
+                    .catch(err => Swal.fire('Gagal Permohonan', typeof err === 'string' ? err : 'Gagal mengirim permohonan survey.', 'error'))
+                    .finally(() => this.isLoading = false);
+            },
+
+            printSurveyForm(data) {
+                if (!data) return;
+                const esc = (v) => (v === undefined || v === null || v === '') ? '' : String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const permohonan = esc(data.permohonan || data.judul);
+                const namaLokasi = esc(data.namaLokasi || data.lokasi);
+                const alamat = esc(data.alamat);
+                const ulp = esc(data.ulp);
+                const jumlahUnit = esc(data.jumlahUnit);
+                const tarifDaya = esc(data.tarifDaya);
+                const nomorSurat = esc(data.nomorSurat);
+                const tanggalSurat = esc(data.tanggalSurat);
+                const pic = esc(data.pic);
+
+                const html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Form Survey - ${permohonan}</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #111; font-size: 12px; margin: 0; }
+  h1 { text-align: center; font-size: 16px; letter-spacing: 1px; margin: 0 0 18px 0; text-decoration: underline; text-underline-offset: 4px; }
+  .field-row { display: flex; margin-bottom: 6px; }
+  .field-label { width: 150px; flex-shrink: 0; }
+  .field-colon { width: 12px; flex-shrink: 0; }
+  .field-value { flex: 1; border-bottom: 1px solid #999; min-height: 15px; padding-bottom: 1px; }
+  .fields-block { margin-bottom: 16px; }
+  table.kegiatan { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  table.kegiatan th, table.kegiatan td { border: 1px solid #333; padding: 6px 8px; font-size: 11px; text-align: left; }
+  table.kegiatan th { background: #eee; text-align: center; }
+  table.kegiatan td.no { text-align: center; width: 28px; }
+  .section-title { font-weight: bold; margin-bottom: 6px; }
+  .gambar-box { border: 1px solid #333; height: 90mm; margin-bottom: 16px; }
+  .catatan-box { border: 1px solid #333; min-height: 20mm; margin-bottom: 16px; padding: 6px 8px; }
+  .ttd-row { display: flex; justify-content: space-between; margin-top: 30px; }
+  .ttd-col { width: 30%; text-align: center; }
+  .ttd-label { font-weight: bold; margin-bottom: 45px; }
+  .ttd-line { border-top: 1px solid #333; padding-top: 4px; }
+  @media print {
+    .no-print { display: none !important; }
+  }
+</style>
+</head>
+<body>
+  <button class="no-print" onclick="window.print()" style="margin-bottom:14px;padding:8px 16px;background:#005C9A;color:#fff;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Cetak / Print</button>
+
+  <h1>FORM SURVEY</h1>
+
+  <div class="fields-block">
+    <div class="field-row"><div class="field-label">Permohonan</div><div class="field-colon">:</div><div class="field-value">${permohonan}</div></div>
+    <div class="field-row"><div class="field-label">Nama/ lokasi</div><div class="field-colon">:</div><div class="field-value">${namaLokasi}</div></div>
+    <div class="field-row"><div class="field-label">Alamat</div><div class="field-colon">:</div><div class="field-value">${alamat}</div></div>
+    <div class="field-row"><div class="field-label">ULP</div><div class="field-colon">:</div><div class="field-value">${ulp}</div></div>
+    <div class="field-row"><div class="field-label">Jumlah Unit</div><div class="field-colon">:</div><div class="field-value">${jumlahUnit}</div></div>
+    <div class="field-row"><div class="field-label">Tarif / Daya</div><div class="field-colon">:</div><div class="field-value">${tarifDaya}</div></div>
+    <div class="field-row"><div class="field-label">Nomor Surat / Nodin</div><div class="field-colon">:</div><div class="field-value">${nomorSurat}</div></div>
+    <div class="field-row"><div class="field-label">Tanggal Surat / Nodin</div><div class="field-colon">:</div><div class="field-value">${tanggalSurat}</div></div>
+    <div class="field-row"><div class="field-label">PIC</div><div class="field-colon">:</div><div class="field-value">${pic}</div></div>
+  </div>
+
+  <table class="kegiatan">
+    <thead>
+      <tr><th style="width:28px;">NO</th><th>KEGIATAN</th><th>NOMOR</th><th>TANGGAL</th><th>KETERANGAN</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="no">1</td><td>SURVEY</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td class="no">2</td><td>NOTA DINAS</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+      <tr><td class="no">3</td><td>SURAT KELUAR</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-title">GAMBAR SURVEY :</div>
+  <div class="gambar-box"></div>
+
+  <div class="section-title">CATATAN :</div>
+  <div class="catatan-box"></div>
+
+  <div class="ttd-row">
+    <div class="ttd-col">
+      <div class="ttd-label">PETUGAS SURVEY 1</div>
+      <div class="ttd-line">&nbsp;</div>
+    </div>
+    <div class="ttd-col">
+      <div class="ttd-label">PETUGAS SURVEY 2</div>
+      <div class="ttd-line">&nbsp;</div>
+    </div>
+    <div class="ttd-col">
+      <div class="ttd-label">PELANGGAN / PEMOHON</div>
+      <div class="ttd-line">&nbsp;</div>
+    </div>
+  </div>
+
+</body>
+</html>`;
+
+                const printWindow = window.open('', '_blank');
+                if (!printWindow) {
+                    Swal.fire('Gagal', 'Popup diblokir browser. Izinkan popup untuk mencetak formulir.', 'warning');
+                    return;
+                }
+                printWindow.document.open();
+                printWindow.document.write(html);
+                printWindow.document.close();
+                printWindow.onload = () => {
+                    printWindow.focus();
+                    printWindow.print();
+                };
+            },
+
+            openProcessDetail(item) {
+                this.selectedBpmItem = item;
+                this.selectedBpmFiles = [];
+                this.modals.bpmDetail = true;
+            },
+
+            advanceBpmStep(item) {
+                const nextStep = (item.step || 1) + 1;
+                const nowISO = new Date().toISOString();
+                
+                let stepTimestamps = item.stepTimestamps || {};
+                stepTimestamps[item.step || 1] = { ...(stepTimestamps[item.step || 1] || {}), end: nowISO };
+                if (nextStep <= 10) {
+                    stepTimestamps[nextStep] = { start: nowISO, end: null };
+                }
+
+                let desc = nextStep <= 10 ? `Step ${nextStep}: ${this.bpmStepsMaster[nextStep - 1].title}` : 'Selesai 100% - Diarsipkan';
+
+                const updatePayload = {
+                    id: item.id,
+                    step: nextStep,
+                    statusDetail: desc,
+                    stepTimestamps: stepTimestamps,
+                    tglSelesai: nextStep > 10 ? nowISO : null
+                };
+
+                this.callServer('apiHandler', ['saveData', { token: this.currentUser.token, type: 'bpm', data: updatePayload }])
+                    .then(() => {
+                        item.step = nextStep;
+                        item.statusDetail = desc;
+                        item.stepTimestamps = stepTimestamps;
+                        Swal.fire({ icon: 'success', title: 'Tahapan Berhasil Diperbarui!', timer: 1200, showConfirmButton: false });
+                    })
+                    .catch(err => Swal.fire('Gagal Update', typeof err === 'string' ? err : 'Terjadi kesalahan.', 'error'));
+            },
+
+            openCatatanModal(item) {
+                Swal.fire({
+                    title: 'Ubah Catatan Agenda',
+                    input: 'textarea',
+                    inputValue: item.statusDetail || '',
+                    showCancelButton: true,
+                    confirmButtonText: 'Simpan',
+                    cancelButtonText: 'Batal'
+                }).then((res) => {
+                    if (res.isConfirmed && res.value !== undefined) {
+                        this.callServer('apiHandler', ['saveData', { token: this.currentUser.token, type: 'bpm', data: { id: item.id, statusDetail: res.value } }])
+                            .then(() => {
+                                item.statusDetail = res.value;
+                                Swal.fire({ icon: 'success', title: 'Catatan Diperbarui', timer: 1200, showConfirmButton: false });
+                            });
+                    }
+                });
+            },
+
+            handleBpmDrop(e) {
+                this.isDraggingBpm = false;
+                if (e.dataTransfer && e.dataTransfer.files) {
+                    this.selectedBpmFiles = Array.from(e.dataTransfer.files);
+                }
+            },
+
+            handleBpmFileSelect(e) {
+                if (e.target.files) {
+                    this.selectedBpmFiles = Array.from(e.target.files);
+                }
+            },
+
+            uploadBpmFiles() {
+                if (!this.selectedBpmFiles || this.selectedBpmFiles.length === 0) return;
+                this.isBpmUploading = true;
+
+                let filePromises = this.selectedBpmFiles.map(file => {
+                    return new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (evt) => resolve({
+                            name: file.name,
+                            base64: evt.target.result.split(',')[1],
+                            mimeType: file.type
+                        });
+                        reader.readAsDataURL(file);
                     });
+                });
+
+                Promise.all(filePromises).then(filesPayload => {
+                    this.callServer('apiHandler', ['uploadBpmAttachments', { token: this.currentUser.token, bpmId: this.selectedBpmItem.id, files: filesPayload }])
+                        .then(updatedLinks => {
+                            if (!this.selectedBpmItem.links) this.selectedBpmItem.links = [];
+                            this.selectedBpmItem.links = updatedLinks;
+                            this.selectedBpmFiles = [];
+                            Swal.fire({ icon: 'success', title: 'Lampiran Berhasil Diunggah!', timer: 1500, showConfirmButton: false });
+                        })
+                        .catch(err => Swal.fire('Gagal Upload', typeof err === 'string' ? err : 'Gagal mengunggah file.', 'error'))
+                        .finally(() => this.isBpmUploading = false);
+                });
             },
 
             renderChart() {
                 const ctx = document.getElementById('archiveChart');
                 if (!ctx) return;
+                
                 if (chartInstance) chartInstance.destroy();
 
-                const categories = this.masterData.categories.length > 0 ? this.masterData.categories : ['PFK', 'ESTETIKA', 'Pelanggan TM', 'SPKLU'];
-                const counts = categories.map(cat => {
-                    const found = (this.archives || []).filter(a => a.kategori === cat).length;
-                    return found > 0 ? found : 1; 
+                let counts = {};
+                (this.archives || []).forEach(a => {
+                    let cat = a.kategori || 'Lainnya';
+                    counts[cat] = (counts[cat] || 0) + 1;
                 });
+
+                let labels = Object.keys(counts);
+                let data = Object.values(counts);
+
+                if (labels.length === 0) {
+                    labels = ['Belum Ada Data'];
+                    data = [1];
+                }
 
                 chartInstance = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
-                        labels: categories,
+                        labels: labels,
                         datasets: [{
-                            data: counts,
-                            backgroundColor: ['#005C9A', '#00A2E2', '#f59e0b', '#10b981', '#8b5cf6'],
+                            data: data,
+                            backgroundColor: ['#005C9A', '#00A2E2', '#f59e0b', '#10b981', '#8b5cf6', '#64748b'],
                             borderWidth: 2,
                             borderColor: this.isDarkMode ? '#1e293b' : '#ffffff'
                         }]
@@ -2751,236 +3391,20 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                position: 'right',
+                                position: 'bottom',
                                 labels: {
-                                    color: this.isDarkMode ? '#cbd5e1' : '#475569',
-                                    font: { family: 'Plus Jakarta Sans', size: 11 },
-                                    usePointStyle: true,
-                                    boxWidth: 8
+                                    color: this.isDarkMode ? '#cbd5e1' : '#334155',
+                                    font: { family: 'Plus Jakarta Sans', size: 11 }
                                 }
                             }
-                        },
-                        cutout: '70%'
+                        }
                     }
                 });
-            },
-
-            loadBpmData() {
-                this.selectedBpmIds = [];
-                this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'bpm' }])
-                    .then(res => {
-                        let rawList = Array.isArray(res) ? res : (res?.data || res?.list || []);
-                        this.bpmList = Array.isArray(rawList) ? rawList : [];
-                    });
-            },
-
-            navigate(viewName) {
-                this.view = viewName;
-                this.pagination.currentPage = 1;
-                this.searchQuery = '';
-                this.selectedLemari = 'All';
-                this.selectedBpmIds = [];
-                if (viewName === 'dashboard') { this.viewTitle = 'Dashboard Utama'; this.loadDashboardData(); }
-                else if (viewName === 'create-bpm') { this.viewTitle = 'Permohonan Baru'; this.loadBpmData(); }
-                else if (viewName === 'bpm') { this.viewTitle = 'Daftar Proses BPM'; this.loadBpmData(); }
-                else if (viewName === 'archives') {
-                    this.viewTitle = 'Kotak Arsip';
-                    this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'archives' }])
-                        .then(res => { this.archives = res?.list || res?.data || (Array.isArray(res) ? res : []); });
-                } else if (viewName === 'users') {
-                    this.viewTitle = 'Manajemen Pegawai';
-                    this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'users' }])
-                        .then(res => { this.users = Array.isArray(res) ? res : (res?.data || []); });
-                } else if (viewName === 'logs') {
-                    this.viewTitle = 'Log Aktivitas';
-                    this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'logs' }])
-                        .then(res => { this.logs = res?.list || res?.data || (Array.isArray(res) ? res : []); });
-                } else if (viewName === 'settings') { this.viewTitle = 'Konfigurasi Master'; this.loadSettings(); }
-            },
-
-            saveBpm() {
-                this.isLoading = true;
-                const nowISO = new Date().toISOString();
-                const initialTimestamps = { 1: { start: nowISO, end: null } };
-
-                const bpmPayload = {
-                    kode: this.bpmForm.kode || ('PLN-PFK-' + Date.now().toString().slice(-8)),
-                    judul: this.bpmForm.judul,
-                    isPFK: Boolean(this.bpmForm.isPFK),
-                    step: 1,
-                    statusDetail: 'Kirim Surat Permohonan Survey & RAB',
-                    tglPengajuan: nowISO,
-                    stepTimestamps: initialTimestamps
-                };
-                this.callServer('apiHandler', ['saveData', { token: this.currentUser.token, type: 'bpm', data: bpmPayload }])
-                    .then(() => {
-                        this.loadBpmData();
-                        this.navigate('bpm');
-                    })
-                    .finally(() => this.isLoading = false);
-            },
-
-            openProcessDetail(item) {
-                this.selectedBpmItem = item;
-                this.selectedBpmFiles = [];
-                if (!this.selectedBpmItem.step) this.selectedBpmItem.step = 1;
-                this.modals.bpmDetail = true;
-            },
-
-            advanceBpmStep(item) {
-                if (item.step > 10) return;
-
-                const currentStep = item.step;
-                const nextStep = currentStep + 1;
-                const nowISO = new Date().toISOString();
-
-                let timestamps = item.stepTimestamps || {};
-                
-                if (!timestamps[currentStep]) timestamps[currentStep] = {};
-                timestamps[currentStep].end = nowISO;
-
-                if (nextStep <= 10) {
-                    if (!timestamps[nextStep]) timestamps[nextStep] = {};
-                    timestamps[nextStep].start = nowISO;
-                }
-
-                let newStatusDetail = 'Selesai 100% - Arsip Tersimpan';
-                if (nextStep <= 10) {
-                    const targetStepObj = this.bpmStepsMaster.find(s => s.no === nextStep);
-                    newStatusDetail = targetStepObj?.title || 'Progres Berjalan';
-                }
-
-                this.callServer('apiHandler', ['saveData', { 
-                    token: this.currentUser.token, 
-                    type: 'bpm', 
-                    data: { 
-                        id: item.id, 
-                        step: nextStep, 
-                        statusDetail: newStatusDetail,
-                        stepTimestamps: timestamps,
-                        tglSelesai: nextStep > 10 ? nowISO : null
-                    } 
-                }]).then(() => {
-                    item.step = nextStep;
-                    item.statusDetail = newStatusDetail;
-                    item.stepTimestamps = timestamps;
-                    if (nextStep > 10) item.tglSelesai = nowISO;
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: nextStep > 10 ? 'Agenda Selesai 100%!' : 'Progres Berhasil Diperbarui!',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                    this.loadBpmData();
-                }).catch(err => {
-                    Swal.fire('Gagal', typeof err === 'string' ? err : 'Gagal memperbarui step.', 'error');
-                });
-            },
-
-            openCatatanModal(item) {
-                Swal.fire({
-                  title: 'Beri Catatan Progres',
-                  input: 'textarea',
-                  inputPlaceholder: 'Tuliskan catatan progress atau instruksi untuk step ini...',
-                  showCancelButton: true,
-                  confirmButtonText: 'Simpan Catatan',
-                  cancelButtonText: 'Batal',
-                  confirmButtonColor: '#005C9A'
-                }).then((result) => {
-                  if (result.isConfirmed && result.value) {
-                    this.callServer('apiHandler', ['saveData', { 
-                      token: this.currentUser.token, 
-                      type: 'bpm', 
-                      data: { id: item.id, statusDetail: result.value } 
-                    }]).then(() => {
-                      item.statusDetail = result.value;
-                      Swal.fire({ icon: 'success', title: 'Catatan Berhasil Disimpan!', timer: 1500, showConfirmButton: false });
-                      this.loadBpmData();
-                    });
-                  }
-                });
-            },
-
-            handleBpmFileSelect(e) {
-                const files = Array.from(e.target.files);
-                if (files.length > 0) this.selectedBpmFiles = files;
-            },
-
-            handleBpmDrop(e) {
-                this.isDraggingBpm = false;
-                const files = Array.from(e.dataTransfer.files);
-                if (files.length > 0) this.selectedBpmFiles = files;
-            },
-
-            uploadBpmFiles() {
-                if (!this.selectedBpmFiles || this.selectedBpmFiles.length === 0) return;
-                this.isBpmUploading = true;
-
-                const promises = this.selectedBpmFiles.map(file => {
-                    return new Promise((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = (evt) => {
-                            const base64Data = evt.target.result.split(',')[1];
-                            resolve({ name: file.name, mimeType: file.type, base64: base64Data });
-                        };
-                        reader.onerror = reject;
-                        reader.readAsDataURL(file);
-                    });
-                });
-
-                Promise.all(promises)
-                    .then(fileObjs => {
-                        const payload = {
-                            id: this.selectedBpmItem.id || this.selectedBpmItem.kode,
-                            fileObj: fileObjs[0],
-                            files: fileObjs,
-                            judul: this.selectedBpmItem.judul
-                        };
-
-                        return this.callServer('apiHandler', ['saveData', {
-                            token: this.currentUser.token,
-                            type: 'bpm',
-                            data: payload
-                        }]);
-                    })
-                    .then(() => {
-                        Swal.fire({ icon: 'success', title: 'Dokumen Berhasil Diunggah!', timer: 1500, showConfirmButton: false });
-                        this.selectedBpmFiles = [];
-                        this.loadBpmData();
-                    })
-                    .catch(err => Swal.fire('Gagal Upload', typeof err === 'string' ? err : 'Terjadi kesalahan saat mengunggah berkas.', 'error'))
-                    .finally(() => this.isBpmUploading = false);
-            },
-
-            loadSettings() {
-                this.callServer('apiHandler', ['getSettings', { token: this.currentUser.token }])
-                    .then(res => {
-                        const master = res?.data || res;
-                        if (master) {
-                            this.masterData.categories = master.categories || ['PFK', 'ESTETIKA', 'Pelanggan TM', 'SPKLU'];
-                            this.masterData.extensions = master.extensions || ['PDF', 'DOCX', 'XLSX'];
-                            this.masterData.nomors = master.nomors || ['001/PLN/2026'];
-                            this.masterData.lemaris = master.lemaris || ['Lemari A', 'Lemari B', 'Lemari C', 'Lemari_D'];
-                            this.masterData.ordners = master.ordners || ['Ordner_01', 'Ordner_02', 'Ordner_03', 'Ordner_04'];
-                        }
-                    });
-            },
-
-            prevPage() { if (this.pagination.currentPage > 1) this.pagination.currentPage--; },
-            nextPage() { if (this.pagination.currentPage < this.totalPages) this.pagination.currentPage++; },
-            getFileIcon(type) {
-                if (!type) return { icon: 'fas fa-file', bg: 'bg-slate-100 dark:bg-slate-700', text: 'text-slate-400' };
-                const t = type.toLowerCase();
-                if (t.includes('pdf')) return { icon: 'fas fa-file-pdf', bg: 'bg-rose-50 dark:bg-rose-900/30 border-rose-100 dark:border-rose-800', text: 'text-rose-500' };
-                if (t.includes('xls')) return { icon: 'fas fa-file-excel', bg: 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-100 dark:border-emerald-800', text: 'text-emerald-600' };
-                return { icon: 'fas fa-file-alt', bg: 'bg-sky-50 dark:bg-sky-900/30 border-sky-100 dark:border-sky-800', text: 'text-[#005C9A] dark:text-sky-300' };
             }
+
         }));
     });
   </script>
-
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
 </body>
 
 </html>
