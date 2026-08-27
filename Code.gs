@@ -10,6 +10,44 @@ const ADMIN_DEFAULT = {
 // Nama Folder di Google Drive tempat file disimpan
 const DRIVE_FOLDER_NAME = "Arsip Digital Uploads";
 
+// --- KONFIGURASI KEAMANAN ---
+const MAX_LOGIN_ATTEMPTS = 5;         // Percobaan login gagal sebelum akun dikunci sementara
+const LOCK_DURATION_MINUTES = 15;     // Lama penguncian akun (menit)
+const OTP_EXPIRY_MINUTES = 10;        // Lama kode OTP berlaku (menit)
+const OTP_REQUEST_COOLDOWN_SECONDS = 60; // Jeda minimum antar permintaan OTP (detik)
+
+// Urutan kolom lengkap sheet Users (ditambah kolom keamanan di akhir agar kompatibel mundur)
+const USER_SHEET_HEADERS = [
+  'Username', 'Password', 'Nama Lengkap', 'Role', 'Status', 'Token', 'Email', 'OTP',
+  'Salt', 'OtpExpiry', 'FailedAttempts', 'LockUntil', 'LastOtpRequestAt'
+];
+
+// Pastikan sheet Users punya seluruh kolom keamanan (migrasi otomatis untuk sheet lama)
+function ensureUserSheetSchema(ss) {
+  const sheet = ss.getSheetByName('Users');
+  if (!sheet) return;
+  const lastCol = sheet.getLastColumn();
+  const header = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+  if (header.length < USER_SHEET_HEADERS.length) {
+    sheet.getRange(1, 1, 1, USER_SHEET_HEADERS.length).setValues([USER_SHEET_HEADERS]);
+  }
+}
+
+// Hash password dengan SHA-256 + salt unik per user
+function hashPassword(password, salt) {
+  const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(password) + '::' + String(salt), Utilities.Charset.UTF_8);
+  return bytes.map(b => ((b < 0 ? b + 256 : b).toString(16).padStart(2, '0'))).join('');
+}
+
+function generateSalt() {
+  return Utilities.getUuid().replace(/-/g, '');
+}
+
+// Deteksi apakah string sudah berupa hash SHA-256 (64 karakter hex) atau masih password polos (data lama)
+function looksHashed(pw) {
+  return typeof pw === 'string' && /^[a-f0-9]{64}$/i.test(pw);
+}
+
 /**
  * 1. HTTP GET HANDLER
  */
@@ -31,16 +69,19 @@ function initializeSheet() {
   let userSheet = ss.getSheetByName('Users');
   if (!userSheet) {
     userSheet = ss.insertSheet('Users');
-    userSheet.appendRow(['Username', 'Password', 'Nama Lengkap', 'Role', 'Status', 'Token', 'Email', 'OTP']);
+    userSheet.appendRow(USER_SHEET_HEADERS);
+    const adminSalt = generateSalt();
     userSheet.appendRow([
       ADMIN_DEFAULT.user,
-      ADMIN_DEFAULT.pass,
+      hashPassword(ADMIN_DEFAULT.pass, adminSalt),
       ADMIN_DEFAULT.nama,
       ADMIN_DEFAULT.role,
       'Active',
       '',
       ADMIN_DEFAULT.email,
-      ''
+      '',
+      adminSalt,
+      '', 0, '', ''
     ]);
     userSheet.setFrozenRows(1);
   }
@@ -71,7 +112,20 @@ function initializeSheet() {
       ['Lemari', 'Lemari_B'],
       ['Lemari', 'Lemari_C'],
       ['Ordner', 'Ordner_01'],
-      ['Ordner', 'Ordner_02']
+      ['Ordner', 'Ordner_02'],
+      ['ULP', 'ULP Malang Kota'],
+      ['ULP', 'ULP Blimbing'],
+      ['ULP', 'ULP Dinoyo'],
+      ['ULP', 'ULP Kebonagung'],
+      ['ULP', 'ULP Singosari'],
+      ['ULP', 'ULP Lawang'],
+      ['ULP', 'ULP Batu'],
+      ['ULP', 'ULP Tumpang'],
+      ['ULP', 'ULP Bululawang'],
+      ['ULP', 'ULP Gondanglegi'],
+      ['ULP', 'ULP Kepanjen'],
+      ['ULP', 'ULP Sumberpucung'],
+      ['ULP', 'ULP Dampit']
     ];
     defaults.forEach(row => setSheet.appendRow(row));
     setSheet.setFrozenRows(1);
@@ -162,6 +216,7 @@ function getLemariListFromMaster(ss) {
 function apiHandler(action, payload) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
+    ensureUserSheetSchema(ss);
     switch (action) {
       case 'checkSession': return checkSession(ss, payload);
       case 'login': return loginUser(ss, payload);
@@ -174,6 +229,7 @@ function apiHandler(action, payload) {
       case 'saveProfile': return saveProfile(ss, payload);
       case 'getStats': return getDashboardStats(ss, payload);
       case 'getDashboardStats': return getDashboardStats(ss, payload);
+      case 'getNextNomorSurat': return getNextNomorSurat(ss);
       case 'uploadBpmAttachments': return uploadBpmAttachments(ss, payload);
       case 'getData': return getData(ss, payload);
       case 'saveData': return saveData(ss, payload);
@@ -214,11 +270,56 @@ function loginUser(ss, { username, password }) {
   const data = sheet.getDataRange().getValues();
 
   for (let i = 1; i < data.length; i++) {
-    if (data[i][0] == username && data[i][1] == password) {
+    if (data[i][0] == username) {
+      const row = i + 1;
+      const now = new Date();
+
+      // 1. Cek apakah akun sedang terkunci akibat terlalu banyak percobaan gagal
+      const lockUntilRaw = data[i][11];
+      if (lockUntilRaw) {
+        const lockUntil = new Date(lockUntilRaw);
+        if (!isNaN(lockUntil) && now < lockUntil) {
+          const minutesLeft = Math.ceil((lockUntil - now) / 60000);
+          throw new Error(`Akun terkunci sementara akibat terlalu banyak percobaan gagal. Coba lagi dalam ${minutesLeft} menit.`);
+        }
+      }
+
+      // 2. Verifikasi password (mendukung migrasi otomatis dari password lama yang belum di-hash)
+      const storedPassword = data[i][1] ? data[i][1].toString() : '';
+      const storedSalt = data[i][8] ? data[i][8].toString() : '';
+      let passwordMatches = false;
+
+      if (looksHashed(storedPassword) && storedSalt) {
+        passwordMatches = (hashPassword(password, storedSalt) === storedPassword);
+      } else {
+        // Data lama: password masih polos di sheet. Cocokkan langsung, lalu upgrade ke hash.
+        passwordMatches = (storedPassword === String(password));
+        if (passwordMatches) {
+          const newSalt = generateSalt();
+          sheet.getRange(row, 2).setValue(hashPassword(password, newSalt));
+          sheet.getRange(row, 9).setValue(newSalt);
+        }
+      }
+
+      if (!passwordMatches) {
+        const attempts = (parseInt(data[i][10], 10) || 0) + 1;
+        sheet.getRange(row, 11).setValue(attempts);
+        if (attempts >= MAX_LOGIN_ATTEMPTS) {
+          const lockUntil = new Date(now.getTime() + LOCK_DURATION_MINUTES * 60000);
+          sheet.getRange(row, 12).setValue(lockUntil);
+          throw new Error(`Terlalu banyak percobaan gagal. Akun dikunci selama ${LOCK_DURATION_MINUTES} menit.`);
+        }
+        throw new Error("Username atau Password salah.");
+      }
+
       if (data[i][4] !== 'Active') throw new Error("Akun Anda dinonaktifkan/suspend.");
 
+      // 3. Login berhasil -> reset counter percobaan gagal
+      sheet.getRange(row, 11).setValue(0);
+      sheet.getRange(row, 12).setValue('');
+
       const token = Utilities.getUuid();
-      sheet.getRange(i + 1, 6).setValue(token);
+      sheet.getRange(row, 6).setValue(token);
 
       logActivity(ss, username, 'Login', 'User berhasil login');
       return {
@@ -245,8 +346,25 @@ function requestOtp(ss, { email }) {
 
   for (let i = 1; i < data.length; i++) {
     if (data[i][6] && data[i][6].toString().toLowerCase() === email.toLowerCase()) {
+      const row = i + 1;
+      const now = new Date();
+
+      // Cegah spam permintaan OTP beruntun
+      const lastRequestRaw = data[i][12];
+      if (lastRequestRaw) {
+        const lastRequest = new Date(lastRequestRaw);
+        const secondsSince = (now - lastRequest) / 1000;
+        if (!isNaN(lastRequest) && secondsSince < OTP_REQUEST_COOLDOWN_SECONDS) {
+          const waitSeconds = Math.ceil(OTP_REQUEST_COOLDOWN_SECONDS - secondsSince);
+          throw new Error(`Mohon tunggu ${waitSeconds} detik sebelum meminta kode OTP baru.`);
+        }
+      }
+
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      sheet.getRange(i + 1, 8).setValue(otp);
+      const expiry = new Date(now.getTime() + OTP_EXPIRY_MINUTES * 60000);
+      sheet.getRange(row, 8).setValue(otp);
+      sheet.getRange(row, 10).setValue(expiry);
+      sheet.getRange(row, 13).setValue(now);
 
       try {
         MailApp.sendEmail({
@@ -255,7 +373,7 @@ function requestOtp(ss, { email }) {
           htmlBody: `
             <h3>Permintaan Reset Password</h3>
             <p>Halo ${data[i][2]},</p>
-            <p>Gunakan kode OTP berikut untuk me-reset kata sandi Anda:</p>
+            <p>Gunakan kode OTP berikut untuk me-reset kata sandi Anda. Kode berlaku selama ${OTP_EXPIRY_MINUTES} menit:</p>
             <h2 style="background: #005C9A; color: #ffffff; padding: 10px 20px; display: inline-block; letter-spacing: 5px; border-radius: 8px;">${otp}</h2>
           `
         });
@@ -277,14 +395,30 @@ function resetPassword(ss, { email, otp, newPass }) {
 
   for (let i = 1; i < data.length; i++) {
     if (data[i][6] && data[i][6].toString().toLowerCase() === email.toLowerCase()) {
-      if (String(data[i][7]) === String(otp)) {
-        sheet.getRange(i + 1, 2).setValue(newPass);
-        sheet.getRange(i + 1, 8).setValue("");
-        logActivity(ss, data[i][0], 'Reset Password', 'Sukses reset password via OTP');
-        return { status: 'success', message: 'Password berhasil diubah.' };
-      } else {
+      const row = i + 1;
+
+      if (String(data[i][7]) !== String(otp) || !data[i][7]) {
         throw new Error("Kode OTP salah atau kadaluarsa.");
       }
+
+      const expiryRaw = data[i][9];
+      if (expiryRaw) {
+        const expiry = new Date(expiryRaw);
+        if (!isNaN(expiry) && new Date() > expiry) {
+          throw new Error("Kode OTP sudah kadaluarsa. Silakan minta kode baru.");
+        }
+      }
+
+      const newSalt = generateSalt();
+      sheet.getRange(row, 2).setValue(hashPassword(newPass, newSalt));
+      sheet.getRange(row, 9).setValue(newSalt);
+      sheet.getRange(row, 8).setValue("");   // Hapus OTP setelah dipakai
+      sheet.getRange(row, 10).setValue("");  // Hapus expiry
+      sheet.getRange(row, 11).setValue(0);   // Reset percobaan gagal login
+      sheet.getRange(row, 12).setValue("");  // Buka lock jika ada
+
+      logActivity(ss, data[i][0], 'Reset Password', 'Sukses reset password via OTP');
+      return { status: 'success', message: 'Password berhasil diubah.' };
     }
   }
   throw new Error("User tidak ditemukan.");
@@ -313,13 +447,23 @@ function updateUserProfile(ss, { token, nama_lengkap, password_lama, password_ba
 
   for (let i = 1; i < data.length; i++) {
     if (data[i][0] === user.username) {
-      if (String(data[i][1]) !== String(password_lama)) {
-        throw new Error("Password lama salah.");
-      }
+      const row = i + 1;
+      const storedPassword = data[i][1] ? data[i][1].toString() : '';
+      const storedSalt = data[i][8] ? data[i][8].toString() : '';
 
-      sheet.getRange(i + 1, 3).setValue(nama_lengkap);
+      let oldPasswordMatches = false;
+      if (looksHashed(storedPassword) && storedSalt) {
+        oldPasswordMatches = (hashPassword(password_lama, storedSalt) === storedPassword);
+      } else {
+        oldPasswordMatches = (storedPassword === String(password_lama));
+      }
+      if (!oldPasswordMatches) throw new Error("Password lama salah.");
+
+      sheet.getRange(row, 3).setValue(nama_lengkap);
       if (password_baru && password_baru.trim() !== "") {
-        sheet.getRange(i + 1, 2).setValue(password_baru);
+        const newSalt = generateSalt();
+        sheet.getRange(row, 2).setValue(hashPassword(password_baru, newSalt));
+        sheet.getRange(row, 9).setValue(newSalt);
       }
 
       logActivity(ss, user.username, 'Update Profil', 'User memperbarui profil/password mandiri');
@@ -352,7 +496,37 @@ function saveProfile(ss, { token, profile }) {
   });
 }
 
-// --- DASHBOARD STATS ---
+// Konversi angka bulan (1-12) ke angka romawi, untuk format penomoran surat resmi
+function toRomanMonth(month) {
+  const romans = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+  return romans[month - 1] || 'I';
+}
+
+// Hitung nomor urut berikutnya untuk format: 001/REN/VIII/2026 (reset tiap tahun)
+function generateNomorSuratPreview(ss) {
+  const bpmSheet = getOrCreateBpmSheet(ss);
+  const data = bpmSheet.getDataRange().getValues();
+  const now = new Date();
+  const year = now.getFullYear();
+  const pattern = /^(\d+)\/REN\/[IVXLCDM]+\/(\d{4})$/;
+  let maxSeq = 0;
+
+  for (let i = 1; i < data.length; i++) {
+    const val = data[i][13] ? data[i][13].toString().trim() : '';
+    const m = val.match(pattern);
+    if (m && parseInt(m[2], 10) === year) {
+      const seq = parseInt(m[1], 10);
+      if (seq > maxSeq) maxSeq = seq;
+    }
+  }
+
+  const nextSeq = maxSeq + 1;
+  return `${String(nextSeq).padStart(3, '0')}/REN/${toRomanMonth(now.getMonth() + 1)}/${year}`;
+}
+
+function getNextNomorSurat(ss) {
+  return { status: 'success', data: generateNomorSuratPreview(ss) };
+}
 function getDashboardStats(ss, { token }) {
   const user = validateToken(ss, token);
   const userSheet = ss.getSheetByName('Users');
@@ -443,7 +617,7 @@ function getData(ss, { token, type }) {
       if (row[0]) {
         result.push({
           username: row[0],
-          password: user.role === 'Admin' ? row[1] : '***',
+          password: '',
           nama_lengkap: row[2],
           fullname: row[2],
           role: row[3],
@@ -725,7 +899,7 @@ function saveData(ss, { token, type, data }) {
       let tglPengajuan = rowData[16] || rowData[6] || now;
       let tglSurvey    = rowData[17] || (stepVal >= 4 ? now : '');
       let tglManajemen = rowData[18] || (stepVal >= 7 ? now : '');
-      let tglSelesai   = rowData[19] || (stepVal >= 10 ? now : '');
+      let tglSelesai   = rowData[19] || (stepVal >= 9 ? now : '');
 
       let timestampsStr = data.stepTimestamps ? JSON.stringify(data.stepTimestamps) : (rowData[20] || '{}');
 
@@ -755,34 +929,43 @@ function saveData(ss, { token, type, data }) {
       
       logActivity(ss, user.username, 'Update BPM', `Memperbarui alur BPM: ${data.permohonan || data.judul || rowData[2]} ke Step ${stepVal}`);
     } else { // Permohonan BPM Baru
-      const newId = Date.now().toString();
-      const initialTimestampsStr = JSON.stringify(data.stepTimestamps || { 1: { start: now.toISOString(), end: null } });
+      const lock = LockService.getScriptLock();
+      lock.waitLock(15000);
+      let finalNomorSurat;
+      try {
+        finalNomorSurat = generateNomorSuratPreview(ss);
 
-      bpmSheet.appendRow([
-        newId,
-        data.kode || ('PLN-PFK-' + Math.floor(10000000 + Math.random() * 90000000)),
-        data.permohonan || data.judul || 'Permohonan Survey',
-        data.isPFK !== undefined ? Boolean(data.isPFK) : false,
-        data.step || 1,
-        data.statusDetail || 'Kirim Surat Permohonan Survey & RAB',
-        now,
-        user.username,
-        data.namaLokasi || data.lokasi || '-',
-        data.alamat || '-',
-        data.ulp || '-',
-        data.jumlahUnit || '-',
-        data.tarifDaya || '-',
-        data.nomorSurat || '-',
-        data.tanggalSurat || '-',
-        data.pic || '-',
-        data.tglPengajuan || now, // Tgl_Pengajuan
-        '',  // Tgl_Survey
-        '',  // Tgl_Manajemen
-        '',  // Tgl_Selesai
-        initialTimestampsStr,
-        ''   // Lampiran
-      ]);
-      logActivity(ss, user.username, 'Pengajuan BPM', `Membuat permohonan survey baru: ${data.permohonan || data.judul}`);
+        const newId = Date.now().toString();
+        const initialTimestampsStr = JSON.stringify(data.stepTimestamps || { 1: { start: now.toISOString(), end: null } });
+
+        bpmSheet.appendRow([
+          newId,
+          data.kode || ('PLN-PFK-' + Math.floor(10000000 + Math.random() * 90000000)),
+          data.permohonan || data.judul || 'Permohonan Survey',
+          data.isPFK !== undefined ? Boolean(data.isPFK) : false,
+          data.step || 1,
+          data.statusDetail || 'Kirim Surat Permohonan Survey & RAB',
+          now,
+          user.username,
+          data.namaLokasi || data.lokasi || '-',
+          data.alamat || '-',
+          data.ulp || '-',
+          data.jumlahUnit || '-',
+          data.tarifDaya || '-',
+          finalNomorSurat,
+          data.tanggalSurat || '-',
+          data.pic || '-',
+          data.tglPengajuan || now, // Tgl_Pengajuan
+          '',  // Tgl_Survey
+          '',  // Tgl_Manajemen
+          '',  // Tgl_Selesai
+          initialTimestampsStr,
+          ''   // Lampiran
+        ]);
+      } finally {
+        lock.releaseLock();
+      }
+      logActivity(ss, user.username, 'Pengajuan BPM', `Membuat permohonan survey baru: ${data.permohonan || data.judul} (No. Surat: ${finalNomorSurat})`);
     }
   }
   else if (type === 'users' && user.role === 'Admin') {
@@ -790,14 +973,23 @@ function saveData(ss, { token, type, data }) {
     if (!data.isEdit) {
       const users = sheet.getDataRange().getValues();
       if (users.some(u => u[0] === data.username)) throw new Error("Username sudah ada.");
-      sheet.appendRow([data.username, data.password, data.nama_lengkap, data.role, data.status, '', data.email || '', '']);
+      if (!data.password || data.password.trim() === '') throw new Error("Password wajib diisi untuk user baru.");
+      const salt = generateSalt();
+      sheet.appendRow([data.username, hashPassword(data.password, salt), data.nama_lengkap, data.role, data.status, '', data.email || '', '', salt, '', 0, '', '']);
       logActivity(ss, user.username, 'Add User', `Menambah user: ${data.username}`);
     } else {
       const allData = sheet.getDataRange().getValues();
       for (let i = 1; i < allData.length; i++) {
         if (allData[i][0] === data.username) {
-          sheet.getRange(i + 1, 2, 1, 4).setValues([[data.password, data.nama_lengkap, data.role, data.status]]);
-          sheet.getRange(i + 1, 7).setValue(data.email || '');
+          const row = i + 1;
+          sheet.getRange(row, 3, 1, 3).setValues([[data.nama_lengkap, data.role, data.status]]);
+          sheet.getRange(row, 7).setValue(data.email || '');
+          // Hanya ubah password jika admin mengisi field baru; kosongkan untuk tetap pakai password lama
+          if (data.password && data.password.trim() !== '') {
+            const newSalt = generateSalt();
+            sheet.getRange(row, 2).setValue(hashPassword(data.password, newSalt));
+            sheet.getRange(row, 9).setValue(newSalt);
+          }
           break;
         }
       }
@@ -917,6 +1109,7 @@ function getSettings(ss, { token }) {
   let nomors = [];
   let lemaris = [];
   let ordners = [];
+  let ulps = [];
 
   if (sheet) {
     const data = sheet.getDataRange().getValues();
@@ -926,6 +1119,7 @@ function getSettings(ss, { token }) {
       if (data[i][0] === 'Nomor') nomors.push(data[i][1]);
       if (data[i][0] === 'Lemari') lemaris.push(data[i][1]);
       if (data[i][0] === 'Ordner') ordners.push(data[i][1]);
+      if (data[i][0] === 'ULP') ulps.push(data[i][1]);
     }
   }
 
@@ -944,6 +1138,11 @@ function getSettings(ss, { token }) {
 
   const cleanLemaris = lemaris.length > 0 ? lemaris : ['Lemari_A', 'Lemari_B', 'Lemari_C'];
   const cleanOrdners = ordners.length > 0 ? ordners : ['Ordner_01', 'Ordner_02', 'Ordner_03'];
+  const cleanUlps = ulps.length > 0 ? ulps : [
+    'ULP Malang Kota', 'ULP Blimbing', 'ULP Dinoyo', 'ULP Kebonagung', 'ULP Singosari',
+    'ULP Lawang', 'ULP Batu', 'ULP Tumpang', 'ULP Bululawang', 'ULP Gondanglegi',
+    'ULP Kepanjen', 'ULP Sumberpucung', 'ULP Dampit'
+  ];
   cleanLemaris.forEach(l => getOrCreateLemariSheet(ss, l));
 
   return {
@@ -954,6 +1153,7 @@ function getSettings(ss, { token }) {
       nomors,
       lemaris: cleanLemaris,
       ordners: cleanOrdners,
+      ulps: cleanUlps,
       userDirectory
     }
   };
@@ -1005,7 +1205,8 @@ function saveMasterSettings(ss, { token, data }) {
     extensions: 'Extension',
     nomors: 'Nomor',
     lemaris: 'Lemari',
-    ordners: 'Ordner'
+    ordners: 'Ordner',
+    ulps: 'ULP'
   };
 
   Object.keys(mapKeys).forEach(key => {

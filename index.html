@@ -62,52 +62,95 @@
 
   <!-- LOGIN SCREEN -->
   <div x-show="!isAuthenticated" x-transition.opacity
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cover bg-center"
-    style="background-image: url('https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');">
-    <div class="absolute inset-0 bg-gradient-to-tr from-[#005C9A]/85 to-[#00A2E2]/70 backdrop-blur-[4px]"></div>
+    class="fixed inset-0 z-50 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden"
+    :class="isDarkMode ? 'bg-slate-950' : 'bg-white'">
 
-    <div
-      class="relative z-10 p-6 sm:p-10 rounded-3xl sm:rounded-[32px] shadow-2xl w-full max-w-[420px] flex flex-col border backdrop-blur-md transition-colors duration-300"
-      :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/50 text-white' : 'bg-white/95 border-white/40 text-slate-800'">
-      <div class="text-center mb-6 sm:mb-8 flex flex-col items-center">
-        <div class="w-16 h-20 sm:w-20 sm:h-24 mb-3 sm:mb-4 flex items-center justify-center">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png" class="h-20 sm:h-24 w-auto object-contain drop-shadow-sm transition-transform hover:scale-105 duration-300" alt="Logo PLN">
+    <!-- BACKGROUND VISUAL KHUSUS LAYAR SEMPIT/MOBILE (panel kanan disembunyikan di sini, jadi latar tidak polos kosong) -->
+    <div class="absolute inset-0 lg:hidden">
+      <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');"></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-[#005C9A]/95 via-[#004b7e]/92 to-slate-950/95"></div>
+    </div>
+
+    <!-- PANEL KIRI: FORM LOGIN -->
+    <div class="relative z-10 w-full lg:w-[44%] xl:w-[40%] min-h-full lg:min-h-0 flex flex-col justify-center px-6 sm:px-14 lg:px-16 xl:px-20 py-14 lg:py-0 flex-shrink-0">
+
+      <div class="w-full">
+        <!-- LOGO -->
+        <div class="flex items-center gap-3.5 mb-12 sm:mb-16">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png" class="h-12 sm:h-14 w-auto object-contain" alt="Logo PLN">
+          <div class="leading-tight">
+            <p class="font-black text-lg sm:text-xl tracking-tight text-white" :class="{'lg:text-slate-900': !isDarkMode}">E-ARSIP</p>
+            <p class="font-black text-lg sm:text-xl tracking-tight -mt-1 text-sky-300" :class="{'lg:text-[#005C9A]': !isDarkMode}">PLN</p>
+          </div>
         </div>
-        <h3 class="text-[#005C9A] dark:text-[#00A2E2] font-extrabold text-[10px] sm:text-[11px] uppercase tracking-[0.25em] mb-1">D-Workspace PLN</h3>
-        <h1 class="text-xl sm:text-2xl font-black tracking-tight" :class="isDarkMode ? 'text-white' : 'text-slate-900'">PT PLN (PERSERO)</h1>
-        <p class="text-xs mt-1.5 font-medium" :class="isDarkMode ? 'text-slate-400' : 'text-slate-500'">Silakan masuk menggunakan kredensial korporat Anda</p>
+
+        <!-- HEADING -->
+        <h1 class="text-4xl sm:text-5xl font-black tracking-tight mb-2 text-white" :class="{'lg:text-slate-900': !isDarkMode}">Log In</h1>
+        <p class="text-base sm:text-lg font-bold mb-2 text-slate-200" :class="{'lg:text-slate-500': !isDarkMode}">Portal Arsip Digital & BPM Survey</p>
+        <p class="text-sm sm:text-base mb-10 sm:mb-12 text-slate-300" :class="{'lg:text-slate-400': !isDarkMode}">Masuk menggunakan kredensial korporat Anda untuk mengakses layanan.</p>
+
+        <form @submit.prevent="login" class="w-full space-y-5">
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+              <i class="fas fa-user text-slate-400 group-focus-within:text-[#005C9A] transition-colors text-base"></i>
+            </div>
+            <input x-model="loginForm.username" type="text"
+              :class="isDarkMode ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500' : 'bg-white lg:bg-slate-50 border-slate-200 text-slate-700 placeholder-slate-400'"
+              class="w-full pr-5 py-4 sm:py-5 border rounded-2xl text-base font-medium focus:outline-none focus:border-[#005C9A] focus:ring-4 focus:ring-[#005C9A]/10 transition-all duration-200 shadow-lg lg:shadow-none"
+              style="padding-left: 3.25rem;"
+              placeholder="Username / NIP" required>
+          </div>
+
+          <div class="relative group">
+            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+              <i class="fas fa-lock text-slate-400 group-focus-within:text-[#005C9A] transition-colors text-base"></i>
+            </div>
+            <input x-model="loginForm.password" :type="showLoginPassword ? 'text' : 'password'"
+              :class="isDarkMode ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500' : 'bg-white lg:bg-slate-50 border-slate-200 text-slate-700 placeholder-slate-400'"
+              class="w-full py-4 sm:py-5 border rounded-2xl text-base font-medium focus:outline-none focus:border-[#005C9A] focus:ring-4 focus:ring-[#005C9A]/10 transition-all duration-200 shadow-lg lg:shadow-none"
+              style="padding-left: 3.25rem; padding-right: 3.25rem;"
+              placeholder="Password" required>
+            <button type="button" @click="showLoginPassword = !showLoginPassword"
+              class="absolute inset-y-0 right-0 pr-5 flex items-center text-slate-400 hover:text-[#005C9A] transition-colors">
+              <i class="fas text-base" :class="showLoginPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+            </button>
+          </div>
+
+          <div class="flex justify-end !mt-3">
+            <a href="#" @click.prevent="modals.forgot = true; forgotStep = 1;"
+              class="text-sm text-sky-300 lg:text-[#00A2E2] hover:text-white lg:hover:text-[#005C9A] font-bold transition-colors">Lupa Password Akun?</a>
+          </div>
+
+          <button type="submit" class="w-full !mt-5 bg-gradient-to-r from-[#005C9A] to-[#00A2E2] hover:opacity-95 text-white font-bold py-4 sm:py-5 rounded-2xl shadow-xl shadow-[#005C9A]/30 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center text-sm tracking-wider uppercase" :disabled="isLoading">
+            <span x-show="!isLoading" class="flex items-center gap-2">MASUK SISTEM <i class="fas fa-arrow-right text-xs"></i></span>
+            <span x-show="isLoading" class="flex items-center gap-2">
+              <i class="fas fa-circle-notch fa-spin"></i> Autentikasi...
+            </span>
+          </button>
+        </form>
+
+        <div class="mt-14 sm:mt-16 text-left">
+          <p class="text-[10px] font-bold tracking-wider uppercase text-slate-400" :class="{'lg:text-slate-400': true}">&copy; 2026 PT PLN (Persero). All Rights Reserved.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL KANAN: VISUAL / BRANDING -->
+    <div class="hidden lg:block lg:w-[56%] xl:w-[60%] relative overflow-hidden flex-shrink-0">
+      <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');"></div>
+      <div class="absolute inset-0 bg-gradient-to-tr from-[#005C9A]/90 via-[#005C9A]/60 to-[#00A2E2]/40"></div>
+
+      <!-- Kartu Logo Melayang -->
+      <div class="absolute top-10 left-10 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl px-6 py-4 flex items-center gap-4">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/9/97/Logo_PLN.png" class="h-10 w-auto object-contain" alt="Logo PLN">
+        <div class="h-10 w-px bg-slate-200"></div>
+        <p class="text-slate-700 font-bold text-sm leading-tight">PT PLN<br>(Persero)</p>
       </div>
 
-      <form @submit.prevent="login" class="w-full space-y-4">
-        <div class="relative group">
-          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <i class="fas fa-user text-slate-400 group-focus-within:text-[#005C9A] transition-colors text-sm"></i>
-          </div>
-          <input x-model="loginForm.username" type="text" :class="isDarkMode ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-200 text-slate-700 placeholder-slate-400'" class="w-full pl-11 pr-4 py-3 sm:py-3.5 border rounded-2xl text-sm font-medium focus:outline-none focus:border-[#005C9A] focus:ring-4 focus:ring-[#005C9A]/10 transition-all duration-200" placeholder="Username / NIP" required>
-        </div>
-
-        <div class="relative group">
-          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <i class="fas fa-lock text-slate-400 group-focus-within:text-[#005C9A] transition-colors text-sm"></i>
-          </div>
-          <input x-model="loginForm.password" type="password" :class="isDarkMode ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-200 text-slate-700 placeholder-slate-400'" class="w-full pl-11 pr-4 py-3 sm:py-3.5 border rounded-2xl text-sm font-medium focus:outline-none focus:border-[#005C9A] focus:ring-4 focus:ring-[#005C9A]/10 transition-all duration-200" placeholder="Password" required>
-        </div>
-
-        <div class="flex justify-end">
-          <a href="#" @click.prevent="modals.forgot = true; forgotStep = 1;"
-            class="text-xs text-[#00A2E2] hover:text-[#005C9A] font-bold transition-colors">Lupa Password Akun?</a>
-        </div>
-
-        <button type="submit" class="w-full mt-2 bg-gradient-to-r from-[#005C9A] to-[#00A2E2] hover:opacity-95 text-white font-bold py-3.5 rounded-2xl shadow-xl shadow-[#005C9A]/20 transition-all duration-300 transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center text-xs tracking-wider uppercase" :disabled="isLoading">
-          <span x-show="!isLoading" class="flex items-center gap-2">MASUK SISTEM <i class="fas fa-arrow-right text-[10px]"></i></span>
-          <span x-show="isLoading" class="flex items-center gap-2">
-            <i class="fas fa-circle-notch fa-spin"></i> Autentikasi...
-          </span>
-        </button>
-      </form>
-
-      <div class="mt-6 sm:mt-8 text-center border-t border-slate-100/10 pt-4 sm:pt-5">
-        <p class="text-slate-400 text-[10px] font-bold tracking-wider uppercase">&copy; 2026 PT PLN (Persero). All Rights Reserved.</p>
+      <!-- Teks Bawah -->
+      <div class="absolute bottom-16 left-14 right-14 text-white">
+        <h2 class="text-4xl xl:text-5xl font-black tracking-tight leading-tight mb-4">Sistem Arsip Digital<br>& BPM Survey</h2>
+        <p class="text-base xl:text-lg font-medium text-white/85 max-w-lg">Kelola dokumentasi kearsipan dan pantau seluruh alur kerja permohonan survey PFK secara terpusat, cepat, dan transparan.</p>
       </div>
     </div>
   </div>
@@ -369,9 +412,9 @@
             class="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-16">
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-              <div
-                class="rounded-3xl p-5 border shadow-sm flex items-center justify-between transition-colors"
-                :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200/80'">
+              <div @click="navigate('bpm', 'all')"
+                class="rounded-3xl p-5 border shadow-sm flex items-center justify-between transition-all cursor-pointer hover:shadow-md hover:scale-[1.02]"
+                :class="isDarkMode ? 'bg-slate-800 border-slate-700 hover:border-sky-500/50' : 'bg-white border-slate-200/80 hover:border-[#005C9A]/40'">
                 <div>
                   <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Total Pengajuan Saya</p>
                   <h3 class="text-2xl font-black text-[#005C9A] dark:text-[#00A2E2] mt-1" x-text="bpmList.length">0</h3>
@@ -381,25 +424,25 @@
                 </div>
               </div>
 
-              <div
-                class="rounded-3xl p-5 border shadow-sm flex items-center justify-between transition-colors"
-                :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200/80'">
+              <div @click="navigate('bpm', 'active')"
+                class="rounded-3xl p-5 border shadow-sm flex items-center justify-between transition-all cursor-pointer hover:shadow-md hover:scale-[1.02]"
+                :class="isDarkMode ? 'bg-slate-800 border-slate-700 hover:border-amber-500/50' : 'bg-white border-slate-200/80 hover:border-amber-500/40'">
                 <div>
                   <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Dalam Proses Survey / RAB</p>
-                  <h3 class="text-2xl font-black text-amber-500 mt-1" x-text="bpmList.filter(b => b.step <= 10).length">0</h3>
+                  <h3 class="text-2xl font-black text-amber-500 mt-1" x-text="bpmList.filter(b => b.step <= 9).length">0</h3>
                 </div>
                 <div class="p-3 bg-amber-50 dark:bg-slate-700 text-amber-500 rounded-2xl">
                   <i class="fas fa-spinner fa-spin text-base"></i>
                 </div>
               </div>
 
-              <div
-                class="rounded-3xl p-5 border shadow-sm flex items-center justify-between transition-colors"
-                :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200/80'">
+              <div @click="navigate('bpm', 'completed')"
+                class="rounded-3xl p-5 border shadow-sm flex items-center justify-between transition-all cursor-pointer hover:shadow-md hover:scale-[1.02]"
+                :class="isDarkMode ? 'bg-slate-800 border-slate-700 hover:border-emerald-500/50' : 'bg-white border-slate-200/80 hover:border-emerald-500/40'">
                 <div>
                   <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Selesai & Diarsip</p>
                   <h3 class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1"
-                    x-text="bpmList.filter(b => b.step > 10).length">0</h3>
+                    x-text="bpmList.filter(b => b.step > 9).length">0</h3>
                 </div>
                 <div class="p-3 bg-emerald-50 dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 rounded-2xl">
                   <i class="fas fa-check-circle text-base"></i>
@@ -463,9 +506,14 @@
                       <label class="block text-xs font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
                         ULP <span class="text-rose-500">*</span>
                       </label>
-                      <input x-model="bpmForm.ulp" type="text" placeholder="Unit ULP (Contoh: ULP Malang Kota)"
-                        :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:bg-white'"
+                      <select x-model="bpmForm.ulp"
+                        :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white' : 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white'"
                         class="w-full px-4 py-3 border rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-medium transition-all" required>
+                        <option value="" disabled selected>Pilih Unit ULP</option>
+                        <template x-for="u in masterData.ulps" :key="u">
+                          <option :value="u" x-text="u"></option>
+                        </template>
+                      </select>
                     </div>
 
                     <!-- Jumlah Unit -->
@@ -493,12 +541,20 @@
                   <div class="space-y-4">
                     <!-- Nomor Surat / Nodin -->
                     <div class="space-y-1.5">
-                      <label class="block text-xs font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
+                      <label class="flex items-center gap-1.5 text-xs font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
                         Nomor Surat / Nodin <span class="text-rose-500">*</span>
+                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">OTOMATIS</span>
                       </label>
-                      <input x-model="bpmForm.nomorSurat" type="text" placeholder="Nomor Surat Resmi / Nodin"
-                        :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:bg-white'"
-                        class="w-full px-4 py-3 border rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-medium transition-all" required>
+                      <div class="relative">
+                        <input x-model="bpmForm.nomorSurat" type="text" readonly placeholder="Memuat nomor..."
+                          :class="isDarkMode ? 'bg-slate-800/60 border-slate-700/80 text-emerald-300' : 'bg-slate-100 border-slate-200 text-slate-600'"
+                          class="w-full px-4 py-3 pr-11 border rounded-2xl outline-none text-sm font-mono font-bold tracking-wide cursor-not-allowed" required>
+                        <button type="button" @click="refreshNomorSurat()" title="Perbarui nomor"
+                          class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-amber-500 transition-colors">
+                          <i class="fas fa-rotate-right text-xs" :class="{'fa-spin': isLoadingNomor}"></i>
+                        </button>
+                      </div>
+                      <p class="text-[10px] text-slate-400">Format: No.Urut/REN/Bulan(Romawi)/Tahun — dibuat otomatis oleh sistem saat pengajuan disimpan.</p>
                     </div>
 
                     <!-- Tanggal Surat / Nodin -->
@@ -519,23 +575,6 @@
                       <input x-model="bpmForm.pic" type="text" placeholder="Penanggung Jawab / PIC Lapangan"
                         :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:bg-white'"
                         class="w-full px-4 py-3 border rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-medium transition-all" required>
-                    </div>
-
-                    <!-- Kategori Percabangan Alur -->
-                    <div class="space-y-1.5">
-                      <label class="block text-xs font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
-                        Kategori Percabangan Alur <span class="text-rose-500">*</span>
-                      </label>
-                      <select x-model="bpmForm.isPFK"
-                        :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'"
-                        class="w-full px-4 py-3 border rounded-2xl font-semibold text-xs outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all cursor-pointer">
-                        <option :value="false" :class="isDarkMode ? 'bg-slate-900 text-white' : 'bg-white text-slate-800'">
-                          Non-PFK (SPKLU / Pelanggan TM / Estetika - Perlu Rapat MOM)
-                        </option>
-                        <option :value="true" :class="isDarkMode ? 'bg-slate-900 text-white' : 'bg-white text-slate-800'">
-                          Pekerjaan PFK (Langsung Ke Pengarsipan Setelah Approve)
-                        </option>
-                      </select>
                     </div>
                   </div>
 
@@ -690,14 +729,14 @@
                 </div>
               </div>
 
-              <div @click="redirectByRole()"
+              <div @click="navigate('bpm', 'completed')"
                 class="rounded-3xl p-5 sm:p-6 shadow-sm border relative overflow-hidden group hover:shadow-md hover:scale-[1.02] cursor-pointer transition-all duration-200"
                 :class="isDarkMode ? 'bg-slate-800 border-slate-700 hover:border-emerald-500/50' : 'bg-white border-slate-200/60 hover:border-emerald-500/40'">
                 <div class="flex justify-between items-start">
                   <div>
                     <p class="text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider">Pekerjaan Selesai (BPM)</p>
                     <h3 class="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-2 tracking-tight"
-                      x-text="bpmList.filter(b => b.step > 10).length">0</h3>
+                      x-text="bpmList.filter(b => b.step > 9).length">0</h3>
                   </div>
                   <div class="p-3 sm:p-3.5 bg-emerald-50 dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 rounded-2xl group-hover:scale-110 transition-transform">
                     <i class="fas fa-check-double text-base sm:text-lg"></i>
@@ -866,7 +905,7 @@
                 </div>
                 <div>
                   <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Selesai 100%</p>
-                  <h4 class="text-2xl font-black text-emerald-500 mt-0.5" x-text="bpmList.filter(b => (b.step || 1) > 10).length">0</h4>
+                  <h4 class="text-2xl font-black text-emerald-500 mt-0.5" x-text="bpmList.filter(b => (b.step || 1) > 9).length">0</h4>
                 </div>
               </div>
 
@@ -991,17 +1030,17 @@
                           <div class="flex flex-col gap-1.5 w-36 sm:w-40">
                             <div class="flex justify-between items-center text-[10px]">
                               <span class="font-bold text-slate-400" x-text="'Step ' + Math.min(item.step || 1, 10) + '/10'"></span>
-                              <span class="font-mono font-bold" :class="(item.step || 1) > 10 ? 'text-emerald-500' : 'text-[#00A2E2]'" x-text="Math.min(Math.round(((item.step || 1)/10)*100), 100) + '%'"></span>
+                              <span class="font-mono font-bold" :class="(item.step || 1) > 9 ? 'text-emerald-500' : 'text-[#00A2E2]'" x-text="Math.min(Math.round(((item.step || 1)/9)*100), 100) + '%'"></span>
                             </div>
                             <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden border border-slate-200 dark:border-slate-600">
-                              <div :class="(item.step || 1) > 10 ? 'bg-emerald-500' : 'bg-gradient-to-r from-[#005C9A] to-[#00A2E2]'" class="h-full rounded-full transition-all duration-500"
+                              <div :class="(item.step || 1) > 9 ? 'bg-emerald-500' : 'bg-gradient-to-r from-[#005C9A] to-[#00A2E2]'" class="h-full rounded-full transition-all duration-500"
                                 :style="`width: ${Math.min(((item.step || 1) / 10) * 100, 100)}%`"></div>
                             </div>
                           </div>
                         </td>
 
                         <td class="p-3 sm:p-4 whitespace-nowrap">
-                          <template x-if="(item.step || 1) > 10">
+                          <template x-if="(item.step || 1) > 9">
                             <span class="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 px-2.5 py-1 rounded-xl font-bold text-[10px] inline-flex items-center gap-1.5 shadow-sm">
                               <i class="fas fa-check-circle text-emerald-600 dark:text-emerald-400"></i> Selesai
                             </span>
@@ -1562,6 +1601,30 @@
                 </div>
               </div>
 
+              <div class="rounded-3xl shadow-sm border overflow-visible h-auto transition-colors"
+                :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200/80'">
+                <div class="p-4 bg-rose-500 text-white flex items-center gap-2 rounded-t-3xl">
+                  <i class="fas fa-map-location-dot text-sm"></i>
+                  <h3 class="font-bold text-xs uppercase tracking-wider">Unit ULP</h3>
+                </div>
+                <div class="p-4 sm:p-5 space-y-4">
+                  <div class="flex gap-2">
+                    <input x-model="tempSetting.ulp" @keydown.enter.prevent="addSetting('ULP')" type="text" placeholder="Contoh: ULP Malang Kota..."
+                      :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'"
+                      class="flex-1 px-3 py-2 border rounded-2xl text-xs outline-none focus:border-rose-500">
+                    <button type="button" @click="addSetting('ULP')" class="bg-rose-500 hover:opacity-95 text-white px-3.5 py-2 rounded-2xl text-xs font-bold shadow-sm"><i class="fas fa-plus"></i></button>
+                  </div>
+                  <div class="flex flex-wrap gap-1.5 pt-1">
+                    <template x-for="u in masterData.ulps" :key="u">
+                      <span class="inline-flex items-center gap-1.5 bg-rose-50 dark:bg-rose-900/30 border border-rose-100 dark:border-rose-800 px-2.5 py-1 rounded-xl text-xs font-bold text-rose-700 dark:text-rose-300">
+                        <span x-text="u"></span>
+                        <i @click="removeSetting('ULP', u)" class="fas fa-times text-rose-300 hover:text-rose-500 cursor-pointer text-[10px]"></i>
+                      </span>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 
@@ -1698,7 +1761,7 @@
               <span class="px-2 py-0.5 bg-sky-50 dark:bg-slate-700 text-[#00A2E2] font-bold text-[9px] sm:text-[10px] rounded-full border border-sky-100 dark:border-slate-600" 
                     x-text="selectedBpmItem?.isPFK ? 'Branch 2 - PFK' : 'Branch 1 - Non PFK'"></span>
               
-              <template x-if="(selectedBpmItem?.step || 1) > 10">
+              <template x-if="(selectedBpmItem?.step || 1) > 9">
                 <span class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 font-bold text-[9px] sm:text-[10px] rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
                   <i class="fas fa-check-circle"></i> Selesai
                 </span>
@@ -1771,7 +1834,7 @@
                         <span class="text-[9px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-600" x-text="'Target: ' + stepObj.sla"></span>
                       </div>
 
-                      <template x-if="selectedBpmItem?.step === stepObj.no && selectedBpmItem?.step <= 10">
+                      <template x-if="selectedBpmItem?.step === stepObj.no && selectedBpmItem?.step <= 9">
                         <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 text-[10px] font-bold border border-indigo-100 dark:border-indigo-800 flex items-center gap-1">
                           <i class="fas fa-play text-[8px] animate-pulse"></i> Sedang Berjalan
                         </span>
@@ -1821,7 +1884,7 @@
                       </template>
 
                       <!-- JIKA STEP SEDANG AKTIF -->
-                      <template x-if="selectedBpmItem?.step === stepObj.no && selectedBpmItem?.step <= 10">
+                      <template x-if="selectedBpmItem?.step === stepObj.no && selectedBpmItem?.step <= 9">
                         <div class="flex items-center gap-2 flex-wrap">
                           <span class="px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1">
                             <i class="fas fa-spinner fa-spin text-amber-500"></i> Waktu Berjalan: <b x-text="stepObj.duration"></b>
@@ -1838,7 +1901,7 @@
                     </div>
 
                     <!-- TOMBOL AKSI TANDAI SELESAI -->
-                    <template x-if="selectedBpmItem?.step === stepObj.no && selectedBpmItem?.step <= 10">
+                    <template x-if="selectedBpmItem?.step === stepObj.no && selectedBpmItem?.step <= 9">
                       <div class="pt-2 flex flex-col sm:flex-row gap-2 w-full">
                         <button @click="advanceBpmStep(selectedBpmItem)" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 active:bg-emerald-700 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-1.5">
                           <i class="fas fa-check"></i> Selesaikan Step Ini
@@ -2264,10 +2327,11 @@
             class="w-full px-3 py-2.5 border rounded-2xl outline-none focus:border-[#005C9A] font-medium text-sm">
         </div>
         <div>
-          <label class="block font-bold mb-1" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">Kata Sandi / Kredensial Sesi <span class="text-rose-500">*</span></label>
-          <input x-model="form.user.password" type="text"
+          <label class="block font-bold mb-1" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">Kata Sandi / Kredensial Sesi <span class="text-rose-500" x-show="!form.user.isEdit">*</span></label>
+          <input x-model="form.user.password" type="text" autocomplete="new-password"
+            :placeholder="form.user.isEdit ? 'Kosongkan jika tidak ingin mengubah password' : 'Masukkan password baru'"
             :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-800'"
-            class="w-full px-3 py-2.5 border rounded-2xl outline-none focus:border-[#005C9A] font-mono text-sm" required>
+            class="w-full px-3 py-2.5 border rounded-2xl outline-none focus:border-[#005C9A] font-mono text-sm" :required="!form.user.isEdit" minlength="4">
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -2365,9 +2429,11 @@
             logs: [],
             notifications: [],
             unreadCount: 0,
-            masterData: { categories: ['PFK', 'ESTETIKA', 'Pelanggan TM', 'SPKLU'], extensions: ['PDF', 'DOCX', 'XLSX'], nomors: ['001/PLN/2026'], lemaris: ['Lemari A', 'Lemari B', 'Lemari C', 'Lemari_D'], ordners: ['Ordner_01', 'Ordner_02', 'Ordner_03', 'Ordner_04'] },
+            masterData: { categories: ['PFK', 'ESTETIKA', 'Pelanggan TM', 'SPKLU'], extensions: ['PDF', 'DOCX', 'XLSX'], nomors: ['001/PLN/2026'], lemaris: ['Lemari A', 'Lemari B', 'Lemari C', 'Lemari_D'], ordners: ['Ordner_01', 'Ordner_02', 'Ordner_03', 'Ordner_04'], ulps: ['ULP Malang Kota', 'ULP Blimbing', 'ULP Dinoyo', 'ULP Kebonagung', 'ULP Singosari', 'ULP Lawang', 'ULP Batu', 'ULP Tumpang', 'ULP Bululawang', 'ULP Gondanglegi', 'ULP Kepanjen', 'ULP Sumberpucung', 'ULP Dampit'] },
 
             loginForm: { username: '', password: '' },
+            showLoginPassword: false,
+            isLoadingNomor: false,
             forgotForm: { email: '', otp: '', newPass: '' },
             forgotStep: 1,
             searchQuery: '',
@@ -2389,8 +2455,7 @@
               { no: 6, team: 'Tim Survey', role: 'TL Rensis', title: 'Koreksi Rincian Anggaran Biaya (RAB)', desc: 'TL Rensis melakukan koreksi RAB untuk pekerjaan PFK', sla: '1 Hari' },
               { no: 7, team: 'Tim Manajemen', role: 'Asman Ren', title: 'Persetujuan RAB + TTD (PFK)', desc: 'Asman Ren menyetujui dan menandatangani dokumen RAB untuk PFK', sla: '1 Hari' },
               { no: 8, team: 'Tim Pengajuan', role: 'Admin Perencanaan', title: 'AMS ke User (Pemohon) - PFK', desc: 'Admin mengirimkan AMS ke User (ULP/NPS) untuk Permohonan SPKLU, ESTETIKA, Plg TM cc. Bidang Konstruksi', sla: '1 Hari' },
-              { no: 9, team: 'Tim Pengajuan', role: 'Admin Perencanaan', title: 'Upload & Input Hasil RAB', desc: 'Admin mengunggah hasil RAB ke sistem arsip digital', sla: '1 Hari' },
-              { no: 10, team: 'Tim Manajemen', role: 'Aplikasi Arsip Digital', title: 'Penyimpanan Digital Arsip (MOM & RAB)', desc: 'Sistem menyimpan arsip digital RAB secara otomatis', sla: 'Otomatis' }
+              { no: 9, team: 'Tim Pengajuan', role: 'Admin Perencanaan', title: 'Upload & Input Hasil RAB', desc: 'Admin mengunggah hasil RAB ke sistem arsip digital', sla: '1 Hari' }
             ],
 
             form: {
@@ -2414,7 +2479,7 @@
 
             fileData: { name: '', bytes: '', type: '' },
             filesData: [], 
-            tempSetting: { category: '', extension: '', nomor: '', lemari: '', ordner: '' },
+            tempSetting: { category: '', extension: '', nomor: '', lemari: '', ordner: '', ulp: '' },
             pagination: { currentPage: 1, perPage: 10 },
 
             getFileIcon(type) {
@@ -2537,8 +2602,8 @@
 
                     let matchStatus = true;
                     const step = item.step || 1;
-                    if (this.bpmFilterStatus === 'active') matchStatus = step <= 10;
-                    else if (this.bpmFilterStatus === 'completed') matchStatus = step > 10;
+                    if (this.bpmFilterStatus === 'active') matchStatus = step <= 9;
+                    else if (this.bpmFilterStatus === 'completed') matchStatus = step > 9;
 
                     let matchBranch = true;
                     if (this.bpmFilterBranch === 'pfk') matchBranch = item.isPFK === true;
@@ -2611,7 +2676,7 @@
             },
 
             addSetting(type) {
-                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'Nomor': 'nomors', 'Lemari': 'lemaris', 'Ordner': 'ordners' };
+                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'Nomor': 'nomors', 'Lemari': 'lemaris', 'Ordner': 'ordners', 'ULP': 'ulps' };
                 let inputKey = type.toLowerCase();
                 let val = this.tempSetting[inputKey];
 
@@ -2631,7 +2696,7 @@
             },
 
             removeSetting(type, val) {
-                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'Nomor': 'nomors', 'Lemari': 'lemaris', 'Ordner': 'ordners' };
+                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'Nomor': 'nomors', 'Lemari': 'lemaris', 'Ordner': 'ordners', 'ULP': 'ulps' };
                 let targetArrayKey = keyMap[type];
                 if (this.masterData[targetArrayKey]) {
                     this.masterData[targetArrayKey] = this.masterData[targetArrayKey].filter(item => item !== val);
@@ -2639,11 +2704,20 @@
                 }
             },
 
+            refreshNomorSurat() {
+                this.isLoadingNomor = true;
+                this.callServer('apiHandler', ['getNextNomorSurat', { token: this.currentUser.token }])
+                    .then(nomor => { this.bpmForm.nomorSurat = nomor; })
+                    .catch(() => { this.bpmForm.nomorSurat = ''; })
+                    .finally(() => this.isLoadingNomor = false);
+            },
+
             saveMasterSettings() {
                 this.callServer('apiHandler', ['saveSettings', { token: this.currentUser.token, data: this.masterData }]);
             },
 
             saveUser() {
+                if (this.isLoading) return; // Cegah submit ganda
                 this.isLoading = true;
                 this.callServer('apiHandler', ['saveData', { token: this.currentUser.token, type: 'users', data: this.form.user }])
                     .then(() => {
@@ -2701,6 +2775,7 @@
 
             saveProfile() {
                 if (!this.form.profile.nama_lengkap) return;
+                if (this.isLoading) return; // Cegah submit ganda
                 this.isLoading = true;
                 this.callServer('apiHandler', ['saveProfile', { token: this.currentUser.token, profile: this.form.profile }])
                     .then(() => {
@@ -2799,6 +2874,7 @@
             },
 
             saveArchive() {
+                if (this.isUploading) return; // Cegah submit ganda
                 this.isUploading = true;
                 const payload = {
                     ...this.form.archive,
@@ -2828,14 +2904,16 @@
 
             redirectByRole() {
                 const role = (this.currentUser.role || '').toLowerCase();
-                if (role.includes('pengajuan') || role.includes('ulp')) {
+                if (role === 'admin') {
+                    this.navigate('bpm', 'active');
+                } else if (role.includes('pengajuan') || role.includes('ulp')) {
                     this.navigate('create-bpm');
                 } else if (role.includes('survey') || role.includes('rensis')) {
-                    this.navigate('bpm');
+                    this.navigate('bpm', 'active');
                 } else if (role.includes('arsip') || role.includes('manajemen')) {
                     this.navigate('archives');
                 } else {
-                    this.navigate('dashboard');
+                    this.navigate('bpm', 'active');
                 }
             },
 
@@ -2861,8 +2939,8 @@
                 const role = (this.currentUser.role || '').toLowerCase();
                 if (role.includes('survey')) return this.bpmList.filter(b => b.step >= 4 && b.step <= 6);
                 if (role.includes('asman') || role.includes('manajemen')) return this.bpmList.filter(b => b.step === 7);
-                if (role.includes('ulp') || role.includes('pengajuan')) return this.bpmList.filter(b => b.step <= 10);
-                return this.bpmList.filter(b => b.step <= 10);
+                if (role.includes('ulp') || role.includes('pengajuan')) return this.bpmList.filter(b => b.step <= 9);
+                return this.bpmList.filter(b => b.step <= 9);
             },
 
             calculateDuration(startDateStr, endDateStr) {
@@ -3025,6 +3103,7 @@
 
             login() {
                 if (!this.loginForm.username || !this.loginForm.password) return;
+                if (this.isLoading) return; // Cegah submit ganda
                 this.isLoading = true;
                 this.callServer('apiHandler', ['login', this.loginForm])
                     .then(res => {
@@ -3051,9 +3130,12 @@
                     .finally(() => this.forceLogout());
             },
 
-            navigate(viewName) {
+            navigate(viewName, bpmStatusFilter) {
                 this.view = viewName;
                 this.pagination.currentPage = 1;
+                if (viewName === 'bpm' && bpmStatusFilter) {
+                    this.bpmFilterStatus = bpmStatusFilter;
+                }
                 const titles = {
                     'dashboard': 'Dashboard Utama',
                     'create-bpm': 'Permohonan Survey Baru',
@@ -3070,6 +3152,7 @@
                     this.loadDashboardData();
                 } else if (viewName === 'bpm' || viewName === 'create-bpm') {
                     this.loadBpmData();
+                    if (viewName === 'create-bpm') this.refreshNomorSurat();
                 } else if (viewName === 'archives') {
                     this.loadArchiveData();
                 } else if (viewName === 'users') {
@@ -3119,6 +3202,7 @@
             },
 
             saveBpm() {
+                if (this.isLoading) return; // Cegah submit ganda (double-click / Enter beruntun)
                 this.isLoading = true;
                 const payload = {
                     ...this.bpmForm,
@@ -3142,6 +3226,7 @@
                             if (result.isConfirmed) this.printSurveyForm(payload);
                         });
                         this.bpmForm = { permohonan: '', namaLokasi: '', alamat: '', ulp: '', jumlahUnit: '', tarifDaya: '', nomorSurat: '', tanggalSurat: '', pic: '', isPFK: false };
+                        this.refreshNomorSurat();
                         this.loadBpmData();
                     })
                     .catch(err => Swal.fire('Gagal Permohonan', typeof err === 'string' ? err : 'Gagal mengirim permohonan survey.', 'error'))
@@ -3270,18 +3355,18 @@
                 
                 let stepTimestamps = item.stepTimestamps || {};
                 stepTimestamps[item.step || 1] = { ...(stepTimestamps[item.step || 1] || {}), end: nowISO };
-                if (nextStep <= 10) {
+                if (nextStep <= 9) {
                     stepTimestamps[nextStep] = { start: nowISO, end: null };
                 }
 
-                let desc = nextStep <= 10 ? `Step ${nextStep}: ${this.bpmStepsMaster[nextStep - 1].title}` : 'Selesai 100% - Diarsipkan';
+                let desc = nextStep <= 9 ? `Step ${nextStep}: ${this.bpmStepsMaster[nextStep - 1].title}` : 'Selesai 100% - Diarsipkan';
 
                 const updatePayload = {
                     id: item.id,
                     step: nextStep,
                     statusDetail: desc,
                     stepTimestamps: stepTimestamps,
-                    tglSelesai: nextStep > 10 ? nowISO : null
+                    tglSelesai: nextStep > 9 ? nowISO : null
                 };
 
                 this.callServer('apiHandler', ['saveData', { token: this.currentUser.token, type: 'bpm', data: updatePayload }])
