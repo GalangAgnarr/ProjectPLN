@@ -213,6 +213,56 @@ function getLemariListFromMaster(ss) {
 /**
  * 3. API ROUTER
  */
+// =============================================================================
+// FUNGSI UTILITAS SEKALI-PAKAI — JANGAN dihubungkan ke apiHandler/web app.
+// Fungsi ini SENGAJA tidak diberi 'case' di apiHandler supaya tidak bisa
+// dipanggil dari luar (internet) oleh siapapun, demi keamanan.
+//
+// CARA PAKAI:
+// 1. Buka project ini di Apps Script Editor (Extensions > Apps Script).
+// 2. Di dropdown pilihan fungsi (atas, sebelah tombol Run/Debug), pilih:
+//    resetAllPasswordsToDefault
+// 3. Klik tombol "Run".
+// 4. Setelah selesai, buka menu "Execution log" / "View > Logs" untuk
+//    melihat konfirmasi berapa user yang berhasil direset.
+// 5. Beri tahu semua user untuk login pakai password default di bawah,
+//    lalu segera ganti sendiri lewat menu Profil setelah berhasil masuk.
+// =============================================================================
+function resetAllPasswordsToDefault() {
+  const DEFAULT_PASSWORD = 'pln@123';
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ensureUserSheetSchema(ss);
+  const sheet = ss.getSheetByName('Users');
+  if (!sheet) {
+    Logger.log('Sheet "Users" tidak ditemukan.');
+    return;
+  }
+
+  const data = sheet.getDataRange().getValues();
+  let count = 0;
+
+  for (let i = 1; i < data.length; i++) {
+    if (!data[i][0]) continue; // lewati baris kosong
+    const salt = generateSalt();
+    const hash = hashPassword(DEFAULT_PASSWORD, salt);
+    const row = i + 1;
+
+    sheet.getRange(row, 2).setValue(hash);   // Password (hash baru)
+    sheet.getRange(row, 9).setValue(salt);   // Salt baru
+    sheet.getRange(row, 11).setValue(0);     // FailedAttempts direset
+    sheet.getRange(row, 12).setValue('');    // LockUntil dibuka
+    sheet.getRange(row, 8).setValue('');     // OTP dibersihkan
+    sheet.getRange(row, 10).setValue('');    // OtpExpiry dibersihkan
+
+    count++;
+  }
+
+  Logger.log(`SELESAI. ${count} akun user telah direset ke password default: "${DEFAULT_PASSWORD}"`);
+  Logger.log('Setiap user WAJIB login lalu segera ganti password sendiri lewat menu Profil.');
+}
+// =============================================================================
+
 function apiHandler(action, payload) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
