@@ -210,6 +210,51 @@ function getLemariListFromMaster(ss) {
   return lemaris.length > 0 ? lemaris : ['Lemari_A', 'Lemari_B', 'Lemari_C'];
 }
 
+// --- STRUKTUR ARSIP BARU: TAHUN / BULAN (menggantikan Lemari sebagai pengelompokan utama) ---
+
+const BULAN_INDONESIA = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+function getBulanFromDate(dateVal) {
+  try {
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return BULAN_INDONESIA[0];
+    return BULAN_INDONESIA[d.getMonth()];
+  } catch (e) {
+    return BULAN_INDONESIA[0];
+  }
+}
+
+function getOrCreateTahunSheet(ss, rawTahun) {
+  let cleanName = (rawTahun || new Date().getFullYear().toString()).toString().trim().replace(/\s+/g, '_');
+  let sheet = ss.getSheetByName(cleanName);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(cleanName);
+    sheet.appendRow(['ID', 'Nomor Arsip', 'Nama Arsip', 'Perihal', 'Kategori', 'Bulan', 'Ordner', 'Jenis File', 'Link File', 'Tanggal Upload', 'Pengupload', 'SharedWith']);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function getTahunListFromMaster(ss) {
+  const setSheet = ss.getSheetByName('Settings');
+  let tahuns = [];
+  if (setSheet) {
+    const data = setSheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === 'Tahun' && data[i][1]) {
+        tahuns.push(data[i][1].toString().trim());
+      }
+    }
+  }
+  if (tahuns.length === 0) {
+    const currentYear = new Date().getFullYear();
+    tahuns = [(currentYear - 1).toString(), currentYear.toString(), (currentYear + 1).toString()];
+  }
+  // Urutkan dari tahun terbaru
+  return tahuns.sort((a, b) => b.localeCompare(a));
+}
+
 /**
  * 3. API ROUTER
  */
@@ -263,6 +308,99 @@ function resetAllPasswordsToDefault() {
 }
 // =============================================================================
 
+// =============================================================================
+// MIGRASI STRUKTUR ARSIP: LEMARI -> TAHUN/BULAN
+// SENGAJA tidak dihubungkan ke apiHandler — hanya bisa dijalankan manual
+// oleh Admin lewat Apps Script Editor, karena ini operasi struktural sekali-pakai.
+//
+// CARA PAKAI:
+// 1. Buka Apps Script Editor (Extensions > Apps Script).
+// 2. Pilih fungsi 'migrateArchivesToYearStructure' di dropdown atas, klik Run.
+// 3. Cek "Execution log" untuk konfirmasi jumlah dokumen yang dipindahkan.
+//
+// Sheet Lemari lama TIDAK dihapus — hanya diganti nama jadi "OLD_<nama>"
+// sebagai cadangan, supaya data tidak pernah hilang meski migrasi diulang.
+// =============================================================================
+function migrateArchivesToYearStructure() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const lemariList = getLemariListFromMaster(ss);
+  let migratedCount = 0;
+  let skippedCount = 0;
+  const yearsCreated = {};
+
+  lemariList.forEach(lemariName => {
+    const oldSheet = ss.getSheetByName(lemariName);
+    if (!oldSheet) {
+      Logger.log(`Lewati: sheet "${lemariName}" tidak ditemukan.`);
+      return;
+    }
+
+    const data = oldSheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      if (!row[0]) continue; // lewati baris kosong
+
+      const uploadDateRaw = row[9];
+      const d = new Date(uploadDateRaw);
+      const tahun = isNaN(d.getTime()) ? new Date().getFullYear().toString() : d.getFullYear().toString();
+      const bulan = getBulanFromDate(uploadDateRaw);
+
+      const targetSheet = getOrCreateTahunSheet(ss, tahun);
+
+      // Cek duplikasi (jaga-jaga kalau migrasi dijalankan dua kali)
+      const existingIds = targetSheet.getDataRange().getValues().map(r => r[0]);
+      if (existingIds.includes(row[0])) {
+        skippedCount++;
+        continue;
+      }
+
+      targetSheet.appendRow([
+        row[0],           // ID
+        row[1],           // Nomor Arsip
+        row[2],           // Nama Arsip
+        row[3],           // Perihal
+        row[4],           // Kategori
+        bulan,            // Bulan (baru, dari tanggal upload)
+        row[6],           // Ordner (tetap dipertahankan)
+        row[7],           // Jenis File
+        row[8],           // Link File
+        row[9],           // Tanggal Upload (asli)
+        row[10],          // Pengupload
+        row[11]           // SharedWith
+      ]);
+
+      yearsCreated[tahun] = true;
+      migratedCount++;
+    }
+
+    // Ganti nama sheet lama jadi cadangan (TIDAK dihapus)
+    try {
+      if (!oldSheet.getName().startsWith('OLD_')) {
+        oldSheet.setName('OLD_' + lemariName);
+      }
+    } catch (e) {
+      Logger.log(`Gagal mengganti nama sheet "${lemariName}": ${e.message}`);
+    }
+  });
+
+  // Daftarkan tahun-tahun baru ke Settings supaya langsung muncul di Konfigurasi Master Data
+  const setSheet = ss.getSheetByName('Settings');
+  if (setSheet) {
+    const existingSettings = setSheet.getDataRange().getValues();
+    Object.keys(yearsCreated).forEach(tahun => {
+      const alreadyExists = existingSettings.some(r => r[0] === 'Tahun' && r[1].toString() === tahun);
+      if (!alreadyExists) {
+        setSheet.appendRow(['Tahun', tahun]);
+      }
+    });
+  }
+
+  Logger.log(`SELESAI. ${migratedCount} dokumen berhasil dipindahkan ke struktur Tahun/Bulan.`);
+  if (skippedCount > 0) Logger.log(`${skippedCount} dokumen dilewati karena sudah pernah dimigrasi sebelumnya.`);
+  Logger.log(`Tahun yang dibuat/terpakai: ${Object.keys(yearsCreated).join(', ') || '(tidak ada)'}`);
+  Logger.log('Sheet Lemari lama telah diganti nama menjadi "OLD_<nama>" sebagai cadangan (tidak dihapus).');
+}
+// =============================================================================
 function apiHandler(action, payload) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -678,12 +816,12 @@ function getData(ss, { token, type }) {
     });
   }
   else if (type === 'archives') {
-    const lemariList = getLemariListFromMaster(ss);
+    const tahunList = getTahunListFromMaster(ss);
 
-    lemariList.forEach(lemariName => {
-      const lemariSheet = ss.getSheetByName(lemariName);
-      if (lemariSheet) {
-        let rawData = lemariSheet.getDataRange().getValues();
+    tahunList.forEach(tahunName => {
+      const tahunSheet = ss.getSheetByName(tahunName.replace(/\s+/g, '_'));
+      if (tahunSheet) {
+        let rawData = tahunSheet.getDataRange().getValues();
         rawData.shift();
         rawData.forEach(row => {
           if (!row[0]) return;
@@ -702,7 +840,8 @@ function getData(ss, { token, type }) {
               nama: row[2],
               perihal: row[3],
               kategori: row[4],
-              lemari: row[5] || lemariName,
+              tahun: tahunName,
+              bulan: row[5] || 'Januari',
               ordner: row[6] || '-',
               jenis: row[7],
               link: linkArray[0] || '#',
@@ -813,10 +952,11 @@ function saveData(ss, { token, type, data }) {
   if (type === 'archives') {
     const id = data.id || Utilities.getUuid();
     const timestamp = new Date();
-    const targetLemariName = (data.lemari || 'Lemari_A').trim().replace(/\s+/g, '_');
+    const targetTahun = (data.tahun || new Date().getFullYear().toString()).toString().trim();
+    const targetBulan = (data.bulan || getBulanFromDate(timestamp)).toString().trim();
     const targetOrdner = (data.ordner || '-').trim();
 
-    const targetSheet = getOrCreateLemariSheet(ss, targetLemariName);
+    const targetSheet = getOrCreateTahunSheet(ss, targetTahun);
 
     let finalLinks = Array.isArray(data.links) ? data.links : (Array.isArray(data.existingLinks) ? data.existingLinks : []);
 
@@ -848,10 +988,10 @@ function saveData(ss, { token, type, data }) {
 
     if (data.id) { // Mode Edit
       let found = false;
-      const lemariList = getLemariListFromMaster(ss);
+      const tahunList = getTahunListFromMaster(ss);
 
-      for (let l = 0; l < lemariList.length; l++) {
-        const currentSheet = ss.getSheetByName(lemariList[l]);
+      for (let l = 0; l < tahunList.length; l++) {
+        const currentSheet = ss.getSheetByName(tahunList[l].replace(/\s+/g, '_'));
         if (!currentSheet) continue;
 
         const allData = currentSheet.getDataRange().getValues();
@@ -877,12 +1017,12 @@ function saveData(ss, { token, type, data }) {
               currentSheet.deleteRow(i + 1);
               targetSheet.appendRow([
                 data.id, data.nomor, data.nama, data.perihal, data.kategori,
-                targetLemariName, targetOrdner, data.jenis, combinedLinksStr, originalDate, originalUploader, data.shared || 'Public'
+                targetBulan, targetOrdner, data.jenis, combinedLinksStr, originalDate, originalUploader, data.shared || 'Public'
               ]);
             } else {
               currentSheet.getRange(i + 1, 1, 1, 12).setValues([[
                 data.id, data.nomor, data.nama, data.perihal, data.kategori,
-                targetLemariName, targetOrdner, data.jenis, combinedLinksStr, originalDate, originalUploader, data.shared || 'Public'
+                targetBulan, targetOrdner, data.jenis, combinedLinksStr, originalDate, originalUploader, data.shared || 'Public'
               ]]);
             }
 
@@ -893,7 +1033,7 @@ function saveData(ss, { token, type, data }) {
         if (found) break;
       }
       if (!found) throw new Error("Data tidak ditemukan.");
-      logActivity(ss, user.username, 'Edit Arsip', `Mengubah arsip: ${data.nama} (Lemari: ${targetLemariName}, Ordner: ${targetOrdner})`);
+      logActivity(ss, user.username, 'Edit Arsip', `Mengubah arsip: ${data.nama} (${targetTahun}/${targetBulan}, Ordner: ${targetOrdner})`);
     } else { // Mode Baru
       targetSheet.appendRow([
         id,
@@ -901,7 +1041,7 @@ function saveData(ss, { token, type, data }) {
         data.nama,
         data.perihal,
         data.kategori,
-        targetLemariName,
+        targetBulan,
         targetOrdner,
         data.jenis,
         combinedLinksStr,
@@ -909,7 +1049,7 @@ function saveData(ss, { token, type, data }) {
         user.username,
         data.shared || 'Public'
       ]);
-      logActivity(ss, user.username, 'Upload Arsip', `Menambah arsip: ${data.nama} di ${targetLemariName} (${targetOrdner})`);
+      logActivity(ss, user.username, 'Upload Arsip', `Menambah arsip: ${data.nama} di ${targetTahun}/${targetBulan} (${targetOrdner})`);
     }
 
     if (data.shared && data.shared !== 'Public') {
@@ -1103,9 +1243,9 @@ function deleteData(ss, { token, type, id }) {
       }
     }
   } else if (type === 'archives') {
-    const lemariList = getLemariListFromMaster(ss);
-    for (let l = 0; l < lemariList.length; l++) {
-      const currentSheet = ss.getSheetByName(lemariList[l]);
+    const tahunList = getTahunListFromMaster(ss);
+    for (let l = 0; l < tahunList.length; l++) {
+      const currentSheet = ss.getSheetByName(tahunList[l].replace(/\s+/g, '_'));
       if (!currentSheet) continue;
 
       const data = currentSheet.getDataRange().getValues();
@@ -1160,6 +1300,7 @@ function getSettings(ss, { token }) {
   let lemaris = [];
   let ordners = [];
   let ulps = [];
+  let tahuns = [];
 
   if (sheet) {
     const data = sheet.getDataRange().getValues();
@@ -1170,6 +1311,7 @@ function getSettings(ss, { token }) {
       if (data[i][0] === 'Lemari') lemaris.push(data[i][1]);
       if (data[i][0] === 'Ordner') ordners.push(data[i][1]);
       if (data[i][0] === 'ULP') ulps.push(data[i][1]);
+      if (data[i][0] === 'Tahun') tahuns.push(data[i][1].toString());
     }
   }
 
@@ -1193,7 +1335,11 @@ function getSettings(ss, { token }) {
     'ULP Lawang', 'ULP Batu', 'ULP Tumpang', 'ULP Bululawang', 'ULP Gondanglegi',
     'ULP Kepanjen', 'ULP Sumberpucung', 'ULP Dampit'
   ];
+  const currentYear = new Date().getFullYear();
+  const cleanTahuns = (tahuns.length > 0 ? tahuns : [(currentYear - 1).toString(), currentYear.toString(), (currentYear + 1).toString()])
+    .sort((a, b) => b.localeCompare(a));
   cleanLemaris.forEach(l => getOrCreateLemariSheet(ss, l));
+  cleanTahuns.forEach(t => getOrCreateTahunSheet(ss, t));
 
   return {
     status: 'success',
@@ -1204,6 +1350,7 @@ function getSettings(ss, { token }) {
       lemaris: cleanLemaris,
       ordners: cleanOrdners,
       ulps: cleanUlps,
+      tahuns: cleanTahuns,
       userDirectory
     }
   };
@@ -1232,6 +1379,9 @@ function saveSetting(ss, { token, type, value }) {
   if (type === 'Lemari') {
     getOrCreateLemariSheet(ss, cleanVal);
   }
+  if (type === 'Tahun') {
+    getOrCreateTahunSheet(ss, cleanVal);
+  }
 
   logActivity(ss, user.username, 'Update Setting', `Menambah ${type}: ${cleanVal}`);
   return { status: 'success' };
@@ -1256,7 +1406,8 @@ function saveMasterSettings(ss, { token, data }) {
     nomors: 'Nomor',
     lemaris: 'Lemari',
     ordners: 'Ordner',
-    ulps: 'ULP'
+    ulps: 'ULP',
+    tahuns: 'Tahun'
   };
 
   Object.keys(mapKeys).forEach(key => {

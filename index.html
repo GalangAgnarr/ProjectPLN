@@ -55,6 +55,172 @@
       height: 100vh !important;
       overflow: hidden !important;
     }
+
+    /* === CSS Modul RAB Generator === */
+        .bg-modern-app {
+            background-color: #090d16;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(0, 162, 226, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(0, 92, 154, 0.14) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .no-arrow {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: none !important;
+        }
+
+        /* Menghilangkan tombol panah (spinner) pada input number */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
+        /* DOKUMEN CETAK PRESISI A4 PAS */
+        .print-page {
+            width: 210mm;
+            min-height: 285mm;
+            padding: 8mm 10mm;
+            box-sizing: border-box;
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        @page {
+            size: A4 portrait;
+            margin: 0mm;
+        }
+
+        /* FIX MUTLAK ANTI BLANK PAGE PADA MODUS PRINT */
+        @media print {
+            .no-print { 
+                display: none !important; 
+            }
+            html, body {
+                width: 210mm !important;
+                height: auto !important;
+                background: #ffffff !important; 
+                font-size: 8pt !important; 
+                color: #000000 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+            .mobile-scroll-wrapper {
+                overflow: visible !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+            .print-page { 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                width: 210mm !important; 
+                height: 287mm !important; 
+                max-height: 287mm !important;
+                padding: 8mm 10mm !important; 
+                border-radius: 0 !important;
+                border: none !important;
+                page-break-before: auto !important;
+                page-break-after: always !important;
+                page-break-inside: avoid !important;
+                box-sizing: border-box !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+                overflow: hidden !important;
+            }
+            .print-page:last-child {
+                page-break-after: avoid !important;
+                page-break-after: auto !important;
+            }
+            div:empty {
+                display: none !important;
+            }
+        }
+
+        .pln-table {
+            table-layout: fixed;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .pln-table th, .pln-table td {
+            border: 1px solid #000000 !important;
+            padding: 2px 1px;
+            vertical-align: middle;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            font-size: 7.5px;
+            line-height: 1.1;
+            color: #000000 !important;
+        }
+
+        .pln-table th {
+            background-color: #f1f5f9 !important;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .pln-table input, .pln-table select {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #cbd5e1;
+            outline: none;
+            background: #f8fafc;
+            font-size: 7.5px;
+            font-family: inherit;
+            color: #000000 !important;
+            padding: 1px 1px;
+            margin: 0;
+            border-radius: 2px;
+            letter-spacing: -0.3px;
+        }
+
+        .pln-table input:focus, .pln-table select:focus {
+            background-color: #e0f2fe;
+            border-color: #0284c7;
+        }
+
+        .pln-table input[readonly] {
+            background-color: #f1f5f9 !important;
+            cursor: not-allowed;
+            color: #475569 !important;
+        }
+
+        .bg-modern-app ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .bg-modern-app ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.4);
+        }
+        .bg-modern-app ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        .bg-modern-app ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
   </style>
 </head>
 
@@ -161,7 +327,7 @@
 
       <!-- SIDEBAR -->
       <aside :class="sidebarOpen ? 'w-72 translate-x-0' : 'w-72 -translate-x-full md:translate-x-0 md:w-24'"
-        class="bg-[#005C9A] dark:bg-slate-950 text-white flex flex-col transition-all duration-300 fixed md:relative z-40 h-full border-r border-[#004b7e]/30 dark:border-slate-800 shadow-2xl">
+        class="no-print bg-[#005C9A] dark:bg-slate-950 text-white flex flex-col transition-all duration-300 fixed md:relative z-40 h-full border-r border-[#004b7e]/30 dark:border-slate-800 shadow-2xl">
 
         <div class="h-16 sm:h-20 flex items-center px-6 border-b border-[#004b7e]/30 dark:border-slate-800 bg-[#004b7e]/20 dark:bg-slate-900/50 justify-between">
           <div class="flex items-center gap-3">
@@ -317,7 +483,7 @@
       <main class="flex-1 flex flex-col h-screen overflow-hidden relative" :class="isDarkMode ? 'bg-slate-900' : 'bg-[#f4f7fa]'">
 
         <header
-          class="h-16 sm:h-20 border-b flex items-center justify-between px-4 sm:px-8 z-30 flex-shrink-0 transition-colors duration-300"
+          class="no-print h-16 sm:h-20 border-b flex items-center justify-between px-4 sm:px-8 z-30 flex-shrink-0 transition-colors duration-300"
           :class="isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200/80'">
           <div class="flex items-center gap-3 sm:gap-4">
             <button @click="sidebarOpen = !sidebarOpen" class="p-2 sm:p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[#005C9A] transition-all focus:outline-none">
@@ -474,9 +640,14 @@
                       <label class="block text-xs font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
                         Permohonan <span class="text-rose-500">*</span>
                       </label>
-                      <input x-model="bpmForm.permohonan" type="text" placeholder="Detail Permohonan"
-                        :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white placeholder-slate-500' : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:bg-white'"
+                      <select x-model="bpmForm.permohonan" @change="bpmForm.isPFK = (bpmForm.permohonan === 'PFK')"
+                        :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white' : 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white'"
                         class="w-full px-4 py-3 border rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-medium transition-all" required>
+                        <option value="" disabled selected>Pilih Jenis Permohonan</option>
+                        <option value="PFK">PFK</option>
+                        <option value="ESTETIKA">ESTETIKA</option>
+                        <option value="Pelanggan TM">Pelanggan TM</option>
+                      </select>
                     </div>
 
                     <!-- Nama/Lokasi -->
@@ -1199,19 +1370,38 @@
             <div
               class="flex flex-wrap items-center gap-2 p-3 rounded-2xl border shadow-sm overflow-x-auto custom-scrollbar transition-colors"
               :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200/80'">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-1 flex items-center whitespace-nowrap"><i class="fas fa-cabinet-filing text-[#005C9A] dark:text-sky-400 mr-1.5 text-xs"></i> Rak:</span>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-1 flex items-center whitespace-nowrap"><i class="fas fa-calendar-days text-[#005C9A] dark:text-sky-400 mr-1.5 text-xs"></i> Tahun:</span>
 
-              <button @click="selectedLemari = 'All'; pagination.currentPage = 1"
-                :class="selectedLemari === 'All' ? 'bg-[#005C9A] text-white font-bold border-[#005C9A] shadow-sm' : (isDarkMode ? 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-700' : 'bg-slate-50 text-slate-600 border-slate-200/60 hover:bg-slate-100')"
+              <button @click="selectedTahun = 'All'; pagination.currentPage = 1"
+                :class="selectedTahun === 'All' ? 'bg-[#005C9A] text-white font-bold border-[#005C9A] shadow-sm' : (isDarkMode ? 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-700' : 'bg-slate-50 text-slate-600 border-slate-200/60 hover:bg-slate-100')"
                 class="px-3 py-1 rounded-xl text-xs font-semibold border transition-all whitespace-nowrap">
-                Semua Lemari
+                Semua Tahun
               </button>
 
-              <template x-for="lem in masterData.lemaris" :key="lem">
-                <button @click="selectedLemari = lem; pagination.currentPage = 1"
-                  :class="selectedLemari === lem ? 'bg-[#00A2E2] text-white font-bold border-[#00A2E2] shadow-sm' : (isDarkMode ? 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-700' : 'bg-slate-50 text-slate-600 border-slate-200/60 hover:bg-slate-100')"
+              <template x-for="thn in masterData.tahuns" :key="thn">
+                <button @click="selectedTahun = thn; pagination.currentPage = 1"
+                  :class="selectedTahun === thn ? 'bg-[#00A2E2] text-white font-bold border-[#00A2E2] shadow-sm' : (isDarkMode ? 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-700' : 'bg-slate-50 text-slate-600 border-slate-200/60 hover:bg-slate-100')"
                   class="px-3 py-1 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 whitespace-nowrap">
-                  <span class="w-1.5 h-1.5 rounded-full bg-sky-300"></span> <span x-text="lem"></span>
+                  <span class="w-1.5 h-1.5 rounded-full bg-sky-300"></span> <span x-text="thn"></span>
+                </button>
+              </template>
+            </div>
+
+            <div
+              class="flex flex-wrap items-center gap-2 p-3 rounded-2xl border shadow-sm overflow-x-auto custom-scrollbar transition-colors"
+              :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200/80'">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-1 flex items-center whitespace-nowrap"><i class="fas fa-calendar-week text-amber-500 mr-1.5 text-xs"></i> Bulan:</span>
+
+              <button @click="selectedBulan = 'All'; pagination.currentPage = 1"
+                :class="selectedBulan === 'All' ? 'bg-amber-500 text-white font-bold border-amber-500 shadow-sm' : (isDarkMode ? 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-700' : 'bg-slate-50 text-slate-600 border-slate-200/60 hover:bg-slate-100')"
+                class="px-3 py-1 rounded-xl text-xs font-semibold border transition-all whitespace-nowrap">
+                Semua Bulan
+              </button>
+
+              <template x-for="bln in bulanIndonesia" :key="bln">
+                <button @click="selectedBulan = bln; pagination.currentPage = 1"
+                  :class="selectedBulan === bln ? 'bg-amber-400 text-white font-bold border-amber-400 shadow-sm' : (isDarkMode ? 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-700' : 'bg-slate-50 text-slate-600 border-slate-200/60 hover:bg-slate-100')"
+                  class="px-3 py-1 rounded-xl text-xs font-semibold border transition-all whitespace-nowrap" x-text="bln">
                 </button>
               </template>
             </div>
@@ -1228,7 +1418,7 @@
                         <tr>
                           <th class="px-4 py-3 sm:px-6 sm:py-4">Informasi Utama Dokumen</th>
                           <th class="px-4 py-3 sm:px-6 sm:py-4">Kategori Klasifikasi</th>
-                          <th class="px-4 py-3 sm:px-6 sm:py-4">Lokasi / Ordner</th>
+                          <th class="px-4 py-3 sm:px-6 sm:py-4">Periode / Ordner</th>
                           <th class="px-4 py-3 sm:px-6 sm:py-4">Pengupload</th>
                           <th class="px-4 py-3 sm:px-6 sm:py-4">Tanggal Masuk</th>
                           <th class="px-4 py-3 sm:px-6 sm:py-4 text-right">Aksi</th>
@@ -1262,7 +1452,7 @@
                             </td>
                             <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap">
                               <div class="flex flex-col gap-1 items-start">
-                                <span class="px-2.5 py-0.5 text-xs rounded-xl border bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 font-bold border-amber-200 dark:border-amber-800" x-text="item.lemari || 'Utama'"></span>
+                                <span class="px-2.5 py-0.5 text-xs rounded-xl border bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 font-bold border-amber-200 dark:border-amber-800" x-text="(item.bulan || '-') + ' ' + (item.tahun || '')"></span>
                                 <span class="px-2 py-0.5 text-[10px] rounded-lg border bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-bold border-purple-200 dark:border-purple-800 flex items-center gap-1" x-show="item.ordner">
                                   <i class="fas fa-folder text-[9px]"></i> <span x-text="item.ordner"></span>
                                 </span>
@@ -1349,7 +1539,7 @@
                         </div>
                         <div class="flex gap-1.5 flex-wrap">
                           <span class="text-[9px] font-bold text-[#005C9A] dark:text-sky-300 bg-sky-50 dark:bg-slate-700 px-2 py-0.5 rounded-lg uppercase border border-sky-100 dark:border-slate-600" x-text="item.kategori"></span>
-                          <span class="text-[9px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-lg uppercase border border-amber-100 dark:border-amber-800" x-text="item.lemari || 'Utama'"></span>
+                          <span class="text-[9px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-lg uppercase border border-amber-100 dark:border-amber-800" x-text="(item.bulan || '-') + ' ' + (item.tahun || '')"></span>
                           <span class="text-[9px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/30 px-2 py-0.5 rounded-lg uppercase border border-purple-100 dark:border-purple-800" x-show="item.ordner" x-text="item.ordner"></span>
                         </div>
                         <h3
@@ -1598,21 +1788,21 @@
               <div class="rounded-3xl shadow-sm border overflow-visible h-auto transition-colors"
                 :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200/80'">
                 <div class="p-4 bg-emerald-600 text-white flex items-center gap-2 rounded-t-3xl">
-                  <i class="fas fa-box-archive text-sm"></i>
-                  <h3 class="font-bold text-xs uppercase tracking-wider">Lokasi Lemari Rak</h3>
+                  <i class="fas fa-calendar-days text-sm"></i>
+                  <h3 class="font-bold text-xs uppercase tracking-wider">Tahun Arsip</h3>
                 </div>
                 <div class="p-4 sm:p-5 space-y-4">
                   <div class="flex gap-2">
-                    <input x-model="tempSetting.lemari" @keydown.enter.prevent="addSetting('Lemari')" type="text" placeholder="Lemari / Rak Baru..."
+                    <input x-model="tempSetting.tahun" @keydown.enter.prevent="addSetting('Tahun')" type="text" placeholder="Contoh: 2027..." inputmode="numeric"
                       :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'"
                       class="flex-1 px-3 py-2 border rounded-2xl text-xs outline-none focus:border-emerald-600">
-                    <button type="button" @click="addSetting('Lemari')" class="bg-emerald-600 hover:opacity-95 text-white px-3.5 py-2 rounded-2xl text-xs font-bold shadow-sm"><i class="fas fa-plus"></i></button>
+                    <button type="button" @click="addSetting('Tahun')" class="bg-emerald-600 hover:opacity-95 text-white px-3.5 py-2 rounded-2xl text-xs font-bold shadow-sm"><i class="fas fa-plus"></i></button>
                   </div>
                   <div class="flex flex-wrap gap-1.5 pt-1">
-                    <template x-for="lem in masterData.lemaris" :key="lem">
+                    <template x-for="thn in masterData.tahuns" :key="thn">
                       <span class="inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 px-2.5 py-1 rounded-xl text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                        <span x-text="lem"></span>
-                        <i @click="removeSetting('Lemari', lem)" class="fas fa-times text-emerald-300 hover:text-rose-500 cursor-pointer text-[10px]"></i>
+                        <span x-text="thn"></span>
+                        <i @click="removeSetting('Tahun', thn)" class="fas fa-times text-emerald-300 hover:text-rose-500 cursor-pointer text-[10px]"></i>
                       </span>
                     </template>
                   </div>
@@ -1705,6 +1895,216 @@
                   <span x-show="isLoading"><i class="fas fa-spinner fa-spin mr-1"></i>Menyusun File...</span>
                 </button>
               </form>
+            </div>
+          </div>
+
+          <!-- 8. RAB GENERATOR VIEW (Modul dari Tim Perencanaan) -->
+          <div x-show="view === 'rab-generator'" x-transition:enter="transition ease-out duration-300" x-cloak
+            class="-m-4 sm:-m-8 min-h-screen">
+            <div class="bg-modern-app min-h-screen">
+
+    <header class="no-print bg-slate-950/80 backdrop-blur-md border-b border-slate-800 px-4 sm:px-6 py-3.5 rounded-t-3xl shadow-lg">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                <div class="flex items-center gap-3">
+                    <button @click="navigate('bpm')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 w-9 h-9 rounded-xl flex items-center justify-center transition shrink-0" title="Kembali ke Alur BPM">
+                        <i class="fas fa-arrow-left text-xs"></i>
+                    </button>
+                    <div class="bg-white p-1 rounded-xl shadow-md flex items-center justify-center ring-1 ring-white/10 shrink-0">
+                        <svg class="h-7 sm:h-8 w-auto" viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="300" height="300" fill="#FFF200"/>
+                            <path d="M50 120 C 80 100, 120 140, 150 120 C 180 100, 220 140, 250 120 L 250 140 C 220 160, 180 120, 150 140 C 120 160, 80 120, 50 140 Z" fill="#00AEEF"/>
+                            <path d="M50 160 C 80 140, 120 180, 150 160 C 180 140, 220 180, 250 160 L 250 180 C 220 200, 180 160, 150 180 C 120 200, 80 160, 50 180 Z" fill="#00AEEF"/>
+                            <path d="M50 200 C 80 180, 120 220, 150 200 C 180 180, 220 220, 250 200 L 250 220 C 220 240, 180 200, 150 220 C 120 240, 80 200, 50 220 Z" fill="#00AEEF"/>
+                            <polygon points="170,50 120,160 170,140 130,260 210,120 160,135" fill="#ED1C24"/>
+                            <text x="150" y="380" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="90" fill="#00AEEF" text-anchor="middle">PLN</text>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-sm sm:text-base font-bold text-white tracking-tight">
+                                RAB Generator
+                            </h1>
+                            <span class="text-[9px] font-semibold bg-[#00A2E2]/10 text-[#00A2E2] border border-[#00A2E2]/20 px-2 py-0.5 rounded-full">v4.0 Full Master</span>
+                        </div>
+                        <p class="text-[10px] sm:text-xs text-slate-400 font-medium">PT. PLN (Persero) UID Jatim - UP3 Malang</p>
+                    </div>
+                </div>
+
+                <button onclick="togglePanduanModal(true)" class="md:hidden bg-slate-800 text-amber-400 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold active:scale-95 shadow-sm">
+                    📖 Panduan
+                </button>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-end gap-2 w-full md:w-auto">
+                <button onclick="togglePanduanModal(true)" class="hidden md:flex bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-800 font-semibold text-xs px-3.5 py-2 rounded-xl transition items-center gap-1.5 shadow-sm">
+                    <span>📖</span> Panduan
+                </button>
+
+                <button onclick="resetToBlank()" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 font-semibold text-xs px-3 py-2 rounded-xl transition flex items-center gap-1 active:scale-95">
+                    <span>🧹</span> Reset
+                </button>
+
+                <button onclick="cetakPrint()" class="bg-[#005C9A] hover:bg-[#00A2E2] text-white font-bold text-xs px-4 py-2 rounded-xl transition shadow-lg shadow-[#005C9A]/20 flex items-center gap-1.5 active:scale-95">
+                    <span>📄</span> Extract
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="panduanModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden text-slate-100 ring-1 ring-white/10">
+            <div class="px-5 py-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <span class="p-2 bg-amber-500/10 text-amber-400 rounded-xl text-base border border-amber-500/20">📖</span>
+                    <div>
+                        <h2 class="text-xs sm:text-sm font-bold text-white tracking-wide">Panduan Penggunaan</h2>
+                        <p class="text-[10px] sm:text-[11px] text-slate-400">Pilihan Material Otomatis Sesuai Kategori Excel Master</p>
+                    </div>
+                </div>
+                <button onclick="togglePanduanModal(false)" class="text-slate-400 hover:text-white font-bold text-sm w-8 h-8 rounded-xl hover:bg-slate-800 flex items-center justify-center transition">✕</button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto space-y-4 text-xs leading-relaxed text-slate-300">
+                <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+                    <h3 class="font-bold text-[#00A2E2] uppercase tracking-wider text-[10px] mb-1">1. Gambaran Umum</h3>
+                    <p class="text-slate-300">Aplikasi ini memuat katalog material otomatis untuk 14 kategori pekerjaan langsung dari file master RAB Excel ULP. Memilih kategori akan menyesuaikan daftar material yang tersedia.</p>
+                </div>
+
+                <div class="space-y-2.5">
+                    <h3 class="font-bold text-[#00A2E2] uppercase tracking-wider text-[10px] mb-2">2. Cara Penggunaan Dropdown</h3>
+                    <div class="flex items-start gap-3 bg-slate-950/40 p-3.5 rounded-2xl border border-slate-800/80">
+                        <span class="bg-[#005C9A] text-white font-extrabold w-5 h-5 rounded-lg flex items-center justify-center text-[10px] shrink-0 mt-0.5">1</span>
+                        <div>
+                            <h4 class="font-semibold text-white text-[11px]">Pilih Kategori Pekerjaan</h4>
+                            <p class="text-slate-400 text-[11px]">Pilih salah satu dari: SUTM, MVTIC, SKTM, KUBIKEL, GD BETON, SKTR, SKSR, GTT KHUSUS, GTT UMUM, SUTR, 53-197 KVA, REHAB SUTM, REHAB SUTR, PASANG GSW.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-3 bg-slate-950/40 p-3.5 rounded-2xl border border-slate-800/80">
+                        <span class="bg-[#005C9A] text-white font-extrabold w-5 h-5 rounded-lg flex items-center justify-center text-[10px] shrink-0 mt-0.5">2</span>
+                        <div>
+                            <h4 class="font-semibold text-white text-[11px]">Auto Filter Material</h4>
+                            <p class="text-slate-400 text-[11px]">Dropdown material di sebelah kanan akan otomatis berubah hanya menampilkan material resmi dari kategori tersebut. Klik <strong>+ Auto Pilih</strong> untuk menambah ke daftar.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-5 py-3.5 bg-slate-950 border-t border-slate-800 flex justify-end">
+                <button onclick="togglePanduanModal(false)" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs px-4 py-2 rounded-xl transition border border-slate-700">Tutup Panduan</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-6xl mx-auto my-6 px-3 sm:px-4">
+
+        <section class="no-print bg-slate-900/60 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-slate-800/80 mb-6 shadow-xl space-y-5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-2.5 h-2.5 bg-[#00A2E2] rounded-full animate-pulse ring-4 ring-[#00A2E2]/20"></span>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-[#00A2E2]">1. Informasi Dokumen & Survey Lapangan</h2>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <label for="selectPPN" class="text-[11px] font-bold text-slate-400">PAJAK PPN:</label>
+                    <select id="selectPPN" onchange="calculateTotal(); saveToLocalStorage();" class="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-[#00A2E2] focus:border-[#00A2E2] focus:outline-none cursor-pointer">
+                        <option value="0.11" selected>PPN 11%</option>
+                        <option value="0.12">PPN 12%</option>
+                        <option value="0">Tanpa PPN (0%)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+                <div>
+                    <label class="block text-[11px] font-medium text-slate-300 mb-1">Nama Pemohon PB/PD</label>
+                    <div class="flex items-center gap-1.5">
+                        <input type="text" id="inNama" placeholder="Ketik atau pilih nama..." oninput="syncData()" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:border-[#00A2E2] focus:outline-none transition">
+                        <select id="selectNamaOpt" onchange="pilihNamaManual(this.value)" class="bg-slate-950 border border-slate-800 rounded-xl px-2 py-2.5 text-xs text-slate-300 focus:border-[#00A2E2] focus:outline-none cursor-pointer shrink-0 max-w-[130px]">
+                            <option value="">-- Pilih dari Permohonan --</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-medium text-slate-300 mb-1">Lokasi Pekerjaan</label>
+                    <div class="flex items-center gap-1.5">
+                        <input type="text" id="inLokasi" placeholder="Ketik atau pilih lokasi..." oninput="syncData()" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:border-[#00A2E2] focus:outline-none transition">
+                        <select id="selectLokasiOpt" onchange="pilihLokasiManual(this.value)" class="bg-slate-950 border border-slate-800 rounded-xl px-2 py-2.5 text-xs text-slate-300 focus:border-[#00A2E2] focus:outline-none cursor-pointer shrink-0 max-w-[130px]">
+                            <option value="">-- Pilih dari Permohonan --</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-medium text-slate-300 mb-1">ULP</label>
+                    <input type="text" id="inULP" value="MALANG KOTA" oninput="syncData()" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:border-[#00A2E2] focus:outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-medium text-slate-300 mb-1">Tanggal Dokumen (Pilih Kalender)</label>
+                    <input type="date" id="inTanggal" onchange="syncData()" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:border-[#00A2E2] focus:outline-none transition cursor-pointer">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-medium text-slate-300 mb-1">Assistant Manager Perencanaan</label>
+                    <input type="text" id="inAsman" value="BAYU KRISTANTO" oninput="syncData()" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:border-[#00A2E2] focus:outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-medium text-slate-300 mb-1">Team Leader Perencanaan</label>
+                    <input type="text" id="inTL" value="ARDY NURFIANTO" oninput="syncData()" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:border-[#00A2E2] focus:outline-none transition">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2 border-t border-slate-800/60">
+                <div>
+                    <label class="block text-[11px] font-medium text-amber-400 mb-1">✍️ TTD Asman Perencanaan (.PNG Transparan)</label>
+                    <input type="file" id="imgAsmanTTD" accept="image/png, image/jpeg" onchange="previewTTD(event, 'outTTDAsmanImg')" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-400 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-slate-800 file:text-amber-400 hover:file:bg-slate-700">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-medium text-amber-400 mb-1">✍️ TTD Team Leader Perencanaan (.PNG Transparan)</label>
+                    <input type="file" id="imgTLTTD" accept="image/png, image/jpeg" onchange="previewTTD(event, 'outTTDTLImg')" class="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-400 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-slate-800 file:text-amber-400 hover:file:bg-slate-700">
+                </div>
+            </div>
+
+            <hr class="border-slate-800/80">
+
+            <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                <button onclick="addManualRow()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition border border-slate-700 flex items-center justify-center gap-1.5 active:scale-95">
+                    <span>✏️</span> Tambah Baris Manual
+                </button>
+
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <select id="selectKategori" onchange="updateMaterialDropdownByKategori()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:border-[#00A2E2] focus:outline-none cursor-pointer shrink-0 font-semibold">
+                        <option value="SUTM">SUTM</option>
+                        <option value="MVTIC" selected>MVTIC</option>
+                        <option value="SKTM">SKTM</option>
+                        <option value="KUBIKEL">KUBIKEL</option>
+                        <option value="GD BETON">GD BETON</option>
+                        <option value="SKTR">SKTR</option>
+                        <option value="SKSR">SKSR</option>
+                        <option value="GTT KHUSUS">GTT KHUSUS</option>
+                        <option value="GTT UMUM">GTT UMUM</option>
+                        <option value="SUTR">SUTR</option>
+                        <option value="53-197 KVA">53-197 KVA</option>
+                        <option value="REHAB SUTM">REHAB SUTM</option>
+                        <option value="REHAB SUTR">REHAB SUTR</option>
+                        <option value="PASANG GSW">PASANG GSW</option>
+                    </select>
+                    <select id="selectMaterial" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white w-full sm:w-80 focus:border-[#00A2E2] focus:outline-none cursor-pointer truncate">
+                    </select>
+                    <button onclick="addItemFromSelect()" class="bg-[#005C9A] hover:bg-[#00A2E2] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-[#005C9A]/20 active:scale-95 shrink-0">
+                        + Auto Pilih
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <div id="pdfArea" class="mobile-scroll-wrapper w-full overflow-x-auto pb-6">
+            <div class="inline-block min-w-full flex flex-col items-center">
+                <div id="rekapPagesContainer" class="w-full flex flex-col items-center"></div>
+                <div id="rincianPagesContainer" class="w-full flex flex-col items-center"></div>
+            </div>
+        </div>
+    </main>
+
             </div>
           </div>
 
@@ -1909,6 +2309,19 @@
                               class="text-[10px] font-bold text-emerald-500 flex items-center gap-1">
                           <i class="fas fa-paperclip"></i> <span x-text="selectedBpmItem?.links?.length + ' lampiran tersimpan'"></span>
                         </span>
+                      </div>
+                    </template>
+
+                    <!-- SHORTCUT KE RAB GENERATOR KHUSUS STEP 5, 6, 7 (PEMBUATAN/KOREKSI/PERSETUJUAN RAB) -->
+                    <template x-if="[5, 6, 7].includes(stepObj.no)">
+                      <div class="pt-1.5 flex flex-wrap items-center gap-2">
+                        <button @click="modals.bpmDetail = false; navigate('rab-generator')"
+                                type="button"
+                                class="px-3 py-1.5 rounded-xl text-[11px] font-bold border flex items-center gap-1.5 transition-all"
+                                :class="isDarkMode ? 'bg-sky-900/30 text-sky-300 border-sky-800 hover:bg-sky-900/50' : 'bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100'">
+                          <i class="fas fa-calculator"></i> Buka RAB Generator
+                        </button>
+                        <span class="text-[10px] text-slate-400">Susun & cetak dokumen RAB, lalu unggah hasilnya sebagai lampiran di sini.</span>
                       </div>
                     </template>
 
@@ -2226,7 +2639,7 @@
             class="w-full px-3 py-2 border rounded-2xl resize-none text-xs focus:border-[#005C9A]"></textarea>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div>
             <label class="block text-xs font-bold mb-1.5" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">Kategori Bidang</label>
             <select x-model="form.archive.kategori"
@@ -2240,13 +2653,25 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold mb-1.5" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">Lokasi Lemari</label>
-            <select x-model="form.archive.lemari"
+            <label class="block text-xs font-bold mb-1.5" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">Tahun Arsip</label>
+            <select x-model="form.archive.tahun"
               :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'"
               class="w-full px-3 py-2 border rounded-2xl text-xs focus:border-[#005C9A]" required>
-              <option value="" disabled>Pilih Lemari</option>
-              <template x-for="lem in masterData.lemaris" :key="lem">
-                <option :value="lem" x-text="lem"></option>
+              <option value="" disabled>Pilih Tahun</option>
+              <template x-for="thn in masterData.tahuns" :key="thn">
+                <option :value="thn" x-text="thn"></option>
+              </template>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold mb-1.5" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">Bulan</label>
+            <select x-model="form.archive.bulan"
+              :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'"
+              class="w-full px-3 py-2 border rounded-2xl text-xs focus:border-[#005C9A]" required>
+              <option value="" disabled>Pilih Bulan</option>
+              <template x-for="bln in bulanIndonesia" :key="bln">
+                <option :value="bln" x-text="bln"></option>
               </template>
             </select>
           </div>
@@ -2471,7 +2896,8 @@
             logs: [],
             notifications: [],
             unreadCount: 0,
-            masterData: { categories: ['PFK', 'ESTETIKA', 'Pelanggan TM', 'SPKLU'], extensions: ['PDF', 'DOCX', 'XLSX'], nomors: ['001/PLN/2026'], lemaris: ['Lemari A', 'Lemari B', 'Lemari C', 'Lemari_D'], ordners: ['Ordner_01', 'Ordner_02', 'Ordner_03', 'Ordner_04'], ulps: ['ULP Malang Kota', 'ULP Blimbing', 'ULP Dinoyo', 'ULP Kebonagung', 'ULP Singosari', 'ULP Lawang', 'ULP Batu', 'ULP Tumpang', 'ULP Bululawang', 'ULP Gondanglegi', 'ULP Kepanjen', 'ULP Sumberpucung', 'ULP Dampit'] },
+            masterData: { categories: ['PFK', 'ESTETIKA', 'Pelanggan TM', 'SPKLU'], extensions: ['PDF', 'DOCX', 'XLSX'], nomors: ['001/PLN/2026'], lemaris: ['Lemari A', 'Lemari B', 'Lemari C', 'Lemari_D'], ordners: ['Ordner_01', 'Ordner_02', 'Ordner_03', 'Ordner_04'], ulps: ['ULP Malang Kota', 'ULP Blimbing', 'ULP Dinoyo', 'ULP Kebonagung', 'ULP Singosari', 'ULP Lawang', 'ULP Batu', 'ULP Tumpang', 'ULP Bululawang', 'ULP Gondanglegi', 'ULP Kepanjen', 'ULP Sumberpucung', 'ULP Dampit'], tahuns: [] },
+            bulanIndonesia: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
 
             loginForm: { username: '', password: '' },
             showLoginPassword: false,
@@ -2480,7 +2906,8 @@
             forgotStep: 1,
             searchQuery: '',
             archiveFilter: { category: '', startDate: '', endDate: '' },
-            selectedLemari: 'All', 
+            selectedTahun: 'All',
+            selectedBulan: 'All', 
             logFilter: { time: 'all', search: '' },
             reportForm: { start: '', end: '' },
 
@@ -2501,7 +2928,7 @@
             ],
 
             form: {
-                archive: { id: '', nomor: '', nama: '', perihal: '', kategori: '', lemari: '', ordner: '', jenis: '', links: [], share_to: [] },
+                archive: { id: '', nomor: '', nama: '', perihal: '', kategori: '', tahun: '', bulan: '', ordner: '', jenis: '', links: [], share_to: [] },
                 user: { username: '', nama_lengkap: '', email: '', password: '', role: 'User', status: 'Active', isEdit: false },
                 profile: { nama_lengkap: '', password_lama: '', password_baru: '' }
             },
@@ -2521,7 +2948,7 @@
 
             fileData: { name: '', bytes: '', type: '' },
             filesData: [], 
-            tempSetting: { category: '', extension: '', nomor: '', lemari: '', ordner: '', ulp: '' },
+            tempSetting: { category: '', extension: '', nomor: '', lemari: '', ordner: '', ulp: '', tahun: '' },
             pagination: { currentPage: 1, perPage: 10 },
 
             getFileIcon(type) {
@@ -2665,7 +3092,10 @@
 
             openModal(type) {
                 if (type === 'archive') {
-                    this.form.archive = { id: '', nomor: '', nama: '', perihal: '', kategori: '', lemari: 'Lemari A', ordner: 'Ordner_01', jenis: 'PDF', links: [], share_to: [] };
+                    const now = new Date();
+                    const defaultTahun = (this.masterData.tahuns.includes(now.getFullYear().toString())) ? now.getFullYear().toString() : (this.masterData.tahuns[0] || now.getFullYear().toString());
+                    const defaultBulan = this.bulanIndonesia[now.getMonth()];
+                    this.form.archive = { id: '', nomor: '', nama: '', perihal: '', kategori: '', tahun: defaultTahun, bulan: defaultBulan, ordner: 'Ordner_01', jenis: 'PDF', links: [], share_to: [] };
                     this.fileData = { name: '', bytes: '', type: '' };
                     this.filesData = [];
                     this.modals.archive = true;
@@ -2720,7 +3150,7 @@
             },
 
             addSetting(type) {
-                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'Nomor': 'nomors', 'Lemari': 'lemaris', 'Ordner': 'ordners', 'ULP': 'ulps' };
+                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'Nomor': 'nomors', 'Lemari': 'lemaris', 'Ordner': 'ordners', 'ULP': 'ulps', 'Tahun': 'tahuns' };
                 let inputKey = type.toLowerCase();
                 let val = this.tempSetting[inputKey];
 
@@ -2740,7 +3170,7 @@
             },
 
             removeSetting(type, val) {
-                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'Nomor': 'nomors', 'Lemari': 'lemaris', 'Ordner': 'ordners', 'ULP': 'ulps' };
+                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'Nomor': 'nomors', 'Lemari': 'lemaris', 'Ordner': 'ordners', 'ULP': 'ulps', 'Tahun': 'tahuns' };
                 let targetArrayKey = keyMap[type];
                 if (this.masterData[targetArrayKey]) {
                     this.masterData[targetArrayKey] = this.masterData[targetArrayKey].filter(item => item !== val);
@@ -3033,14 +3463,17 @@
                           matchDate = matchDate && new Date(item.tanggal) <= new Date(this.archiveFilter.endDate + 'T23:59:59');
                         }
 
-                        let matchLemari = true;
-                        if (this.selectedLemari !== 'All') {
-                            const itemLemariNorm = String(item.lemari || '').toLowerCase().replace(/[\s_]+/g, '');
-                            const selectedLemariNorm = String(this.selectedLemari || '').toLowerCase().replace(/[\s_]+/g, '');
-                            matchLemari = itemLemariNorm === selectedLemariNorm;
+                        let matchTahun = true;
+                        if (this.selectedTahun !== 'All') {
+                            matchTahun = String(item.tahun || '') === String(this.selectedTahun);
                         }
 
-                        return matchSearch && matchCat && matchDate && matchLemari;
+                        let matchBulan = true;
+                        if (this.selectedBulan !== 'All') {
+                            matchBulan = String(item.bulan || '') === String(this.selectedBulan);
+                        }
+
+                        return matchSearch && matchCat && matchDate && matchTahun && matchBulan;
                     });
                 } else if (this.view === 'users') {
                     const q = (this.searchQuery || '').trim().toLowerCase();
@@ -3188,7 +3621,8 @@
                     'users': 'Manajemen Pegawai',
                     'logs': 'Log Aktivitas Sistem',
                     'settings': 'Konfigurasi Master Data',
-                    'reports': 'Unduh Laporan Kerja'
+                    'reports': 'Unduh Laporan Kerja',
+                    'rab-generator': 'RAB Generator'
                 };
                 this.viewTitle = titles[viewName] || 'E-Arsip PLN';
 
@@ -3204,6 +3638,9 @@
                     this.loadUserData();
                 } else if (viewName === 'logs') {
                     this.loadLogData();
+                } else if (viewName === 'rab-generator') {
+                    // Jaga-jaga: pastikan modul RAB Generator selalu dalam mode edit (bukan mode cetak) saat dibuka
+                    if (typeof ensureRabEditMode === 'function') ensureRabEditMode();
                 }
             },
 
@@ -3224,7 +3661,12 @@
 
             loadBpmData() {
                 this.callServer('apiHandler', ['getData', { token: this.currentUser.token, type: 'bpm' }])
-                    .then(data => { this.bpmList = Array.isArray(data) ? data : []; })
+                    .then(data => {
+                        this.bpmList = Array.isArray(data) ? data : [];
+                        // Teruskan data permohonan ke modul RAB Generator (vanilla JS) supaya dropdown nama/lokasi ikut ter-update
+                        window.__bpmDataForRab = this.bpmList;
+                        if (typeof refreshRabPemohonOptions === 'function') refreshRabPemohonOptions();
+                    })
                     .catch(() => {});
             },
 
@@ -3535,6 +3977,1115 @@
         }));
     });
   </script>
-</body>
 
+  <!-- ==== SCRIPT MODUL RAB GENERATOR (vanilla JS, terpisah dari Alpine.js) ==== -->
+  <script>
+        const daftarKategori = [
+            "SUTM", "MVTIC", "SKTM", "KUBIKEL", "GD BETON", 
+            "SKTR", "SKSR", "GTT KHUSUS", "GTT UMUM", "SUTR", 
+            "53-197 KVA", "REHAB SUTM", "REHAB SUTR", "PASANG GSW"
+        ];
+
+        /* KATALOG MASTER MATERIAL DENGAN HARGA MATERIAL (hMat) > 0 */
+        const masterKatalogPerKategori = {
+            "SUTM": [
+                {"kode": "5", "uraian": "Kabel AAAC - S 150 mm2", "sat": "M", "hMat": 36377, "hJasa": 6849, "hBkr": 4109},
+                {"kode": "6", "uraian": "Kabel AAAC - S 240 mm2", "sat": "M", "hMat": 56757, "hJasa": 8352, "hBkr": 5012},
+                {"kode": "160", "uraian": "Galvanized Steel Wire 35 mm - HDG", "sat": "M", "hMat": 21700, "hJasa": 4417, "hBkr": 2650},
+                {"kode": "74", "uraian": "Compresion Joint Sleeve Tension 70 mm - Al", "sat": "B", "hMat": 33300, "hJasa": 23716, "hBkr": 14229},
+                {"kode": "77", "uraian": "Compresion Joint Sleeve Tension 150 mm - Al", "sat": "B", "hMat": 87940, "hJasa": 30257, "hBkr": 18154},
+                {"kode": "78", "uraian": "Compresion Joint Sleeve Tension 240 mm - Al", "sat": "B", "hMat": 118456, "hJasa": 30666, "hBkr": 18400},
+                {"kode": "348", "uraian": "Pipa Galvanized 4\" - 3 m (medium 3,2 mm) + Plat GW Clamp Type C", "sat": "S", "hMat": 1343717, "hJasa": 31565, "hBkr": 18939},
+                {"kode": "349", "uraian": "Pipa Galvanized 4\" - 4 m (medium 3,2 mm) + Plat GW Clamp Type A", "sat": "S", "hMat": 1722102, "hJasa": 31730, "hBkr": 19038},
+                {"kode": "350", "uraian": "Pipa Galvanized 4\" - 4 m (medium 3,2 mm) + Plat GW Clamp Type B", "sat": "B", "hMat": 1728504, "hJasa": 31811, "hBkr": 19087},
+                {"kode": "330", "uraian": "Pipa Galvanized 3\" - 3 m (medium 2,5 mm) + Plat GW Clamp Type A", "sat": "S", "hMat": 729348, "hJasa": 24206, "hBkr": 14524},
+                {"kode": "331", "uraian": "Pipa Galvanized 3\" - 3 m (medium 2,5 mm) + Plat GW Clamp Type B", "sat": "S", "hMat": 732709, "hJasa": 24370, "hBkr": 14622},
+                {"kode": "332", "uraian": "Pipa Galvanized 3\" - 3 m (medium 2,5 mm) + Plat GW Clamp Type C", "sat": "S", "hMat": 739431, "hJasa": 24533, "hBkr": 14720},
+                {"kode": "291", "uraian": "Ornament Cable Band 3\" x 8\" - TM Lengkap Bolt & Nut - HDG", "sat": "B", "hMat": 166008, "hJasa": 10580, "hBkr": 6348},
+                {"kode": "303", "uraian": "Ornament Cable Band 4\" x 7\" - TM Lengkap Bolt & Nut - HDG", "sat": "B", "hMat": 160970, "hJasa": 10868, "hBkr": 6521},
+                {"kode": "56", "uraian": "Bolt & Nut M.16 x 50 - HDG", "sat": "S", "hMat": 16604, "hJasa": 3311, "hBkr": 1987},
+                {"kode": "511", "uraian": "Washer 45 mm x 45 mm x 3,5 mm - HDG", "sat": "B", "hMat": 5868, "hJasa": 720, "hBkr": 432},
+                {"kode": "489", "uraian": "Tiang Beton 11 Meter - 200 daN", "sat": "B", "hMat": 3533210, "hJasa": 932094, "hBkr": 559256},
+                {"kode": "492", "uraian": "Tiang Beton 13 Meter - 350 daN", "sat": "B", "hMat": 5603340, "hJasa": 1096582, "hBkr": 657949},
+                {"kode": "494", "uraian": "Tiang Beton 14 Meter - 350 daN", "sat": "B", "hMat": 6724660, "hJasa": 1302190, "hBkr": 781314},
+                {"kode": "378", "uraian": "Pondasi Type A (GTT 1 Tiang)", "sat": "Ls", "hMat": 669026, "hJasa": 366324, "hBkr": 219794},
+                {"kode": "379", "uraian": "Pondasi Type D (GTT2 Tiang)", "sat": "Ls", "hMat": 1287327, "hJasa": 686856, "hBkr": 412114},
+                {"kode": "315", "uraian": "Penghalang Panjat 10\" (l = 35 mm, t = 3,2 mm, besi 10 mm) Lengkap Bolt & Nut - HDG", "sat": "S", "hMat": 186499, "hJasa": 23031, "hBkr": 13819},
+                {"kode": "57", "uraian": "Bolt & Nut M.16 x 75 - HDG", "sat": "S", "hMat": 19777, "hJasa": 3023, "hBkr": 1814},
+                {"kode": "447", "uraian": "Tanda Bahaya Kecil (l = 150 mm, p = 200 mm, t = 1,2 mm)", "sat": "B", "hMat": 38092, "hJasa": 3599, "hBkr": 2159},
+                {"kode": "58", "uraian": "Bolt M.12 x 30 + Washer Cu", "sat": "S", "hMat": 19182, "hJasa": 3239, "hBkr": 1943},
+                {"kode": "462", "uraian": "Terminal Lug 50 mm - Cu 1 Hole", "sat": "B", "hMat": 83360, "hJasa": 14179, "hBkr": 8507},
+                {"kode": "182", "uraian": "Klem C 50 mm", "sat": "B", "hMat": 55970, "hJasa": 6773, "hBkr": 4064},
+                {"kode": "149", "uraian": "Ground Rod 16 mm - 2,5 m + Clamp - TM - besi As, ElectroPlatting Tembaga 35 micron", "sat": "S", "hMat": 340138, "hJasa": 76870, "hBkr": 46122},
+                {"kode": "20", "uraian": "Kabel BC 50 mm (Bare Conductor)", "sat": "M", "hMat": 147246, "hJasa": 5411, "hBkr": 3247},
+                {"kode": "436", "uraian": "Stainless Steel Strip non magnetic", "sat": "M", "hMat": 10644, "hJasa": 6909, "hBkr": 4145},
+                {"kode": "437", "uraian": "Stoping Buckle non magnetic", "sat": "B", "hMat": 4264, "hJasa": 3239, "hBkr": 1943},
+                {"kode": "223", "uraian": "Link - HDG", "sat": "B", "hMat": 4264, "hJasa": 2488, "hBkr": 1493},
+                {"kode": "361", "uraian": "Pipa Galvanized 3/4\" - 6 m (tebal = 1,6 mm)", "sat": "S", "hMat": 193394, "hJasa": 15474, "hBkr": 9284},
+                {"kode": "117", "uraian": "Cross Arm UNP 100 - 2000 mm (l = 50 mm, t =5 mm, tgg = 100 mm) - Tumpu", "sat": "B", "hMat": 661672, "hJasa": 56834, "hBkr": 34101},
+                {"kode": "17", "uraian": "Arm Tie Type 750 - 3/4\" - (t = 2,3 mm)", "sat": "B", "hMat": 81839, "hJasa": 6477, "hBkr": 3886},
+                {"kode": "55", "uraian": "Bolt & Nut M.16 x 400 (besi as) Double Arm - HDG", "sat": "S", "hMat": 84293, "hJasa": 5542, "hBkr": 3325},
+                {"kode": "174", "uraian": "Insulator - Pin Post Insulator 20 kV;12,5 kN - Tumpu", "sat": "B", "hMat": 256225, "hJasa": 32711, "hBkr": 19626},
+                {"kode": "389", "uraian": "Preformed Top Tie 150 mm (Semi Cond / Non Metalic / Composite)", "sat": "B", "hMat": 77990, "hJasa": 14395, "hBkr": 8637},
+                {"kode": "164", "uraian": "Ground Wire Clamp Type A - TM (l = 50 mm, t = 6 mm, p = 300 mm)", "sat": "B", "hMat": 75997, "hJasa": 11588, "hBkr": 6953},
+                {"kode": "512", "uraian": "Wire Clip M10 (35 mm)", "sat": "S", "hMat": 8216, "hJasa": 8205, "hBkr": 4923},
+                {"kode": "118", "uraian": "Cross Arm UNP 100 - 2500 mm (l = 50 mm, t =5 mm, tgg = 100 mm)", "sat": "B", "hMat": 828090, "hJasa": 73598, "hBkr": 44159},
+                {"kode": "18", "uraian": "Arm Tie Type 900 - 3/4\" - (t = 2,3 mm)", "sat": "B", "hMat": 92296, "hJasa": 6622, "hBkr": 3973},
+                {"kode": "385", "uraian": "Preformed Side Tie Double 150 mm (Semi Cond / Non Metalic / Composite)", "sat": "B", "hMat": 149974, "hJasa": 10796, "hBkr": 6477},
+                {"kode": "165", "uraian": "Ground Wire Clamp Type B - TM (l = 50 mm, t = 6 mm, p = 300 mm)", "sat": "B", "hMat": 75997, "hJasa": 11732, "hBkr": 7040},
+                {"kode": "387", "uraian": "Preformed Termination 35 mm (542/ u / 2009)", "sat": "B", "hMat": 66661, "hJasa": 21592, "hBkr": 12955},
+                {"kode": "96", "uraian": "Cousen / Thimble (t = 2,5 mm)", "sat": "B", "hMat": 7775, "hJasa": 2452, "hBkr": 1472},
+                {"kode": "116", "uraian": "Cross Arm UNP 100 - 2000 mm (l = 50 mm, t =5 mm, tgg = 100 mm) - Tarik", "sat": "B", "hMat": 661672, "hJasa": 57243, "hBkr": 34346},
+                {"kode": "510", "uraian": "U - Strap - TM (l = 42 mm, t = 6 mm)", "sat": "S", "hMat": 44280, "hJasa": 8637, "hBkr": 5182},
+                {"kode": "175", "uraian": "Insulator - Strain Insulator 20 kV Lengkap - Tarik", "sat": "B", "hMat": 568830, "hJasa": 36799, "hBkr": 22079},
+                {"kode": "254", "uraian": "Kabel NYA 35 mm2 (SPLN)", "sat": "M", "hMat": 112295, "hJasa": 14298, "hBkr": 8579},
+                {"kode": "456", "uraian": "Terminal Lug 35 mm - Cu 1 Hole", "sat": "B", "hMat": 69355, "hJasa": 12739, "hBkr": 7643},
+                {"kode": "217", "uraian": "Line Tap Connector Al 150 - 50 mm type G", "sat": "B", "hMat": 36294, "hJasa": 14179, "hBkr": 8507},
+                {"kode": "214", "uraian": "Line Tap Connector 150-150 mm + Heatshrink", "sat": "S", "hMat": 34000, "hJasa": 14323, "hBkr": 8594},
+                {"kode": "384", "uraian": "Preformed Side Tie 150 mm (Semi Cond / Non Metalic / Composite)", "sat": "B", "hMat": 76682, "hJasa": 10796, "hBkr": 6477},
+                {"kode": "377", "uraian": "Fuse Cut Out Switch 24 kV", "sat": "S", "hMat": 1194327, "hJasa": 23031, "hBkr": 13819},
+                {"kode": "376", "uraian": "Lightning Arrester 24 kV", "sat": "S", "hMat": 672072, "hJasa": 35985, "hBkr": 21592},
+                {"kode": "256", "uraian": "Kabel NYAF 35 mm2 - untuk Bawah Arrester", "sat": "M", "hMat": 96030, "hJasa": 14298, "hBkr": 8579},
+                {"kode": "472", "uraian": "Terminal Lug 150 mm - Al/Cu 1 Hole", "sat": "B", "hMat": 88525, "hJasa": 15546, "hBkr": 9328},
+                {"kode": "140", "uraian": "Double Arm Band 9 \" (t = 6 mm x 42 mm) HDG TM Lengkap Bolt & Nut - HDG", "sat": "S", "hMat": 205027, "hJasa": 30228, "hBkr": 18137},
+                {"kode": "15", "uraian": "Arm Tie Band 9\" (TM) (t = 6 mm x 42 mm) HDG TM Lengkap Bolt & Nut - HDG", "sat": "B", "hMat": 125906, "hJasa": 32099, "hBkr": 19259},
+                {"kode": "166", "uraian": "Ground Wire Clamp Type C - TM (l = 50 mm, t = 6 mm, p = 300 mm)", "sat": "B", "hMat": 93629, "hJasa": 11875, "hBkr": 7125},
+                {"kode": "473", "uraian": "Terminal Lug 150 mm - Al/Cu 2 Hole", "sat": "B", "hMat": 160575, "hJasa": 15762, "hBkr": 9457},
+                {"kode": "353", "uraian": "Pipa Galvanized 4\" - 5 m (tebal = 3,2 mm)", "sat": "B", "hMat": 1904595, "hJasa": 35982, "hBkr": 21589},
+                {"kode": "304", "uraian": "Ornament Cable Band 4\" x 8\" - TM Lengkap Bolt & Nut - HDG", "sat": "B", "hMat": 172568, "hJasa": 10940, "hBkr": 6564},
+                {"kode": "295", "uraian": "Ornament Cable Band 4\" x 10\" - TM Lengkap Bolt & Nut - HDG", "sat": "B", "hMat": 203797, "hJasa": 11875, "hBkr": 7125},
+                {"kode": "296", "uraian": "Ornament Cable Band 4\" x 11\" - TM Lengkap Bolt & Nut - HDG", "sat": "B", "hMat": 213001, "hJasa": 12236, "hBkr": 7341},
+                {"kode": "34", "uraian": "Clamp Begel 3/4\" (untuk Kabel)", "sat": "B", "hMat": 6611, "hJasa": 4318, "hBkr": 2591},
+                {"kode": "486", "uraian": "Termination OD 3 X 150 MM2 u/XLPE", "sat": "S", "hMat": 5800000, "hJasa": 668000, "hBkr": 400800},
+                {"kode": "125", "uraian": "Cross Arm UNP 80 - 2000 (l = 42 mm, t = 3,5 mm, tgg = 80 mm)", "sat": "B", "hMat": 458276, "hJasa": 55608, "hBkr": 33365},
+                {"kode": "408", "uraian": "Single Arm Band 9\" (t = 6 mm x 42 mm) TM Lengkap Nut - HDG", "sat": "B", "hMat": 155729, "hJasa": 20872, "hBkr": 12523},
+                {"kode": "133", "uraian": "Disconnecting Switch 25,8 kV - 800 A Outdoor (3 Phasa)", "sat": "S", "hMat": 3249000, "hJasa": 256426, "hBkr": 153856},
+                {"kode": "119", "uraian": "Cross Arm UNP 100 - 3000 mm (l = 50 mm, t =5 mm, tgg = 100 mm)", "sat": "B", "hMat": 1004855, "hJasa": 85865, "hBkr": 51519},
+                {"kode": "127", "uraian": "Cross Arm UNP 80 - 3000 (l = 45 mm, t = 3,5 mm, tgg = 80 mm)", "sat": "B", "hMat": 669009, "hJasa": 65421, "hBkr": 39253},
+                {"kode": "406", "uraian": "Single Arm Band 8\" (t = 6 mm x 42 mm) TM Lengkap Nut - HDG", "sat": "B", "hMat": 136399, "hJasa": 13963, "hBkr": 8378},
+                {"kode": "120", "uraian": "Cross Arm UNP 100 - 6000 mm (l = 50 mm, t =5 mm, tgg = 100 mm)", "sat": "B", "hMat": 1790693, "hJasa": 122664, "hBkr": 73598},
+                {"kode": "128", "uraian": "Cross Arm UNP 80 - 6000 (l = 45 mm, t = 3,5 mm, tgg = 80 mm)", "sat": "B", "hMat": 1262261, "hJasa": 106309, "hBkr": 63785},
+                {"kode": "519", "uraian": "Anchor Rod Clamp + Bolt & Nut M 16 x 75", "sat": "B", "hMat": 45634, "hJasa": 18650, "hBkr": 11190},
+                {"kode": "422", "uraian": "Single Guy Wire Band 8\" - (t = 6 mm x 42 mm) TM Lengkap Nut - HDG", "sat": "B", "hMat": 105633, "hJasa": 17993, "hBkr": 10796},
+                {"kode": "505", "uraian": "Turn Buckle TM 3/4\" (7000 kg) - TM - (l = 42 mm, t = 6 mm)", "sat": "S", "hMat": 165812, "hJasa": 21592, "hBkr": 12955},
+                {"kode": "388", "uraian": "Preformed Termination 70 mm (542/ u / 2009)", "sat": "B", "hMat": 95987, "hJasa": 25190, "hBkr": 15114},
+                {"kode": "168", "uraian": "Guy Insulator MV (TM) - belimbing", "sat": "B", "hMat": 110434, "hJasa": 9325, "hBkr": 5595},
+                {"kode": "161", "uraian": "Galvanized Steel Wire 70 mm - HDG", "sat": "M", "hMat": 35700, "hJasa": 4743, "hBkr": 2846},
+                {"kode": "513", "uraian": "Wire Clip M12 (70 mm)", "sat": "S", "hMat": 8452, "hJasa": 8349, "hBkr": 5009},
+                {"kode": "337", "uraian": "Pipa Galvanized 3/4\" - 2 m (tebal = 1,6 mm)", "sat": "B", "hMat": 67221, "hJasa": 13902, "hBkr": 8341},
+                {"kode": "170", "uraian": "Guy Wire Rod 5/8\" (15 mm) - 2.500 mm - TM", "sat": "B", "hMat": 225152, "hJasa": 40889, "hBkr": 24533},
+                {"kode": "509", "uraian": "U - Bolt + Steel Plate TM / TR Bolt M.18 + 2 Nut", "sat": "S", "hMat": 90482, "hJasa": 7917, "hBkr": 4750},
+                {"kode": "47", "uraian": "Beton Block 400 mm x 400 mm x 100 mm", "sat": "B", "hMat": 255493, "hJasa": 163551, "hBkr": 98131},
+                {"kode": "424", "uraian": "Single Guy Wire Band 9\" - (t = 6 mm x 42 mm) TM Lengkap Nut - HDG", "sat": "B", "hMat": 122705, "hJasa": 19793, "hBkr": 11876},
+                {"kode": "52", "uraian": "Bolt & Nut M.16 x 120 - HDG", "sat": "S", "hMat": 25608, "hJasa": 3815, "hBkr": 2289},
+                {"kode": "444", "uraian": "Strut Tie 2000 - pipe 2\" - 2,0 m, Tebal 2,0 mm - TM", "sat": "B", "hMat": 336105, "hJasa": 17993, "hBkr": 10796},
+                {"kode": "441", "uraian": "Strut Arm TM (l = 50 mm, t = 5 mm, tgg = 100 mm) - NP 10 - 30 cm", "sat": "B", "hMat": 104236, "hJasa": 25190, "hBkr": 15114},
+                {"kode": "426", "uraian": "Single Guy Wire Band 10\" - (t = 6 mm x 42 mm) TM Lengkap Nut - HDG", "sat": "B", "hMat": 133733, "hJasa": 23031, "hBkr": 13819},
+                {"kode": "211", "uraian": "Lightning Arrester 24 kV", "sat": "S", "hMat": 2016, "hJasa": 0, "hBkr": 0}
+            ],
+            "MVTIC": [
+                {"kode": "376", "uraian": "Lightning Arrester 24 kV", "sat": "S", "hMat": 672072, "hJasa": 35985, "hBkr": 21592},
+                {"kode": "256", "uraian": "Kabel NYAF 35 mm2 - untuk Bawah Arrester", "sat": "M", "hMat": 96030, "hJasa": 14298, "hBkr": 8579},
+                {"kode": "211", "uraian": "Lightning Arrester 24 kV", "sat": "S", "hMat": 2016, "hJasa": 0, "hBkr": 0},
+                {"kode": "251", "uraian": "Kabel NFA2XSEY - T 3 x 150 + 1 x 95 mm2 - CWS", "sat": "M", "hMat": 438095, "hJasa": 55141, "hBkr": 33085},
+                {"kode": "5", "uraian": "Kabel AAAC - S 150 mm2", "sat": "M", "hMat": 36377, "hJasa": 6849, "hBkr": 4109},
+                {"kode": "161", "uraian": "Galvanized Steel Wire 70 mm - HDG", "sat": "M", "hMat": 35700, "hJasa": 4743, "hBkr": 2847},
+                {"kode": "388", "uraian": "Preformed Termination 70 mm (542/ u / 2009)", "sat": "B", "hMat": 95987, "hJasa": 25190, "hBkr": 15114},
+                {"kode": "96", "uraian": "Cousen / Thimble (t = 2,5 mm)", "sat": "B", "hMat": 7775, "hJasa": 2452, "hBkr": 1472},
+                {"kode": "513", "uraian": "Wire Clip M12 (70 mm)", "sat": "S", "hMat": 8452, "hJasa": 8349, "hBkr": 5009},
+                {"kode": "337", "uraian": "Pipa Galvanized 3/4\" - 2 m (tebal = 1,6 mm)", "sat": "B", "hMat": 67221, "hJasa": 13902, "hBkr": 8341},
+                {"kode": "489", "uraian": "Tiang Beton 11 Meter - 200 daN", "sat": "B", "hMat": 3533210, "hJasa": 932094, "hBkr": 559256},
+                {"kode": "492", "uraian": "Tiang Beton 13 Meter - 350 daN", "sat": "B", "hMat": 5603340, "hJasa": 1096582, "hBkr": 657949},
+                {"kode": "494", "uraian": "Tiang Beton 14 Meter - 350 daN", "sat": "B", "hMat": 6724660, "hJasa": 1302190, "hBkr": 781314},
+                {"kode": "378", "uraian": "Pondasi Type A (GTT 1 Tiang)", "sat": "Ls", "hMat": 669026, "hJasa": 366324, "hBkr": 219794},
+                {"kode": "315", "uraian": "Penghalang Panjat 10\" (l = 35 mm, t = 3,2 mm, besi 10 mm) Lengkap Bolt & Nut - HDG", "sat": "S", "hMat": 186499, "hJasa": 23031, "hBkr": 13819},
+                {"kode": "57", "uraian": "Bolt & Nut M.16 x 75 - HDG", "sat": "S", "hMat": 19777, "hJasa": 3023, "hBkr": 1814},
+                {"kode": "447", "uraian": "Tanda Bahaya Kecil (l = 150 mm, p = 200 mm, t = 1,2 mm)", "sat": "B", "hMat": 38092, "hJasa": 3599, "hBkr": 2159},
+                {"kode": "58", "uraian": "Bolt M.12 x 30 + Washer Cu", "sat": "S", "hMat": 19182, "hJasa": 3239, "hBkr": 1943},
+                {"kode": "149", "uraian": "Ground Rod 16 mm - 2,5 m + Clamp - TM - besi As, ElectroPlatting Tembaga 35 micron", "sat": "S", "hMat": 340138, "hJasa": 76870, "hBkr": 46122},
+                {"kode": "20", "uraian": "Kabel BC 50 mm (Bare Conductor)", "sat": "M", "hMat": 147246, "hJasa": 5411, "hBkr": 3247},
+                {"kode": "436", "uraian": "Stainless Steel Strip non magnetic", "sat": "M", "hMat": 10644, "hJasa": 6909, "hBkr": 4145},
+                {"kode": "437", "uraian": "Stoping Buckle non magnetic", "sat": "B", "hMat": 4264, "hJasa": 3239, "hBkr": 1943},
+                {"kode": "377", "uraian": "Fuse Cut Out Switch 24 kV", "sat": "S", "hMat": 1194327, "hJasa": 23031, "hBkr": 13819}
+            ],
+            "SKTM": [
+                {"kode": "246", "uraian": "Kabel NA2XSEYBY 3 x 150 mm2 ;20 kV; UG", "sat": "M", "hMat": 352150, "hJasa": 53376, "hBkr": 32026},
+                {"kode": "353", "uraian": "Pipa Galvanized 4\" - 5 m (tebal = 3,2 mm)", "sat": "B", "hMat": 1904595, "hJasa": 35982, "hBkr": 21590},
+                {"kode": "486", "uraian": "Termination OD 3 X 150 MM2 u/XLPE", "sat": "S", "hMat": 5800000, "hJasa": 668000, "hBkr": 400800},
+                {"kode": "20", "uraian": "Kabel BC 50 mm (Bare Conductor)", "sat": "M", "hMat": 147246, "hJasa": 5411, "hBkr": 3247},
+                {"kode": "149", "uraian": "Ground Rod 16 mm - 2,5 m + Clamp - TM - besi As, ElectroPlatting Tembaga 35 micron", "sat": "S", "hMat": 340138, "hJasa": 76870, "hBkr": 46122},
+                {"kode": "472", "uraian": "Terminal Lug 150 mm - Al/Cu 1 Hole", "sat": "B", "hMat": 88525, "hJasa": 15546, "hBkr": 9328},
+                {"kode": "473", "uraian": "Terminal Lug 150 mm - Al/Cu 2 Hole", "sat": "B", "hMat": 160575, "hJasa": 15762, "hBkr": 9457}
+            ],
+            "KUBIKEL": [
+                {"kode": "149", "uraian": "Ground Rod 16 mm - 2,5 m + Clamp - TM - besi As, ElectroPlatting Tembaga 35 micron", "sat": "S", "hMat": 340138, "hJasa": 76870, "hBkr": 46122},
+                {"kode": "20", "uraian": "Kabel BC 50 mm (Bare Conductor)", "sat": "M", "hMat": 147246, "hJasa": 5411, "hBkr": 3247},
+                {"kode": "58", "uraian": "Bolt M.12 x 30 + Washer Cu", "sat": "S", "hMat": 19182, "hJasa": 3239, "hBkr": 1943},
+                {"kode": "462", "uraian": "Terminal Lug 50 mm - Cu 1 Hole", "sat": "B", "hMat": 83360, "hJasa": 14179, "hBkr": 8507},
+                {"kode": "182", "uraian": "Klem C 50 mm", "sat": "B", "hMat": 55970, "hJasa": 6773, "hBkr": 4064},
+                {"kode": "436", "uraian": "Stainless Steel Strip non magnetic", "sat": "M", "hMat": 10644, "hJasa": 6909, "hBkr": 4145},
+                {"kode": "437", "uraian": "Stoping Buckle non magnetic", "sat": "B", "hMat": 4264, "hJasa": 3239, "hBkr": 1943}
+            ],
+            "GD BETON": [
+                {"kode": "500", "uraian": "Trafo Distribusi 20 KV 3 Phasa 100 KVA", "sat": "S", "hMat": 46431760, "hJasa": 1174619, "hBkr": 704772},
+                {"kode": "501", "uraian": "Trafo Distribusi 20 KV 3 Phasa 160 KVA", "sat": "S", "hMat": 70254700, "hJasa": 1409544, "hBkr": 845726},
+                {"kode": "502", "uraian": "Trafo Distribusi 20 KV 3 Phasa 200 KVA", "sat": "S", "hMat": 73149368, "hJasa": 1527006, "hBkr": 916204},
+                {"kode": "503", "uraian": "Trafo Distribusi 20 KV 3 Phasa 250 KVA", "sat": "S", "hMat": 83038318, "hJasa": 1644468, "hBkr": 986681},
+                {"kode": "504", "uraian": "Trafo Distribusi 20 KV 3 Phasa 400 KVA", "sat": "S", "hMat": 116246416, "hJasa": 1879393, "hBkr": 1127636},
+                {"kode": "149", "uraian": "Ground Rod 16 mm - 2,5 m + Clamp - TM - besi As, ElectroPlatting Tembaga 35 micron", "sat": "S", "hMat": 340138, "hJasa": 76870, "hBkr": 46122},
+                {"kode": "20", "uraian": "Kabel BC 50 mm (Bare Conductor)", "sat": "M", "hMat": 147246, "hJasa": 5411, "hBkr": 3247}
+            ],
+            "SKTR": [
+                {"kode": "600", "uraian": "Kabel NYFGBY 4 x 50 mm2", "sat": "M", "hMat": 677332, "hJasa": 36633, "hBkr": 21980},
+                {"kode": "601", "uraian": "Kabel NYFGBY 4 x 70 mm2", "sat": "M", "hMat": 852533, "hJasa": 40297, "hBkr": 24178},
+                {"kode": "602", "uraian": "Kabel NYFGBY 4 x 95 mm2", "sat": "M", "hMat": 1291070, "hJasa": 43044, "hBkr": 25826},
+                {"kode": "603", "uraian": "Kabel NYFGBY 4 x 120 mm2", "sat": "M", "hMat": 1544026, "hJasa": 45791, "hBkr": 27475},
+                {"kode": "604", "uraian": "Kabel NYFGBY 4 x 150 mm2", "sat": "M", "hMat": 1888126, "hJasa": 48538, "hBkr": 29123},
+                {"kode": "605", "uraian": "Kabel NYFGBY 4 x 240 mm2", "sat": "M", "hMat": 2862024, "hJasa": 51286, "hBkr": 30771}
+            ],
+            "SKSR": [
+                {"kode": "595", "uraian": "Kabel NYFGBY 2 x 10 mm2", "sat": "Mtr", "hMat": 86320, "hJasa": 9814, "hBkr": 5888},
+                {"kode": "596", "uraian": "NYFGBY 2X16 MM2", "sat": "Mtr", "hMat": 115772, "hJasa": 3969, "hBkr": 2381},
+                {"kode": "597", "uraian": "Kabel NYFGBY 4 x 10 mm2", "sat": "Mtr", "hMat": 160690, "hJasa": 21262, "hBkr": 12758},
+                {"kode": "598", "uraian": "Kabel NYFGBY 4 x 16 mm2", "sat": "Mtr", "hMat": 223595, "hJasa": 23512, "hBkr": 14107},
+                {"kode": "599", "uraian": "Kabel NYFGBY 4 x 25 mm2", "sat": "Mtr", "hMat": 313100, "hJasa": 25762, "hBkr": 15457}
+            ],
+            "GTT KHUSUS": [
+                {"kode": "500", "uraian": "Trafo Distribusi 20 KV 3 Phasa 100 KVA", "sat": "S", "hMat": 46431760, "hJasa": 1174619, "hBkr": 704772},
+                {"kode": "501", "uraian": "Trafo Distribusi 20 KV 3 Phasa 160 KVA", "sat": "S", "hMat": 70254700, "hJasa": 1409544, "hBkr": 845726},
+                {"kode": "502", "uraian": "Trafo Distribusi 20 KV 3 Phasa 200 KVA", "sat": "S", "hMat": 73149368, "hJasa": 1527006, "hBkr": 916204},
+                {"kode": "503", "uraian": "Trafo Distribusi 20 KV 3 Phasa 250 KVA", "sat": "S", "hMat": 83038318, "hJasa": 1644468, "hBkr": 986681},
+                {"kode": "377", "uraian": "Fuse Cut Out Switch 24 kV", "sat": "S", "hMat": 1194327, "hJasa": 23031, "hBkr": 13819},
+                {"kode": "376", "uraian": "Lightning Arrester 24 kV", "sat": "S", "hMat": 672072, "hJasa": 35985, "hBkr": 21592}
+            ],
+            "GTT UMUM": [
+                {"kode": "500", "uraian": "Trafo Distribusi 20 KV 3 Phasa 100 KVA", "sat": "S", "hMat": 46431760, "hJasa": 1174619, "hBkr": 704772},
+                {"kode": "501", "uraian": "Trafo Distribusi 20 KV 3 Phasa 160 KVA", "sat": "S", "hMat": 70254700, "hJasa": 1409544, "hBkr": 845726},
+                {"kode": "502", "uraian": "Trafo Distribusi 20 KV 3 Phasa 200 KVA", "sat": "S", "hMat": 73149368, "hJasa": 1527006, "hBkr": 916204},
+                {"kode": "377", "uraian": "Fuse Cut Out Switch 24 kV", "sat": "S", "hMat": 1194327, "hJasa": 23031, "hBkr": 13819},
+                {"kode": "376", "uraian": "Lightning Arrester 24 kV", "sat": "S", "hMat": 672072, "hJasa": 35985, "hBkr": 21592}
+            ],
+            "SUTR": [
+                {"kode": "253", "uraian": "Kabel NFA2X - T; 3 x 70 + 1 x 70 mm2", "sat": "M", "hMat": 82045, "hJasa": 19393, "hBkr": 11636},
+                {"kode": "74", "uraian": "Compresion Joint Sleeve Tension 70 mm - Al", "sat": "B", "hMat": 33300, "hJasa": 23716, "hBkr": 14229},
+                {"kode": "495", "uraian": "Tiang Beton 9 Meter - 200 daN", "sat": "B", "hMat": 3026730, "hJasa": 753901, "hBkr": 452340},
+                {"kode": "489", "uraian": "Tiang Beton 11 Meter - 200 daN", "sat": "B", "hMat": 3533210, "hJasa": 932094, "hBkr": 559256}
+            ],
+            "53-197 KVA": [
+                {"kode": "191", "uraian": "kWh Meter 3 Phasa Pengukuran Langsung (Pasca / Prabayar)", "sat": "S", "hMat": 1903020, "hJasa": 291479, "hBkr": 174888},
+                {"kode": "541", "uraian": "Mountage 53 - 197 kVA", "sat": "Ls", "hMat": 72253, "hJasa": 142980, "hBkr": 85788},
+                {"kode": "210", "uraian": "Lemari APP Pengukuran Tidak Langsung Montage 80 A Aluminium", "sat": "S", "hMat": 14885719, "hJasa": 394158, "hBkr": 236496}
+            ],
+            "REHAB SUTM": [
+                {"kode": "5", "uraian": "Kabel AAAC - S 150 mm2", "sat": "M", "hMat": 36377, "hJasa": 6849, "hBkr": 4109},
+                {"kode": "174", "uraian": "Insulator - Pin Post Insulator 20 kV;12,5 kN - Tumpu", "sat": "B", "hMat": 256225, "hJasa": 32711, "hBkr": 19626},
+                {"kode": "175", "uraian": "Insulator - Strain Insulator 20 kV Lengkap - Tarik", "sat": "B", "hMat": 568830, "hJasa": 36799, "hBkr": 22079}
+            ],
+            "REHAB SUTR": [
+                {"kode": "253", "uraian": "Kabel NFA2X - T; 3 x 70 + 1 x 70 mm2", "sat": "M", "hMat": 82045, "hJasa": 19393, "hBkr": 11636},
+                {"kode": "74", "uraian": "Compresion Joint Sleeve Tension 70 mm - Al", "sat": "B", "hMat": 33300, "hJasa": 23716, "hBkr": 14229},
+                {"kode": "495", "uraian": "Tiang Beton 9 Meter - 200 daN", "sat": "B", "hMat": 3026730, "hJasa": 753901, "hBkr": 452340}
+            ],
+            "PASANG GSW": [
+                {"kode": "160", "uraian": "Galvanized Steel Wire 35 mm - HDG", "sat": "M", "hMat": 21700, "hJasa": 4417, "hBkr": 2650},
+                {"kode": "149", "uraian": "Ground Rod 16 mm - 2,5 m + Clamp - TM - besi As, ElectroPlatting Tembaga 35 micron", "sat": "S", "hMat": 340138, "hJasa": 76870, "hBkr": 46122},
+                {"kode": "20", "uraian": "Kabel BC 50 mm (Bare Conductor)", "sat": "M", "hMat": 147246, "hJasa": 5411, "hBkr": 3247}
+            ]
+        };
+
+        let masterKatalog = masterKatalogPerKategori["MVTIC"];
+        let activeItems = [];
+        let isPrintMode = false;
+        let ttdAsmanData = "";
+        let ttdTLData = "";
+
+        function updateMaterialDropdownByKategori() {
+            const kat = document.getElementById('selectKategori').value;
+            if (masterKatalogPerKategori[kat]) {
+                masterKatalog = masterKatalogPerKategori[kat];
+            } else {
+                masterKatalog = masterKatalogPerKategori["SUTM"];
+            }
+            initDropdown();
+        }
+
+        function pilihNamaManual(val) {
+            if (val) {
+                document.getElementById('inNama').value = val;
+                document.getElementById('selectNamaOpt').value = "";
+
+                // Cari data permohonan yang cocok, lalu otomatis isi Lokasi Pekerjaan sepasang dengan nama ini
+                const bpmData = window.__bpmDataForRab || [];
+                const matched = bpmData.find(b => (b.namaLokasi || b.lokasi || '').toString().trim() === val.trim());
+                if (matched && matched.alamat) {
+                    document.getElementById('inLokasi').value = matched.alamat.toString().trim();
+                    const lokasiSelect = document.getElementById('selectLokasiOpt');
+                    if (lokasiSelect) lokasiSelect.value = "";
+                }
+
+                syncData();
+            }
+        }
+
+        function pilihLokasiManual(val) {
+            if (val) {
+                document.getElementById('inLokasi').value = val;
+                document.getElementById('selectLokasiOpt').value = "";
+                syncData();
+            }
+        }
+
+        function togglePanduanModal(show) {
+            const modal = document.getElementById('panduanModal');
+            if (!modal) return;
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        function getFormattedIndonesianDate(dateString) {
+            if (!dateString) return "";
+            const dateObj = new Date(dateString);
+            if (isNaN(dateObj.getTime())) return dateString;
+            return dateObj.toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+
+        function previewTTD(event, targetImgId) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64Img = e.target.result;
+                    if (targetImgId === 'outTTDAsmanImg') {
+                        ttdAsmanData = base64Img;
+                    } else {
+                        ttdTLData = base64Img;
+                    }
+                    saveToLocalStorage();
+                    renderAllTables();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function initDropdown() {
+            const select = document.getElementById('selectMaterial');
+            select.innerHTML = '';
+            masterKatalog.forEach((item, index) => {
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.textContent = `[${item.kode}] ${item.uraian}`;
+                select.appendChild(opt);
+            });
+        }
+
+        // Isi dropdown "Nama Pemohon" & "Lokasi Pekerjaan" dari data Permohonan (bpmList) yang sesungguhnya,
+        // menggantikan data contoh statis. Dipanggil otomatis tiap kali data BPM di-refresh dari Alpine.
+        function refreshRabPemohonOptions() {
+            const allBpmData = window.__bpmDataForRab || [];
+            // Hanya tampilkan pengajuan yang sedang di tahap RAB (Step 5, 6, atau 7).
+            // Begitu step-nya naik lewat "Tandai Selesai" di Detail BPM, otomatis hilang dari sini.
+            const bpmData = allBpmData.filter(b => [5, 6, 7].includes(b.step));
+
+            const namaSelect = document.getElementById('selectNamaOpt');
+            const lokasiSelect = document.getElementById('selectLokasiOpt');
+            if (!namaSelect || !lokasiSelect) return;
+
+            const currentNama = namaSelect.value;
+            const currentLokasi = lokasiSelect.value;
+
+            const namaUnik = [...new Set(bpmData.map(b => (b.namaLokasi || b.lokasi || '').toString().trim()).filter(Boolean))];
+            const alamatUnik = [...new Set(bpmData.map(b => (b.alamat || '').toString().trim()).filter(Boolean))];
+
+            namaSelect.innerHTML = '<option value="">-- Pilih dari Permohonan (Tahap RAB) --</option>' +
+                namaUnik.map(n => `<option value="${n.replace(/"/g, '&quot;')}">${n}</option>`).join('');
+
+            lokasiSelect.innerHTML = '<option value="">-- Pilih dari Permohonan (Tahap RAB) --</option>' +
+                alamatUnik.map(a => `<option value="${a.replace(/"/g, '&quot;')}">${a}</option>`).join('');
+
+            if (namaUnik.includes(currentNama)) namaSelect.value = currentNama;
+            if (alamatUnik.includes(currentLokasi)) lokasiSelect.value = currentLokasi;
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('pln_active_items', JSON.stringify(activeItems));
+            
+            const formData = {
+                nama: document.getElementById('inNama').value,
+                lokasi: document.getElementById('inLokasi').value,
+                ulp: document.getElementById('inULP').value,
+                tanggal: document.getElementById('inTanggal').value,
+                asman: document.getElementById('inAsman').value,
+                tl: document.getElementById('inTL').value,
+                ppn: document.getElementById('selectPPN').value,
+                ttdAsman: ttdAsmanData,
+                ttdTL: ttdTLData
+            };
+            localStorage.setItem('pln_form_data', JSON.stringify(formData));
+        }
+
+        function loadFromLocalStorage() {
+            const savedItems = localStorage.getItem('pln_active_items');
+            if (savedItems) {
+                try {
+                    activeItems = JSON.parse(savedItems);
+                } catch (e) {
+                    activeItems = [];
+                }
+            }
+
+            const savedForm = localStorage.getItem('pln_form_data');
+            if (savedForm) {
+                try {
+                    const formData = JSON.parse(savedForm);
+                    document.getElementById('inNama').value = formData.nama || '';
+                    document.getElementById('inLokasi').value = formData.lokasi || '';
+                    document.getElementById('inULP').value = formData.ulp || 'MALANG KOTA';
+                    document.getElementById('inAsman').value = formData.asman || 'BAYU KRISTANTO';
+                    document.getElementById('inTL').value = formData.tl || 'ARDY NURFIANTO';
+                    if (formData.ppn) document.getElementById('selectPPN').value = formData.ppn;
+                    ttdAsmanData = formData.ttdAsman || "";
+                    ttdTLData = formData.ttdTL || "";
+                } catch (e) {
+                    // Default
+                }
+            }
+        }
+
+        function setTodayDate() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            
+            document.getElementById('inTanggal').value = `${yyyy}-${mm}-${dd}`;
+            saveToLocalStorage();
+        }
+
+        function loadKatalogData() {
+            updateMaterialDropdownByKategori();
+        }
+
+        function addManualRow() {
+            const katVal = document.getElementById('selectKategori').value;
+            activeItems.push({
+                kategori: katVal,
+                kode: "",
+                uraian: "",
+                sat: "M",
+                volMat: 1,
+                volPsg: 0,
+                volBkr: 0,
+                hMat: 0,
+                hPsg: 0,
+                hBkr: 0,
+                hJasa: 0,
+                harga: 0
+            });
+            saveToLocalStorage();
+            renderAllTables();
+        }
+
+        function addItemFromSelect() {
+            const selectIdx = document.getElementById('selectMaterial').value;
+            if (selectIdx === null || selectIdx === undefined || selectIdx === "") return;
+            const katVal = document.getElementById('selectKategori').value;
+            const item = masterKatalog[selectIdx];
+
+            const hMat = item.hMat || 0;
+            const hJasa = item.hJasa || 0;
+            const hBkr = item.hBkr || 0;
+
+            activeItems.push({
+                kategori: katVal,
+                kode: item.kode,
+                uraian: item.uraian,
+                sat: item.sat,
+                volMat: 1,
+                volPsg: 0,
+                volBkr: 0,
+                hMat: hMat,
+                hPsg: hJasa,
+                hBkr: hBkr,
+                hJasa: hJasa,
+                harga: hMat + hJasa
+            });
+
+            saveToLocalStorage();
+            renderAllTables();
+        }
+
+        function updateItemData(index, key, value, renderFull = false) {
+            activeItems[index][key] = value;
+
+            if (['volMat', 'volPsg', 'volBkr', 'hMat', 'hPsg', 'hBkr', 'hJasa'].includes(key)) {
+                const item = activeItems[index];
+                const volMat = item.volMat !== undefined ? item.volMat : (item.vol || 0);
+                const volPsg = item.volPsg || 0;
+                const volBkr = item.volBkr || 0;
+                const hMat = item.hMat || 0;
+                const hPsg = item.hPsg || item.hJasa || 0;
+                const hBkr = item.hBkr || 0;
+
+                item.harga = (volMat * hMat) + (volPsg * hPsg) + (volBkr * hBkr);
+            }
+
+            saveToLocalStorage();
+            if (renderFull) {
+                renderAllTables();
+            } else {
+                updateSingleRowCalculations(index);
+                renderRincianPages();
+                calculateTotal();
+            }
+        }
+
+        function updateSingleRowCalculations(index) {
+            const item = activeItems[index];
+            const volMat = item.volMat !== undefined ? item.volMat : (item.vol || 0);
+            const volPsg = item.volPsg || 0;
+            const volBkr = item.volBkr || 0;
+            const hMat = item.hMat || 0;
+            const hPsg = item.hPsg || item.hJasa || 0;
+            const hBkr = item.hBkr || 0;
+
+            const totMat = volMat * hMat;
+            const totPsg = volPsg * hPsg;
+            const totBkr = volBkr * hBkr;
+            const totHarga = totMat + totPsg + totBkr;
+
+            const elemMat = document.getElementById(`tot-mat-${index}`);
+            const elemPsg = document.getElementById(`tot-psg-${index}`);
+            const elemBkr = document.getElementById(`tot-bkr-${index}`);
+            const elemTot = document.getElementById(`tot-harga-${index}`);
+
+            if (elemMat) elemMat.textContent = formatAngka(totMat);
+            if (elemPsg) elemPsg.textContent = formatAngka(totPsg);
+            if (elemBkr) elemBkr.textContent = formatAngka(totBkr);
+            if (elemTot) elemTot.textContent = formatAngka(totHarga);
+        }
+
+        function renderAllTables() {
+            renderRekapPages();
+            renderRincianPages();
+            calculateTotal();
+        }
+
+        function renderRekapPages() {
+            const container = document.getElementById('rekapPagesContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (activeItems.length === 0) {
+                container.innerHTML = `<div class="print-page rounded-2xl shadow-xl relative mb-6 border border-slate-200 flex flex-col justify-between">${createRekapPageHTML(0, [], true)}</div>`;
+                return;
+            }
+
+            const normalPageLimit = 28;
+            const lastPageLimit = 22;
+
+            let remainingItems = [...activeItems];
+            let startIndex = 0;
+
+            while (remainingItems.length > 0) {
+                let currentLimit = (remainingItems.length <= lastPageLimit) ? lastPageLimit : normalPageLimit;
+                let pageItems = remainingItems.splice(0, currentLimit);
+                let isLastPage = (remainingItems.length === 0);
+
+                const pageDiv = document.createElement('div');
+                pageDiv.className = "print-page rounded-2xl shadow-xl relative mb-6 border border-slate-200 flex flex-col justify-between";
+                pageDiv.innerHTML = createRekapPageHTML(startIndex, pageItems, isLastPage);
+                container.appendChild(pageDiv);
+
+                startIndex += pageItems.length;
+            }
+        }
+
+        function getCategoryOptionsHTML(selectedKat) {
+            return daftarKategori.map(k => `<option value="${k}" ${selectedKat === k ? 'selected' : ''}>${k}</option>`).join('');
+        }
+
+        function createRekapPageHTML(startIndex, pageItems, isLastPage) {
+            const nama = document.getElementById('inNama').value || "-";
+            const lokasi = document.getElementById('inLokasi').value || "-";
+            const ulp = document.getElementById('inULP').value || "MALANG KOTA";
+            
+            const rawTanggal = document.getElementById('inTanggal').value;
+            const tglFormatted = getFormattedIndonesianDate(rawTanggal);
+            const tgl = "Malang, " + (tglFormatted || "");
+            
+            const asman = document.getElementById('inAsman').value || "";
+            const tl = document.getElementById('inTL').value || "";
+
+            let rowsHTML = '';
+            if (pageItems.length === 0) {
+                rowsHTML = `<tr><td colspan="18" class="text-center italic py-4 text-slate-400 font-medium bg-slate-50">✨ Belum ada data. Klik "+ Tambah Baris Manual" atau "+ Auto Pilih".</td></tr>`;
+            } else {
+                pageItems.forEach((item, localIdx) => {
+                    const idx = startIndex + localIdx;
+                    const vMat = item.volMat !== undefined ? item.volMat : (item.vol || 0);
+                    const vPsg = item.volPsg || 0;
+                    const vBkr = item.volBkr || 0;
+                    const vRet = item.volRet || 0;
+
+                    const hMat = item.hMat || 0;
+                    const hPsg = item.hPsg || item.hJasa || 0;
+                    const hBkr = item.hBkr || 0;
+
+                    const totMat = vMat * hMat;
+                    const totPsg = vPsg * hPsg;
+                    const totBkr = vBkr * hBkr;
+                    const totRow = totMat + totPsg + totBkr;
+
+                    if (isPrintMode) {
+                        rowsHTML += `
+                            <tr>
+                                <td class="text-center font-bold">${idx + 1}</td>
+                                <td class="text-center font-bold">${item.kategori}</td>
+                                <td class="text-center font-mono font-bold">${item.kode || '-'}</td>
+                                <td class="text-left">${item.uraian || '-'}</td>
+                                <td class="text-center">${item.sat || '-'}</td>
+                                <td class="text-center font-bold">${vMat || '-'}</td>
+                                <td class="text-center font-bold">${vPsg || '-'}</td>
+                                <td class="text-center font-bold">${vBkr || '-'}</td>
+                                <td class="text-center font-bold">${vRet || '-'}</td>
+                                <td class="text-right">${formatAngka(hMat)}</td>
+                                <td class="text-right">${formatAngka(hPsg)}</td>
+                                <td class="text-right">${formatAngka(hBkr)}</td>
+                                <td class="text-right">${formatAngka(totMat)}</td>
+                                <td class="text-right">${formatAngka(totPsg)}</td>
+                                <td class="text-right">${formatAngka(totBkr)}</td>
+                                <td class="text-right font-bold">${formatAngka(totRow)}</td>
+                                <td class="text-center no-print"></td>
+                            </tr>
+                        `;
+                    } else {
+                        rowsHTML += `
+                            <tr>
+                                <td class="text-center font-bold">${idx + 1}</td>
+                                <td class="text-center">
+                                    <select onchange="updateItemData(${idx}, 'kategori', this.value, true)" class="no-arrow text-center cursor-pointer font-semibold">
+                                        ${getCategoryOptionsHTML(item.kategori)}
+                                    </select>
+                                </td>
+                                <td><input type="text" value="${item.kode || ''}" placeholder="Kode" oninput="updateItemData(${idx}, 'kode', this.value)" class="text-center font-mono font-bold"></td>
+                                <td><input type="text" value="${item.uraian || ''}" placeholder="Uraian Pekerjaan / Material" oninput="updateItemData(${idx}, 'uraian', this.value)"></td>
+                                <td><input type="text" value="${item.sat || ''}" placeholder="Sat" oninput="updateItemData(${idx}, 'sat', this.value)" class="text-center"></td>
+                                <td><input type="number" inputmode="numeric" pattern="[0-9]*" value="${vMat}" oninput="updateItemData(${idx}, 'volMat', parseFloat(this.value)||0)" class="text-center font-bold"></td>
+                                <td><input type="number" inputmode="numeric" pattern="[0-9]*" value="${vPsg}" oninput="updateItemData(${idx}, 'volPsg', parseFloat(this.value)||0)" class="text-center font-bold"></td>
+                                <td><input type="number" inputmode="numeric" pattern="[0-9]*" value="${vBkr}" oninput="updateItemData(${idx}, 'volBkr', parseFloat(this.value)||0)" class="text-center font-bold"></td>
+                                <td><input type="number" inputmode="numeric" pattern="[0-9]*" value="${vRet}" oninput="updateItemData(${idx}, 'volRet', parseFloat(this.value)||0)" class="text-center font-bold"></td>
+                                <td><input type="number" inputmode="numeric" pattern="[0-9]*" value="${hMat}" placeholder="0" readonly class="text-right font-medium"></td>
+                                <td><input type="number" inputmode="numeric" pattern="[0-9]*" value="${hPsg}" placeholder="0" readonly class="text-right font-medium"></td>
+                                <td><input type="number" inputmode="numeric" pattern="[0-9]*" value="${hBkr}" placeholder="0" readonly class="text-right font-medium"></td>
+                                <td id="tot-mat-${idx}" class="text-right">${formatAngka(totMat)}</td>
+                                <td id="tot-psg-${idx}" class="text-right">${formatAngka(totPsg)}</td>
+                                <td id="tot-bkr-${idx}" class="text-right">${formatAngka(totBkr)}</td>
+                                <td id="tot-harga-${idx}" class="text-right font-bold">${formatAngka(totRow)}</td>
+                                <td class="text-center no-print">
+                                    <button onclick="deleteRow(${idx})" class="text-rose-500 font-bold hover:text-rose-700 transition p-1">✕</button>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+            }
+
+            let footerHTML = '';
+            let signatureHTML = '';
+
+            if (isLastPage) {
+                const subKat = getSubtotalPerKategori();
+                const subKatKeys = Object.keys(subKat).filter(k => subKat[k] > 0);
+                
+                let subKatCardsHTML = '';
+                if (subKatKeys.length > 0) {
+                    subKatCardsHTML = subKatKeys.map(k => `<div>${k}: <span class="font-bold">${formatRupiah(subKat[k])}</span></div>`).join('');
+                } else {
+                    subKatCardsHTML = `<div>-</div>`;
+                }
+
+                footerHTML = `
+                    <div class="mb-2 text-[9px] grid grid-cols-4 gap-1 text-black font-semibold border border-black p-1 bg-slate-50">
+                        ${subKatCardsHTML}
+                    </div>
+                    <div class="flex justify-between items-start text-[10px] font-bold mb-2 text-black">
+                        <div class="w-1/2 p-1.5 border border-black rounded bg-slate-50">
+                            <span class="block text-[8px] text-slate-500 uppercase">TERBILANG JUMLAH TOTAL:</span>
+                            <p id="outTerbilang" class="italic text-slate-900 font-bold text-[11px] mt-0.5">Nihil Rupiah</p>
+                        </div>
+                        <div class="w-5/12 space-y-0.5">
+                            <div class="flex justify-between border-b pb-0.5">
+                                <span>JUMLAH PEKERJAAN:</span>
+                                <span id="outSubtotal">Rp 0</span>
+                            </div>
+                            <div class="flex justify-between border-b pb-0.5">
+                                <span id="labelPPN">PPN (11%):</span>
+                                <span id="outPPN">Rp 0</span>
+                            </div>
+                            <div class="flex justify-between text-[11px] font-extrabold border-b-2 border-black pb-0.5">
+                                <span>TOTAL HARGA:</span>
+                                <span id="outGrandTotal">Rp 0</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const asmanImg = ttdAsmanData ? `<img src="${ttdAsmanData}" class="max-h-16 object-contain">` : '';
+                const tlImg = ttdTLData ? `<img src="${ttdTLData}" class="max-h-16 object-contain">` : '';
+
+                signatureHTML = `
+                    <div class="flex justify-between items-end text-center text-[10px] pt-1 text-black">
+                        <div class="w-48 relative">
+                            <div class="h-16 flex items-center justify-center">${asmanImg}</div>
+                            <p class="font-semibold">ASSISTANT MANAGER PERENCANAAN</p>
+                            <p class="font-bold underline">${asman}</p>
+                        </div>
+                        <div class="w-48 relative">
+                            <p class="mb-0.5">${tgl}</p>
+                            <div class="h-16 flex items-center justify-center">${tlImg}</div>
+                            <p class="font-semibold">TEAM LEADER PERENCANAAN</p>
+                            <p class="font-bold underline">${tl}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="flex-grow flex flex-col justify-start">
+                    <div class="flex justify-between items-start border-b-2 border-black pb-1.5 mb-2">
+                        <div class="flex items-center gap-3">
+                            <svg class="h-9 w-auto" viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="300" height="300" fill="#FFF200"/>
+                                <path d="M50 120 C 80 100, 120 140, 150 120 C 180 100, 220 140, 250 120 L 250 140 C 220 160, 180 120, 150 140 C 120 160, 80 120, 50 140 Z" fill="#00AEEF"/>
+                                <path d="M50 160 C 80 140, 120 180, 150 160 C 180 140, 220 180, 250 160 L 250 180 C 220 200, 180 160, 150 180 C 120 200, 80 160, 50 180 Z" fill="#00AEEF"/>
+                                <path d="M50 200 C 80 180, 120 220, 150 200 C 180 180, 220 220, 250 200 L 250 220 C 220 240, 180 200, 150 220 C 120 240, 80 200, 50 220 Z" fill="#00AEEF"/>
+                                <polygon points="170,50 120,160 170,140 130,260 210,120 160,135" fill="#ED1C24"/>
+                                <text x="150" y="380" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="90" fill="#00AEEF" text-anchor="middle">PLN</text>
+                            </svg>
+                            <div class="text-[9.5px] leading-tight font-bold text-black">
+                                PT. PLN (PERSERO)<br>
+                                UNIT INDUK DISTRIBUSI JAWA TIMUR<br>
+                                UP3 MALANG
+                            </div>
+                        </div>
+                        <div class="text-right text-black">
+                            <h2 class="font-bold text-xs underline tracking-wide">REKAP RAB PERMOHONAN PFK</h2>
+                            <p class="text-[9px]">Lampiran Detail Perencanaan PB/PD</p>
+                        </div>
+                    </div>
+
+                    <table class="w-full text-[10px] font-semibold mb-1.5 text-black">
+                        <tr>
+                            <td style="width: 75px;">NAMA PEK.</td>
+                            <td style="width: 10px;">:</td>
+                            <td>${nama}</td>
+                            <td style="width: 45px;">ULP</td>
+                            <td style="width: 10px;">:</td>
+                            <td style="width: 110px;">${ulp}</td>
+                        </tr>
+                        <tr>
+                            <td>LOKASI</td>
+                            <td>:</td>
+                            <td colspan="4">${lokasi}</td>
+                        </tr>
+                    </table>
+
+                    <table class="pln-table mb-2">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" style="width: 2.5%;">NO</th>
+                                <th rowspan="2" style="width: 5%;">KAT</th>
+                                <th rowspan="2" style="width: 4%;">KODE</th>
+                                <th rowspan="2" style="width: 19.5%;">URAIAN PEKERJAAN / MATERIAL</th>
+                                <th rowspan="2" style="width: 2.5%;">SAT</th>
+                                <th colspan="4" style="width: 12%;">VOLUME</th>
+                                <th colspan="3" style="width: 24.5%;">HARGA SATUAN (Rp)</th>
+                                <th colspan="3" style="width: 21%;">JUMLAH HARGA (Rp)</th>
+                                <th rowspan="2" style="width: 7%;">TOTAL HARGA (Rp)</th>
+                                <th rowspan="2" style="width: 2%;" class="no-print">ACT</th>
+                            </tr>
+                            <tr>
+                                <th style="width: 3.6%;">MAT</th>
+                                <th style="width: 2.8%;">PSG</th>
+                                <th style="width: 2.8%;">BKR</th>
+                                <th style="width: 2.8%;">RETUR</th>
+                                <th style="width: 8.5%;">MATERIAL</th>
+                                <th style="width: 8%;">PSG</th>
+                                <th style="width: 8%;">BKR</th>
+                                <th style="width: 7%;">MATERIAL</th>
+                                <th style="width: 7%;">PSG</th>
+                                <th style="width: 7%;">BKR</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHTML}
+                        </tbody>
+                    </table>
+
+                    ${footerHTML}
+                </div>
+
+                ${signatureHTML}
+            `;
+        }
+
+        function renderRincianPages() {
+            const container = document.getElementById('rincianPagesContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            let formattedRows = [];
+            let rowNo = 1;
+
+            daftarKategori.forEach(kat => {
+                const itemsInKat = activeItems.filter(i => i.kategori === kat);
+                if (itemsInKat.length > 0) {
+                    formattedRows.push({ isHeader: true, title: `PEKERJAAN ${kat}` });
+                    itemsInKat.forEach(item => {
+                        formattedRows.push({
+                            isHeader: false,
+                            no: rowNo++,
+                            item: item,
+                            origIdx: activeItems.indexOf(item)
+                        });
+                    });
+                }
+            });
+
+            if (formattedRows.length === 0) {
+                container.innerHTML = `<div class="print-page rounded-2xl shadow-xl relative mb-6 border border-slate-200 flex flex-col justify-between">${createRincianPageHTML([], true)}</div>`;
+                return;
+            }
+
+            const normalLimit = 28;
+            const lastLimit = 22;
+
+            let remainingRows = [...formattedRows];
+
+            while (remainingRows.length > 0) {
+                let currentLimit = (remainingRows.length <= lastLimit) ? lastLimit : normalLimit;
+                let pageRows = remainingRows.splice(0, currentLimit);
+                let isLastPage = (remainingRows.length === 0);
+
+                const pageDiv = document.createElement('div');
+                pageDiv.className = "print-page rounded-2xl shadow-xl relative mb-6 border border-slate-200 flex flex-col justify-between";
+                pageDiv.innerHTML = createRincianPageHTML(pageRows, isLastPage);
+                container.appendChild(pageDiv);
+            }
+        }
+
+        function createRincianPageHTML(pageRows, isLastPage) {
+            const nama = document.getElementById('inNama').value || "-";
+            
+            const rawTanggal = document.getElementById('inTanggal').value;
+            const tglFormatted = getFormattedIndonesianDate(rawTanggal);
+            const tgl = "Malang, " + (tglFormatted || "");
+
+            const asman = document.getElementById('inAsman').value || "";
+            const tl = document.getElementById('inTL').value || "";
+
+            let tbodyHTML = '';
+            if (pageRows.length === 0) {
+                tbodyHTML = `<tr><td colspan="16" class="text-center italic py-4 text-slate-400 font-medium bg-slate-50">Belum ada rincian pekerjaan.</td></tr>`;
+            } else {
+                pageRows.forEach(row => {
+                    if (row.isHeader) {
+                        tbodyHTML += `<tr class="bg-slate-100 font-bold"><td colspan="16" class="px-2 py-1 text-left uppercase tracking-wider text-[10px] text-slate-800">${row.title}</td></tr>`;
+                    } else {
+                        const item = row.item;
+                        const idx = row.origIdx;
+                        
+                        const vMat = item.volMat !== undefined ? item.volMat : (item.vol || 0);
+                        const vPsg = item.volPsg || 0;
+                        const vBkr = item.volBkr || 0;
+                        const vRet = item.volRet || 0;
+
+                        const hMat = item.hMat || 0;
+                        const hPsg = item.hPsg || item.hJasa || 0;
+                        const hBkr = item.hBkr || 0;
+
+                        const totMat = vMat * hMat;
+                        const totPsg = vPsg * hPsg;
+                        const totBkr = vBkr * hBkr;
+                        const totalRow = totMat + totPsg + totBkr;
+
+                        if (isPrintMode) {
+                            tbodyHTML += `
+                                <tr>
+                                    <td class="text-center">${row.no}</td>
+                                    <td class="text-center font-mono">${item.kode || '-'}</td>
+                                    <td class="text-left">${item.uraian || '-'}</td>
+                                    <td class="text-center">${item.sat || '-'}</td>
+                                    <td class="text-center font-bold">${vMat || '-'}</td>
+                                    <td class="text-center font-bold">${vPsg || '-'}</td>
+                                    <td class="text-center font-bold">${vBkr || '-'}</td>
+                                    <td class="text-center font-bold">${vRet || '-'}</td>
+                                    <td class="text-right">${formatAngka(hMat)}</td>
+                                    <td class="text-right">${formatAngka(hPsg)}</td>
+                                    <td class="text-right">${formatAngka(hBkr)}</td>
+                                    <td class="text-right">${formatAngka(totMat)}</td>
+                                    <td class="text-right">${formatAngka(totPsg)}</td>
+                                    <td class="text-right">${formatAngka(totBkr)}</td>
+                                    <td class="text-right font-bold">${formatAngka(totalRow)}</td>
+                                </tr>
+                            `;
+                        } else {
+                            tbodyHTML += `
+                                <tr>
+                                    <td class="text-center">${row.no}</td>
+                                    <td><input type="text" value="${item.kode || ''}" placeholder="Kode" oninput="updateItemData(${idx}, 'kode', this.value)" class="text-center font-mono"></td>
+                                    <td><input type="text" value="${item.uraian || ''}" placeholder="Uraian Spesifikasi" oninput="updateItemData(${idx}, 'uraian', this.value)"></td>
+                                    <td><input type="text" value="${item.sat || ''}" placeholder="Sat" oninput="updateItemData(${idx}, 'sat', this.value)" class="text-center"></td>
+                                    <td><input type="number" inputmode="numeric" pattern="[0-9]*" value="${vMat}" oninput="updateItemData(${idx}, 'volMat', parseFloat(this.value)||0)" class="text-center font-bold"></td>
+                                    <td><input type="number" inputmode="numeric" pattern="[0-9]*" value="${vPsg}" oninput="updateItemData(${idx}, 'volPsg', parseFloat(this.value)||0)" class="text-center font-bold"></td>
+                                    <td><input type="number" inputmode="numeric" pattern="[0-9]*" value="${vBkr}" oninput="updateItemData(${idx}, 'volBkr', parseFloat(this.value)||0)" class="text-center font-bold"></td>
+                                    <td><input type="number" inputmode="numeric" pattern="[0-9]*" value="${vRet}" oninput="updateItemData(${idx}, 'volRet', parseFloat(this.value)||0)" class="text-center font-bold"></td>
+                                    <td><input type="number" inputmode="numeric" pattern="[0-9]*" value="${hMat}" placeholder="0" readonly class="text-right font-medium"></td>
+                                    <td><input type="number" inputmode="numeric" pattern="[0-9]*" value="${hPsg}" placeholder="0" readonly class="text-right font-medium"></td>
+                                    <td><input type="number" inputmode="numeric" pattern="[0-9]*" value="${hBkr}" placeholder="0" readonly class="text-right font-medium"></td>
+                                    <td class="text-right">${formatAngka(totMat)}</td>
+                                    <td class="text-right">${formatAngka(totPsg)}</td>
+                                    <td class="text-right">${formatAngka(totBkr)}</td>
+                                    <td class="text-right font-bold">${formatAngka(totalRow)}</td>
+                                </tr>
+                            `;
+                        }
+                    }
+                });
+            }
+
+            let signatureHTML = '';
+            if (isLastPage) {
+                const asmanImg = ttdAsmanData ? `<img src="${ttdAsmanData}" class="max-h-16 object-contain">` : '';
+                const tlImg = ttdTLData ? `<img src="${ttdTLData}" class="max-h-16 object-contain">` : '';
+
+                signatureHTML = `
+                    <div class="flex justify-between items-end text-center text-[10px] pt-1 text-black">
+                        <div class="w-48 relative">
+                            <div class="h-16 flex items-center justify-center">${asmanImg}</div>
+                            <p class="font-semibold">ASSISTANT MANAGER PERENCANAAN</p>
+                            <p class="font-bold underline">${asman}</p>
+                        </div>
+                        <div class="w-48 relative">
+                            <p class="mb-0.5">${tgl}</p>
+                            <div class="h-16 flex items-center justify-center">${tlImg}</div>
+                            <p class="font-semibold">TEAM LEADER PERENCANAAN</p>
+                            <p class="font-bold underline">${tl}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="flex-grow flex flex-col justify-start">
+                    <div class="flex justify-between items-start border-b-2 border-black pb-1.5 mb-2">
+                        <div class="flex items-center gap-3">
+                            <svg class="h-9 w-auto" viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="300" height="300" fill="#FFF200"/>
+                                <path d="M50 120 C 80 100, 120 140, 150 120 C 180 100, 220 140, 250 120 L 250 140 C 220 160, 180 120, 150 140 C 120 160, 80 120, 50 140 Z" fill="#00AEEF"/>
+                                <path d="M50 160 C 80 140, 120 180, 150 160 C 180 140, 220 180, 250 160 L 250 180 C 220 200, 180 160, 150 180 C 120 200, 80 160, 50 180 Z" fill="#00AEEF"/>
+                                <path d="M50 200 C 80 180, 120 220, 150 200 C 180 180, 220 220, 250 200 L 250 220 C 220 240, 180 200, 150 220 C 120 240, 80 200, 50 220 Z" fill="#00AEEF"/>
+                                <polygon points="170,50 120,160 170,140 130,260 210,120 160,135" fill="#ED1C24"/>
+                                <text x="150" y="380" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="90" fill="#00AEEF" text-anchor="middle">PLN</text>
+                            </svg>
+                            <div class="text-[9.5px] leading-tight font-bold text-black">
+                                PT. PLN (PERSERO)<br>
+                                UNIT INDUK DISTRIBUSI JAWA TIMUR<br>
+                                UP3 MALANG
+                            </div>
+                        </div>
+                        <div class="text-right text-black">
+                            <h2 class="font-bold text-xs underline tracking-wide">RINCIAN PEKERJAAN PERMOHONAN PB/PD</h2>
+                            <p class="text-[9px]">A.N. ${nama}</p>
+                        </div>
+                    </div>
+
+                    <table class="pln-table mb-2">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" style="width: 3%;">NO</th>
+                                <th rowspan="2" style="width: 4%;">KODE</th>
+                                <th rowspan="2" style="width: 24.5%;">URAIAN PEKERJAAN / SPESIFIKASI</th>
+                                <th rowspan="2" style="width: 2.5%;">SAT</th>
+                                <th colspan="4" style="width: 12%;">VOLUME</th>
+                                <th colspan="3" style="width: 25%;">HARGA SATUAN (Rp)</th>
+                                <th colspan="3" style="width: 21%;">JUMLAH HARGA (Rp)</th>
+                                <th rowspan="2" style="width: 8%;">TOTAL HARGA (Rp)</th>
+                            </tr>
+                            <tr>
+                                <th style="width: 3.6%;">MAT</th>
+                                <th style="width: 2.8%;">PSG</th>
+                                <th style="width: 2.8%;">BKR</th>
+                                <th style="width: 2.8%;">RETUR</th>
+                                <th style="width: 8.5%;">MATERIAL</th>
+                                <th style="width: 8.25%;">PSG</th>
+                                <th style="width: 8.25%;">BKR</th>
+                                <th style="width: 7%;">MATERIAL</th>
+                                <th style="width: 7%;">PSG</th>
+                                <th style="width: 7%;">BKR</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tbodyHTML}
+                        </tbody>
+                    </table>
+                </div>
+
+                ${signatureHTML}
+            `;
+        }
+
+        function getSubtotalPerKategori() {
+            let res = {};
+            daftarKategori.forEach(kat => { res[kat] = 0; });
+            
+            activeItems.forEach(item => {
+                let kat = item.kategori || 'SUTM';
+                if (res[kat] === undefined) res[kat] = 0;
+
+                const vMat = item.volMat !== undefined ? item.volMat : (item.vol || 0);
+                const vPsg = item.volPsg || 0;
+                const vBkr = item.volBkr || 0;
+
+                const hMat = item.hMat || 0;
+                const hPsg = item.hPsg || item.hJasa || 0;
+                const hBkr = item.hBkr || 0;
+
+                const rowTot = (vMat * hMat) + (vPsg * hPsg) + (vBkr * hBkr);
+                res[kat] += rowTot;
+            });
+            return res;
+        }
+
+        function deleteRow(index) {
+            activeItems.splice(index, 1);
+            saveToLocalStorage();
+            renderAllTables();
+        }
+
+        // Dipanggil dari Alpine (navigate()) setiap kali halaman RAB Generator dibuka,
+        // untuk memastikan modul selalu dalam mode edit (bukan tersangkut di mode cetak).
+        function ensureRabEditMode() {
+            if (isPrintMode) {
+                isPrintMode = false;
+                renderAllTables();
+            }
+        }
+
+        function cetakPrint() {
+            isPrintMode = true;
+            renderAllTables();
+            
+            setTimeout(() => {
+                try {
+                    window.print();
+                } catch (e) {
+                    console.warn('Print gagal atau dibatalkan:', e);
+                } finally {
+                    isPrintMode = false;
+                    renderAllTables();
+                }
+            }, 100);
+        }
+
+        function resetToBlank() {
+            activeItems = [];
+            ttdAsmanData = "";
+            ttdTLData = "";
+            isPrintMode = false; // Jaga-jaga: pastikan mode edit aktif lagi kalau sebelumnya sempat nyangkut di mode cetak
+            
+            localStorage.removeItem('pln_active_items');
+            localStorage.removeItem('pln_form_data');
+            
+            document.getElementById('inNama').value = "";
+            document.getElementById('selectNamaOpt').value = "";
+            document.getElementById('inLokasi').value = "";
+            document.getElementById('selectLokasiOpt').value = "";
+            document.getElementById('inULP').value = "MALANG KOTA";
+            document.getElementById('inAsman').value = "BAYU KRISTANTO";
+            document.getElementById('inTL').value = "ARDY NURFIANTO";
+            document.getElementById('selectPPN').value = "0.11";
+            document.getElementById('imgAsmanTTD').value = "";
+            document.getElementById('imgTLTTD').value = "";
+            
+            setTodayDate();
+            syncData();
+            renderAllTables();
+        }
+
+        function syncData() {
+            saveToLocalStorage();
+            renderAllTables();
+        }
+
+        function calculateTotal() {
+            let totalSub = 0;
+            activeItems.forEach(item => {
+                const vMat = item.volMat !== undefined ? item.volMat : (item.vol || 0);
+                const vPsg = item.volPsg || 0;
+                const vBkr = item.volBkr || 0;
+
+                const hMat = item.hMat || 0;
+                const hPsg = item.hPsg || item.hJasa || 0;
+                const hBkr = item.hBkr || 0;
+
+                totalSub += (vMat * hMat) + (vPsg * hPsg) + (vBkr * hBkr);
+            });
+
+            const ppnRate = parseFloat(document.getElementById('selectPPN').value) || 0;
+            const ppnPercentText = Math.round(ppnRate * 100);
+            
+            const labelPPN = document.getElementById('labelPPN');
+            if (labelPPN) {
+                labelPPN.textContent = ppnRate === 0 ? "PPN (0%):" : `PPN (${ppnPercentText}%):`;
+            }
+
+            const ppn = totalSub * ppnRate;
+            const grandTotal = totalSub + ppn;
+
+            const subTotalElem = document.getElementById('outSubtotal');
+            const ppnElem = document.getElementById('outPPN');
+            const grandTotalElem = document.getElementById('outGrandTotal');
+            const terbilangElem = document.getElementById('outTerbilang');
+
+            if (subTotalElem) subTotalElem.textContent = formatRupiah(totalSub);
+            if (ppnElem) ppnElem.textContent = formatRupiah(ppn);
+            if (grandTotalElem) grandTotalElem.textContent = formatRupiah(grandTotal);
+            if (terbilangElem) terbilangElem.textContent = grandTotal > 0 ? terbilang(grandTotal) + " Rupiah" : "Nihil Rupiah";
+        }
+
+        function formatRupiah(num) {
+            return "Rp " + Math.round(num).toLocaleString('id-ID');
+        }
+
+        function formatAngka(num) {
+            return Math.round(num).toLocaleString('id-ID');
+        }
+
+        function terbilang(angka) {
+            angka = Math.floor(Math.abs(angka));
+            const huruf = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
+            if (angka < 12) return " " + huruf[angka];
+            if (angka < 20) return terbilang(angka - 10) + " Belas";
+            if (angka < 100) return terbilang(Math.floor(angka / 10)) + " Puluh" + terbilang(angka % 10);
+            if (angka < 200) return " Seratus" + terbilang(angka - 100);
+            if (angka < 1000) return terbilang(Math.floor(angka / 100)) + " Ratus" + terbilang(angka % 100);
+            if (angka < 2000) return " Seribu" + terbilang(angka - 1000);
+            if (angka < 1000000) return terbilang(Math.floor(angka / 1000)) + " Ribu" + terbilang(angka % 1000);
+            if (angka < 1000000000) return terbilang(Math.floor(angka / 1000000)) + " Juta" + terbilang(angka % 1000000);
+            return terbilang(Math.floor(angka / 1000000000)) + " Milyar" + terbilang(angka % 1000000000);
+        }
+
+        loadKatalogData();
+        loadFromLocalStorage();
+        setTodayDate();
+        syncData();
+        renderAllTables();
+        refreshRabPemohonOptions();
+  </script>
+</body>
 </html>
