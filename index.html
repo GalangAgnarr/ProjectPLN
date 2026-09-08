@@ -1317,6 +1317,23 @@
                 </button>
               </div>
 
+              <!-- STATISTIK RINGKAS ARSIP -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <template x-for="cat in masterData.categories" :key="cat">
+                  <div class="rounded-2xl px-4 py-3 border shadow-sm text-center transition-colors"
+                    :class="isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'">
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400" x-text="'Folder ' + cat"></p>
+                    <p class="text-xl font-black mt-0.5" :class="isDarkMode ? 'text-white' : 'text-slate-800'"
+                      x-text="archives.filter(a => a.kategori === cat).length"></p>
+                  </div>
+                </template>
+              </div>
+
+              <div class="rounded-2xl px-4 py-4 border-2 shadow-sm text-center transition-colors bg-gradient-to-r from-[#005C9A] to-[#00A2E2] border-[#00A2E2]">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-white/80">Total Arsip</p>
+                <p class="text-2xl font-black text-white mt-0.5" x-text="archives.length"></p>
+              </div>
+
               <div class="flex items-center gap-2 border px-3 py-1.5 rounded-xl w-full justify-between transition-colors"
                 :class="isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'">
                 <i class="far fa-calendar-alt text-slate-400 text-xs"></i>
@@ -1330,7 +1347,7 @@
                 </button>
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                 <div class="relative w-full">
                   <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
                   <input x-model="searchQuery" @input="pagination.currentPage = 1" type="text" placeholder="Cari berkas/nomor/ordner..."
@@ -1348,6 +1365,18 @@
                     </template>
                   </select>
                   <i class="fas fa-chevron-down absolute right-3 top-2.5 text-slate-400 text-[9px] pointer-events-none"></i>
+                </div>
+
+                <div class="relative w-full">
+                  <select x-model="archiveFilter.jenis" @change="pagination.currentPage = 1"
+                    :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'"
+                    class="w-full pl-3 pr-7 py-1.5 border rounded-xl text-xs outline-none appearance-none">
+                    <option value="">Semua Jenis File</option>
+                    <template x-for="ext in masterData.extensions" :key="ext">
+                      <option :value="ext" x-text="ext"></option>
+                    </template>
+                  </select>
+                  <i class="fas fa-file absolute right-3 top-2.5 text-slate-400 text-[9px] pointer-events-none"></i>
                 </div>
 
                 <div class="flex items-center justify-between gap-2">
@@ -1382,7 +1411,8 @@
                 <button @click="selectedTahun = thn; pagination.currentPage = 1"
                   :class="selectedTahun === thn ? 'bg-[#00A2E2] text-white font-bold border-[#00A2E2] shadow-sm' : (isDarkMode ? 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-700' : 'bg-slate-50 text-slate-600 border-slate-200/60 hover:bg-slate-100')"
                   class="px-3 py-1 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 whitespace-nowrap">
-                  <span class="w-1.5 h-1.5 rounded-full bg-sky-300"></span> <span x-text="thn"></span>
+                  <span class="w-1.5 h-1.5 rounded-full bg-sky-300"></span>
+                  <span x-text="thn + ' (' + archives.filter(a => String(a.tahun) === String(thn)).length + ')'"></span>
                 </button>
               </template>
             </div>
@@ -1428,7 +1458,9 @@
                         <template x-for="(item, i) in (view === 'archives' ? paginatedData : [])" :key="item.id || i">
                           <tr :class="isDarkMode ? 'hover:bg-slate-700/40' : 'hover:bg-slate-50/50'" class="transition-colors group">
                             <td class="px-4 py-3 sm:px-6 sm:py-4">
-                              <div class="flex items-center">
+                              <div class="flex items-center cursor-pointer"
+                                @click="const l = item.link || (item.links && item.links[0]); if (l && l !== '#') window.open(l, '_blank')"
+                                title="Klik untuk buka file">
                                 <div
                                   class="flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center text-base sm:text-lg shadow-sm border"
                                   :class="getFileIcon(item.jenis).bg">
@@ -1543,8 +1575,10 @@
                           <span class="text-[9px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/30 px-2 py-0.5 rounded-lg uppercase border border-purple-100 dark:border-purple-800" x-show="item.ordner" x-text="item.ordner"></span>
                         </div>
                         <h3
-                          class="font-bold text-xs sm:text-sm mt-3 line-clamp-2 min-h-[36px] transition-colors"
+                          class="font-bold text-xs sm:text-sm mt-3 line-clamp-2 min-h-[36px] transition-colors cursor-pointer"
                           :class="isDarkMode ? 'text-slate-200 group-hover:text-sky-400' : 'text-slate-800 group-hover:text-[#005C9A]'"
+                          @click="const l = item.link || (item.links && item.links[0]); if (l && l !== '#') window.open(l, '_blank')"
+                          title="Klik untuk buka file"
                           x-text="item.nama"></h3>
                         <p class="text-[11px] text-slate-400 mt-1 line-clamp-1 italic font-medium"
                           x-text="item.perihal || 'Tidak ada deskripsi'"></p>
@@ -2690,9 +2724,14 @@
 
           <div>
             <label class="block text-xs font-bold mb-1.5" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">Ekstensi File</label>
-            <input x-model="form.archive.jenis" list="extensionList" type="text"
+            <select x-model="form.archive.jenis"
               :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'"
               class="w-full px-3 py-2 border rounded-2xl text-xs uppercase focus:border-[#005C9A]" required>
+              <option value="" disabled>Pilih Ekstensi</option>
+              <template x-for="ext in masterData.extensions" :key="ext">
+                <option :value="ext" x-text="ext"></option>
+              </template>
+            </select>
           </div>
         </div>
 
@@ -2858,12 +2897,6 @@
 
   </div>
 
-  <datalist id="extensionList">
-    <template x-for="ext in masterData.extensions" :key="ext">
-      <option :value="ext"></option>
-    </template>
-  </datalist>
-
   <!-- LOGIKA JAVASCRIPT & ALPINEJS COMPONENT -->
   <script>
     let chartInstance = null;
@@ -2905,7 +2938,7 @@
             forgotForm: { email: '', otp: '', newPass: '' },
             forgotStep: 1,
             searchQuery: '',
-            archiveFilter: { category: '', startDate: '', endDate: '' },
+            archiveFilter: { category: '', jenis: '', startDate: '', endDate: '' },
             selectedTahun: 'All',
             selectedBulan: 'All', 
             logFilter: { time: 'all', search: '' },
@@ -3433,6 +3466,20 @@
                 return `${Math.max(minutes, 1)} Mnt`;
             },
 
+            // Backend mengirim tanggal dalam format teks "dd/MM/yyyy HH:mm" (mis. "20/08/2026 14:30"),
+            // yang TIDAK bisa dibaca langsung oleh new Date() JavaScript. Fungsi ini mem-parsing manual.
+            parseIndoDate(str) {
+                if (!str || str === '-') return null;
+                const [datePart] = str.split(' ');
+                if (!datePart) return null;
+                const parts = datePart.split('/');
+                if (parts.length !== 3) return null;
+                const [dd, mm, yyyy] = parts.map(Number);
+                if (!dd || !mm || !yyyy) return null;
+                const d = new Date(yyyy, mm - 1, dd);
+                return isNaN(d.getTime()) ? null : d;
+            },
+
             get filteredData() {
                 if (this.view === 'archives') {
                     const q = (this.searchQuery || '').trim().toLowerCase();
@@ -3454,13 +3501,15 @@
                             uploader.includes(q);
 
                         const matchCat = !this.archiveFilter.category || item.kategori === this.archiveFilter.category;
+                        const matchJenis = !this.archiveFilter.jenis || String(item.jenis || '').toUpperCase() === this.archiveFilter.jenis.toUpperCase();
 
                         let matchDate = true;
-                        if (this.archiveFilter.startDate && item.tanggal) {
-                          matchDate = matchDate && new Date(item.tanggal) >= new Date(this.archiveFilter.startDate);
+                        const itemDateParsed = this.parseIndoDate(item.tanggal);
+                        if (this.archiveFilter.startDate && itemDateParsed) {
+                          matchDate = matchDate && itemDateParsed >= new Date(this.archiveFilter.startDate);
                         }
-                        if (this.archiveFilter.endDate && item.tanggal) {
-                          matchDate = matchDate && new Date(item.tanggal) <= new Date(this.archiveFilter.endDate + 'T23:59:59');
+                        if (this.archiveFilter.endDate && itemDateParsed) {
+                          matchDate = matchDate && itemDateParsed <= new Date(this.archiveFilter.endDate + 'T23:59:59');
                         }
 
                         let matchTahun = true;
@@ -3473,7 +3522,7 @@
                             matchBulan = String(item.bulan || '') === String(this.selectedBulan);
                         }
 
-                        return matchSearch && matchCat && matchDate && matchTahun && matchBulan;
+                        return matchSearch && matchCat && matchJenis && matchDate && matchTahun && matchBulan;
                     });
                 } else if (this.view === 'users') {
                     const q = (this.searchQuery || '').trim().toLowerCase();

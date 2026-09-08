@@ -964,7 +964,7 @@ function saveData(ss, { token, type, data }) {
       data.files.forEach(fObj => {
         if (fObj && fObj.base64) {
           try {
-            const uploadedUrl = uploadToDrive(fObj, fObj.name || data.nama, data.kategori, user.nama_lengkap);
+            const uploadedUrl = uploadArsipToDrive(fObj, fObj.name || data.nama, data.kategori, targetTahun, targetBulan);
             finalLinks.push(uploadedUrl);
           } catch (e) {
             console.warn("Gagal upload salah satu file: " + e.message);
@@ -973,7 +973,7 @@ function saveData(ss, { token, type, data }) {
       });
     } else if (data.fileObj && data.fileObj.base64) {
       try {
-        const uploadedUrl = uploadToDrive(data.fileObj, data.fileObj.name || data.nama, data.kategori, user.nama_lengkap);
+        const uploadedUrl = uploadArsipToDrive(data.fileObj, data.fileObj.name || data.nama, data.kategori, targetTahun, targetBulan);
         finalLinks.push(uploadedUrl);
       } catch (e) {
         throw new Error("Gagal upload file ke Drive: " + e.message);
@@ -1609,6 +1609,25 @@ function uploadToDrive(fileObj, fileName, category, uploaderFullName) {
   const decoded = Utilities.base64Decode(fileObj.base64);
   const blob = Utilities.newBlob(decoded, fileObj.mimeType, fileName);
   const file = finalFolder.createFile(blob);
+
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return file.getUrl();
+}
+
+// Upload khusus untuk Kotak Arsip Digital: folder utama dikelompokkan per KATEGORI dulu
+// (Folder PFK, Folder ESTETIKA, Folder Pelanggan TM, Folder SPKLU), baru di dalamnya per Tahun/Bulan.
+// Terpisah dari uploadToDrive() supaya tidak mengubah struktur folder lampiran BPM yang sudah ada.
+function uploadArsipToDrive(fileObj, fileName, kategori, tahun, bulan) {
+  const rootIterator = DriveApp.getFoldersByName(DRIVE_FOLDER_NAME);
+  let rootFolder = rootIterator.hasNext() ? rootIterator.next() : DriveApp.createFolder(DRIVE_FOLDER_NAME);
+
+  const kategoriFolder = getOrCreateSubFolder(rootFolder, 'Folder ' + (kategori ? kategori.trim() : 'Umum'));
+  const tahunFolder = getOrCreateSubFolder(kategoriFolder, tahun ? tahun.toString().trim() : new Date().getFullYear().toString());
+  const bulanFolder = getOrCreateSubFolder(tahunFolder, bulan ? bulan.toString().trim() : 'Januari');
+
+  const decoded = Utilities.base64Decode(fileObj.base64);
+  const blob = Utilities.newBlob(decoded, fileObj.mimeType, fileName);
+  const file = bulanFolder.createFile(blob);
 
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   return file.getUrl();
