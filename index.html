@@ -1,4 +1,4 @@
-<!-- REV 39 - Ordner dihapus total dari struktur arsip dan master data -->
+<!-- REV 42 - Penghapusan Nomor Kode Berkas Arsip -->
 <!DOCTYPE html>
 <html lang="id">
 
@@ -1441,7 +1441,7 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                 <div class="relative w-full">
                   <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-                  <input x-model="searchQuery" @input="pagination.currentPage = 1" type="text" placeholder="Cari berkas/nomor..."
+                  <input x-model="searchQuery" @input="pagination.currentPage = 1" type="text" placeholder="Cari berkas..."
                     :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-900' : 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white'"
                     class="w-full pl-8 pr-3 py-1.5 border rounded-xl text-xs outline-none focus:border-[#005C9A]">
                 </div>
@@ -1558,9 +1558,6 @@
                                   <i :class="getFileIcon(item.jenis).icon + ' ' + getFileIcon(item.jenis).text"></i>
                                 </div>
                                 <div class="ml-3">
-                                  <div
-                                    class="text-[9px] font-mono font-bold text-[#005C9A] dark:text-sky-300 bg-sky-50 dark:bg-slate-700 px-1.5 py-0.5 rounded-md border border-sky-100 dark:border-slate-600 w-fit mb-0.5"
-                                    x-text="item.nomor"></div>
                                   <div
                                     class="font-bold line-clamp-1 transition-colors"
                                     :class="isDarkMode ? 'text-white group-hover:text-sky-400' : 'text-slate-900 group-hover:text-[#005C9A]'"
@@ -1874,30 +1871,6 @@
                         :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-600'">
                         <span x-text="ext"></span>
                         <i @click="removeSetting('Extension', ext)" class="fas fa-times text-slate-300 hover:text-rose-500 cursor-pointer text-[10px]"></i>
-                      </span>
-                    </template>
-                  </div>
-                </div>
-              </div>
-
-              <div class="rounded-3xl shadow-sm border overflow-visible h-auto transition-colors"
-                :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200/80'">
-                <div class="p-4 bg-amber-500 text-white flex items-center gap-2 rounded-t-3xl">
-                  <i class="fas fa-list-ol text-sm"></i>
-                  <h3 class="font-bold text-xs uppercase tracking-wider">Nomor Identitas Berkas</h3>
-                </div>
-                <div class="p-4 sm:p-5 space-y-4">
-                  <div class="flex gap-2">
-                    <input x-model="tempSetting.nomor" @keydown.enter.prevent="addSetting('Nomor')" type="text" placeholder="Contoh: 001/PLN/2026..."
-                      :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'"
-                      class="flex-1 px-3 py-2 border rounded-2xl text-xs outline-none uppercase focus:border-amber-500">
-                    <button type="button" @click="addSetting('Nomor')" class="bg-amber-500 hover:opacity-95 text-white px-3.5 py-2 rounded-2xl text-xs font-bold shadow-sm"><i class="fas fa-plus"></i></button>
-                  </div>
-                  <div class="flex flex-wrap gap-1.5 pt-1">
-                    <template x-for="nom in masterData.nomors" :key="nom">
-                      <span class="inline-flex items-center gap-1.5 bg-amber-50 dark:bg-amber-900/30 border border-amber-100 dark:border-amber-800 px-2.5 py-1 rounded-xl text-xs font-mono font-bold text-amber-700 dark:text-amber-300">
-                        <span x-text="nom"></span>
-                        <i @click="removeSetting('Nomor', nom)" class="fas fa-times text-amber-300 hover:text-rose-500 cursor-pointer text-[10px]"></i>
                       </span>
                     </template>
                   </div>
@@ -2795,14 +2768,7 @@
       </div>
 
       <form @submit.prevent="saveArchive" class="p-5 sm:p-6 space-y-4 text-sm max-h-[85vh] overflow-y-auto custom-scrollbar">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-bold mb-1.5" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">Nomor Kode Berkas</label>
-            <input x-model="form.archive.nomor" type="text" readonly
-              :class="isDarkMode ? 'bg-slate-800 border-slate-700 text-sky-300' : 'bg-slate-100 border-slate-200 text-slate-700'"
-              class="w-full px-3 py-2.5 border rounded-2xl outline-none font-mono text-xs cursor-not-allowed" required>
-          </div>
-          <div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div>
             <label class="block text-xs font-bold mb-1.5" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">Judul / Nama Dokumen</label>
             <input x-model="form.archive.nama" type="text"
               :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'"
@@ -3062,7 +3028,7 @@
             logs: [],
             notifications: [],
             unreadCount: 0,
-            masterData: { categories: ['PFK', 'ESTETIKA', 'Pelanggan TM', 'SPKLU'], extensions: ['PDF', 'DOCX', 'XLSX'], nomors: ['001/PLN/2026'], ulps: ['ULP Malang Kota', 'ULP Blimbing', 'ULP Dinoyo', 'ULP Kebonagung', 'ULP Singosari', 'ULP Lawang', 'ULP Batu', 'ULP Tumpang', 'ULP Bululawang', 'ULP Gondanglegi', 'ULP Kepanjen', 'ULP Sumberpucung', 'ULP Dampit'], tahuns: [] },
+            masterData: { categories: ['PFK', 'ESTETIKA', 'Pelanggan TM', 'SPKLU'], extensions: ['PDF', 'DOCX', 'XLSX'], ulps: ['ULP Malang Kota', 'ULP Blimbing', 'ULP Dinoyo', 'ULP Kebonagung', 'ULP Singosari', 'ULP Lawang', 'ULP Batu', 'ULP Tumpang', 'ULP Bululawang', 'ULP Gondanglegi', 'ULP Kepanjen', 'ULP Sumberpucung', 'ULP Dampit'], tahuns: [] },
             bulanIndonesia: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
 
             loginForm: { username: '', password: '' },
@@ -3094,7 +3060,7 @@
             ],
 
             form: {
-                archive: { id: '', nomor: '001/PLN/2026', nama: '', perihal: '', kategori: '', tahun: '', bulan: '', jenis: '', links: [], share_to: [] },
+                archive: { id: '', nama: '', perihal: '', kategori: '', tahun: '', bulan: '', jenis: '', links: [], share_to: [] },
                 user: { username: '', nama_lengkap: '', email: '', password: '', role: 'User', status: 'Active', isEdit: false },
                 profile: { nama_lengkap: '', password_lama: '', password_baru: '' }
             },
@@ -3113,7 +3079,7 @@
 
             fileData: { name: '', bytes: '', type: '' },
             filesData: [], 
-            tempSetting: { category: '', extension: '', nomor: '', ulp: '', tahun: '' },
+            tempSetting: { category: '', extension: '', ulp: '', tahun: '' },
             pagination: { currentPage: 1, perPage: 10 },
 
             getFileIcon(type) {
@@ -3294,7 +3260,7 @@
                     const now = new Date();
                     const defaultTahun = (this.masterData.tahuns.includes(now.getFullYear().toString())) ? now.getFullYear().toString() : (this.masterData.tahuns[0] || now.getFullYear().toString());
                     const defaultBulan = this.bulanIndonesia[now.getMonth()];
-                    this.form.archive = { id: '', nomor: (this.masterData.nomors && this.masterData.nomors.length > 0 ? this.masterData.nomors[0] : '001/PLN/2026'), nama: '', perihal: '', kategori: '', tahun: defaultTahun, bulan: defaultBulan, jenis: 'PDF', links: [], share_to: [] };
+                    this.form.archive = { id: '', nama: '', perihal: '', kategori: '', tahun: defaultTahun, bulan: defaultBulan, jenis: 'PDF', links: [], share_to: [] };
                     this.fileData = { name: '', bytes: '', type: '' };
                     this.filesData = [];
                     this.modals.archive = true;
@@ -3349,7 +3315,7 @@
             },
 
             addSetting(type) {
-                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'Nomor': 'nomors', 'ULP': 'ulps', 'Tahun': 'tahuns' };
+                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'ULP': 'ulps', 'Tahun': 'tahuns' };
                 let inputKey = type.toLowerCase();
                 let val = this.tempSetting[inputKey];
 
@@ -3369,7 +3335,7 @@
             },
 
             removeSetting(type, val) {
-                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'Nomor': 'nomors', 'ULP': 'ulps', 'Tahun': 'tahuns' };
+                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'ULP': 'ulps', 'Tahun': 'tahuns' };
                 let targetArrayKey = keyMap[type];
                 if (this.masterData[targetArrayKey]) {
                     this.masterData[targetArrayKey] = this.masterData[targetArrayKey].filter(item => item !== val);
@@ -3474,9 +3440,9 @@
                 }
                 this.isLoading = true;
                 setTimeout(() => {
-                    let csvContent = "data:text/csv;charset=utf-8,ID,Nomor,Nama,Kategori,Tahun,Bulan,Uploader,Tanggal\n";
+                    let csvContent = "data:text/csv;charset=utf-8,ID,Nama,Kategori,Tahun,Bulan,Uploader,Tanggal\n";
                     (this.archives || []).forEach(a => {
-                        csvContent += `"${a.id || ''}","${a.nomor || ''}","${a.nama || ''}","${a.kategori || ''}","${a.tahun || ''}","${a.bulan || ''}","${a.uploader || ''}","${a.tanggal || ''}"\n`;
+                        csvContent += `"${a.id || ''}","${a.nama || ''}","${a.kategori || ''}","${a.tahun || ''}","${a.bulan || ''}","${a.uploader || ''}","${a.tanggal || ''}"\n`;
                     });
                     const encodedUri = encodeURI(csvContent);
                     const link = document.createElement("a");

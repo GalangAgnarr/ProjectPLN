@@ -1,5 +1,4 @@
-// REV 23 - Jenis permohonan BPM menjadi sumber utama (PFK, ESTETIKA, Pelanggan TM, SPKLU)
-// REV 22 - Pembatasan kewenangan penyelesaian BPM berdasarkan tim/step
+// REV 24 - Penghapusan Nomor Kode Berkas + migrasi schema arsip
 // --- KODE REV 18: DEDUPLIKASI MASTER TAHUN + STABILITAS ARSIP ---
 // --- KONFIGURASI UTAMA ---
 const ADMIN_DEFAULT = {
@@ -12,47 +11,6 @@ const ADMIN_DEFAULT = {
 
 // Nama Folder di Google Drive tempat file disimpan
 const DRIVE_FOLDER_NAME = "Arsip Digital Uploads";
-
-// Jenis permohonan BPM yang digunakan sistem saat ini.
-const BPM_PERMOHONAN_TYPES = ['PFK', 'ESTETIKA', 'Pelanggan TM', 'SPKLU'];
-
-// Normalisasi jenis permohonan agar backend tidak lagi bergantung pada Branch/Non-PFK.
-function normalizeBpmPermohonan(value) {
-  const raw = (value === undefined || value === null) ? '' : String(value).trim();
-  if (!raw) return 'PFK';
-
-  const upper = raw.toUpperCase();
-  if (upper === 'PFK') return 'PFK';
-  if (upper === 'ESTETIKA') return 'ESTETIKA';
-  if (upper === 'PELANGGAN TM' || upper === 'PELANGGAN_Tm'.toUpperCase()) return 'Pelanggan TM';
-  if (upper === 'SPKLU') return 'SPKLU';
-
-  // Pertahankan nilai lama/khusus bila tidak termasuk 4 jenis utama.
-  return raw;
-}
-
-function migrateBpmJenisPermohonan(ss) {
-  const sheet = ss.getSheetByName('BPM');
-  if (!sheet || sheet.getLastRow() < 2) return;
-
-  const data = sheet.getDataRange().getValues();
-  let changed = false;
-
-  for (let i = 1; i < data.length; i++) {
-    if (!data[i][0] && !data[i][1] && !data[i][2]) continue;
-    const jenis = normalizeBpmPermohonan(data[i][2]);
-    const shouldBePfk = jenis === 'PFK';
-    if (Boolean(data[i][3]) !== shouldBePfk) {
-      data[i][3] = shouldBePfk;
-      changed = true;
-    }
-  }
-
-  if (changed) {
-    sheet.getRange(2, 1, data.length - 1, data[0].length).setValues(data.slice(1));
-  }
-}
-
 
 // --- KONFIGURASI KEAMANAN ---
 const MAX_LOGIN_ATTEMPTS = 5;         // Percobaan login gagal sebelum akun dikunci sementara
@@ -174,6 +132,7 @@ function initializeSheet() {
   removeLegacyLemariSheets(ss);
   removeLegacyLemariSettings(ss);
   removeUnusedOrdnerSettings(ss);
+  removeUnusedNomorSettings(ss);
   removeDuplicateTahunSettings(ss);
   migrateArchiveSheetsRemoveOrdner(ss);
 
@@ -187,7 +146,6 @@ function initializeSheet() {
 
   // F. Setup Sheet BPM
   getOrCreateBpmSheet(ss);
-  migrateBpmJenisPermohonan(ss);
 
   return "Database berhasil diinisialisasi dan siap digunakan.";
 }
@@ -212,7 +170,7 @@ function getOrCreateTahunSheet(ss, rawTahun) {
 
   if (!sheet) {
     sheet = ss.insertSheet(cleanName);
-    sheet.appendRow(['ID', 'Nomor Arsip', 'Nama Arsip', 'Perihal', 'Kategori', 'Bulan', 'Jenis File', 'Link File', 'Tanggal Upload', 'Pengupload', 'SharedWith']);
+    sheet.appendRow(['ID', 'Nama Arsip', 'Perihal', 'Kategori', 'Bulan', 'Jenis File', 'Link File', 'Tanggal Upload', 'Pengupload', 'SharedWith']);
     sheet.setFrozenRows(1);
   }
   return sheet;
@@ -755,28 +713,27 @@ function getData(ss, { token, type }) {
         rawData.forEach(row => {
           if (!row[0]) return;
 
-          let isOwner = row[9] === user.username;
-          let sharedVal = row[10] ? row[10].toString() : '';
+          let isOwner = row[8] === user.username;
+          let sharedVal = row[9] ? row[9].toString() : '';
           let isShared = sharedVal.includes(user.username) || sharedVal === 'Public';
 
           if (user.role === 'Admin' || isOwner || isShared) {
-            let rawLinkString = row[7] ? row[7].toString() : '';
+            let rawLinkString = row[6] ? row[6].toString() : '';
             let linkArray = rawLinkString ? rawLinkString.split(', ').map(l => l.trim()).filter(Boolean) : [];
 
             result.push({
               id: row[0],
-              nomor: row[1],
-              nama: row[2],
-              perihal: row[3],
-              kategori: row[4],
+              nama: row[1],
+              perihal: row[2],
+              kategori: row[3],
               tahun: tahunName,
-              bulan: row[5] || 'Januari',
-              jenis: row[6],
+              bulan: row[4] || 'Januari',
+              jenis: row[5],
               link: linkArray[0] || '#',
               links: linkArray,
-              tanggal: formatDate(row[8]),
-              uploader: row[9],
-              shared: row[10]
+              tanggal: formatDate(row[7]),
+              uploader: row[8],
+              shared: row[9]
             });
           }
         });
@@ -796,8 +753,10 @@ function getData(ss, { token, type }) {
           return isNaN(d.getTime()) ? null : d.toISOString();
         };
 
-        const jenisPermohonan = normalizeBpmPermohonan(row[2]);
-        const isPfkVal = jenisPermohonan === 'PFK';
+        let rawIsPfk = row[3];
+        let isPfkVal = typeof rawIsPfk === 'string' 
+          ? rawIsPfk.trim().toUpperCase() === 'TRUE' 
+          : Boolean(rawIsPfk);
 
         let stepTimestamps = {};
         if (row[20]) {
@@ -815,8 +774,7 @@ function getData(ss, { token, type }) {
           id: String(row[0] || Date.now()),
           kode: row[1] ? String(row[1]) : '-',
           judul: row[2] ? String(row[2]) : 'Permohonan Survey',
-          permohonan: jenisPermohonan,
-          jenisPermohonan: jenisPermohonan,
+          permohonan: row[2] ? String(row[2]) : 'Permohonan Survey',
           isPFK: isPfkVal,
           step: parseInt(row[4]) || 1,
           statusDetail: row[5] ? String(row[5]) : 'Kirim Surat Permohonan Survey & RAB',
@@ -947,8 +905,8 @@ function saveData(ss, { token, type, data }) {
         const allData = currentSheet.getDataRange().getValues();
         for (let i = 1; i < allData.length; i++) {
           if (allData[i][0] == data.id) {
-            const owner = allData[i][9];
-            const sharedStatus = allData[i][10];
+            const owner = allData[i][8];
+            const sharedStatus = allData[i][9];
             const isOwner = owner === user.username;
             const isPublic = sharedStatus === 'Public';
 
@@ -960,18 +918,18 @@ function saveData(ss, { token, type, data }) {
               }
             }
 
-            const originalDate = allData[i][8];
-            const originalUploader = allData[i][9];
+            const originalDate = allData[i][7];
+            const originalUploader = allData[i][8];
 
             if (currentSheet.getName() !== targetSheet.getName()) {
               currentSheet.deleteRow(i + 1);
               targetSheet.appendRow([
-                data.id, data.nomor, data.nama, data.perihal, data.kategori,
+                data.id, data.nama, data.perihal, data.kategori,
                 targetBulan, data.jenis, combinedLinksStr, originalDate, originalUploader, data.shared || 'Public'
               ]);
             } else {
-              currentSheet.getRange(i + 1, 1, 1, 11).setValues([[
-                data.id, data.nomor, data.nama, data.perihal, data.kategori,
+              currentSheet.getRange(i + 1, 1, 1, 10).setValues([[
+                data.id, data.nama, data.perihal, data.kategori,
                 targetBulan, data.jenis, combinedLinksStr, originalDate, originalUploader, data.shared || 'Public'
               ]]);
             }
@@ -987,7 +945,6 @@ function saveData(ss, { token, type, data }) {
     } else { // Mode Baru
       targetSheet.appendRow([
         id,
-        data.nomor,
         data.nama,
         data.perihal,
         data.kategori,
@@ -1045,7 +1002,6 @@ function saveData(ss, { token, type, data }) {
       }
 
       let stepVal = data.step !== undefined ? parseInt(data.step) : currentStepVal;
-      const jenisPermohonan = normalizeBpmPermohonan(data.permohonan || data.judul || rowData[2]);
 
       let tglPengajuan = rowData[16] || rowData[6] || now;
       let tglSurvey    = rowData[17] || (stepVal >= 4 ? now : '');
@@ -1057,8 +1013,8 @@ function saveData(ss, { token, type, data }) {
       bpmSheet.getRange(rowIndex, 1, 1, 21).setValues([[
         data.id,
         data.kode || rowData[1],
-        jenisPermohonan,
-        jenisPermohonan === 'PFK',
+        data.permohonan || data.judul || rowData[2],
+        data.isPFK !== undefined ? Boolean(data.isPFK) : rowData[3],
         stepVal,
         data.statusDetail || rowData[5],
         rowData[6] || now,
@@ -1078,7 +1034,7 @@ function saveData(ss, { token, type, data }) {
         timestampsStr
       ]]);
       
-      logActivity(ss, user.username, 'Update BPM', `Memperbarui alur BPM: ${jenisPermohonan} - ${rowData[8] || '-'} ke Step ${stepVal}`);
+      logActivity(ss, user.username, 'Update BPM', `Memperbarui alur BPM: ${data.permohonan || data.judul || rowData[2]} ke Step ${stepVal}`);
     } else { // Permohonan BPM Baru
       if (!canCreateBpm) {
         throw new Error('Akses Ditolak: Tim Survey & Rensis tidak dapat membuat permohonan survey baru.');
@@ -1095,13 +1051,12 @@ function saveData(ss, { token, type, data }) {
 
         const newId = Date.now().toString();
         const initialTimestampsStr = JSON.stringify(data.stepTimestamps || { 1: { start: now.toISOString(), end: null } });
-        const jenisPermohonan = normalizeBpmPermohonan(data.permohonan || data.judul);
 
         bpmSheet.appendRow([
           newId,
-          data.kode || ('PLN-' + jenisPermohonan.toUpperCase().replace(/\s+/g, '-') + '-' + Math.floor(10000000 + Math.random() * 90000000)),
-          jenisPermohonan,
-          jenisPermohonan === 'PFK',
+          data.kode || ('PLN-PFK-' + Math.floor(10000000 + Math.random() * 90000000)),
+          data.permohonan || data.judul || 'Permohonan Survey',
+          data.isPFK !== undefined ? Boolean(data.isPFK) : false,
           data.step || 1,
           data.statusDetail || 'Kirim Surat Permohonan Survey & RAB',
           now,
@@ -1220,11 +1175,11 @@ function deleteData(ss, { token, type, id }) {
       const data = currentSheet.getDataRange().getValues();
       for (let i = 1; i < data.length; i++) {
         if (data[i][0] == id) {
-          if (user.role !== 'Admin' && data[i][9] !== user.username) {
+          if (user.role !== 'Admin' && data[i][8] !== user.username) {
             throw new Error("Anda tidak berhak menghapus file ini.");
           }
           deletedName = data[i][2];
-          const rawLinks = data[i][7] ? data[i][7].toString().split(', ') : [];
+          const rawLinks = data[i][6] ? data[i][6].toString().split(', ') : [];
           rawLinks.forEach(link => deleteFileFromDrive(link));
 
           currentSheet.deleteRow(i + 1);
@@ -1265,6 +1220,7 @@ function getSettings(ss, { token }) {
   removeLegacyLemariSheets(ss);
   removeLegacyLemariSettings(ss);
   removeUnusedOrdnerSettings(ss);
+  removeUnusedNomorSettings(ss);
   removeDuplicateTahunSettings(ss);
   migrateArchiveSheetsRemoveOrdner(ss);
 
@@ -1273,7 +1229,6 @@ function getSettings(ss, { token }) {
 
   let categories = [];
   let extensions = [];
-  let nomors = [];
   let ulps = [];
   let tahuns = [];
 
@@ -1282,7 +1237,6 @@ function getSettings(ss, { token }) {
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === 'Category') categories.push(data[i][1]);
       if (data[i][0] === 'Extension') extensions.push(data[i][1]);
-      if (data[i][0] === 'Nomor') nomors.push(data[i][1]);
       if (data[i][0] === 'ULP') ulps.push(data[i][1]);
       if (data[i][0] === 'Tahun') tahuns.push(data[i][1].toString());
     }
@@ -1317,9 +1271,8 @@ function getSettings(ss, { token }) {
   return {
     status: 'success',
     data: {
-      categories: categories.length > 0 ? categories : BPM_PERMOHONAN_TYPES.slice(),
+      categories: categories.length > 0 ? categories : ['PFK', 'ESTETIKA', 'Pelanggan TM', 'SPKLU'],
       extensions,
-      nomors,
       ulps: cleanUlps,
       tahuns: cleanTahuns,
       userDirectory
@@ -1335,7 +1288,7 @@ function saveSetting(ss, { token, type, value }) {
   const data = sheet.getDataRange().getValues();
   let cleanVal = value.toString().trim();
 
-  if (type === 'Lemari' || type === 'Ordner') throw new Error("Master data Lemari dan Ordner sudah tidak digunakan. Gunakan Tahun dan Bulan.");
+  if (type === 'Lemari' || type === 'Ordner' || type === 'Nomor') throw new Error("Master data Lemari dan Ordner sudah tidak digunakan. Gunakan Tahun dan Bulan.");
 
   for (let i = 1; i < data.length; i++) {
     if (data[i][0] === type && data[i][1].toString().toLowerCase() === cleanVal.toLowerCase()) {
@@ -1369,7 +1322,6 @@ function saveMasterSettings(ss, { token, data }) {
   const mapKeys = {
     categories: 'Category',
     extensions: 'Extension',
-    nomors: 'Nomor',
     ulps: 'ULP',
     tahuns: 'Tahun'
   };
@@ -1413,7 +1365,7 @@ function generateReport(ss, payload) {
   var tempSs = SpreadsheetApp.create("Temp_Report_All");
   var tempSheet = tempSs.getActiveSheet();
 
-  tempSheet.appendRow(['ID', 'Nomor Arsip', 'Nama Arsip', 'Perihal', 'Kategori', 'Tahun', 'Bulan', 'Jenis File', 'Link File', 'Tanggal Upload', 'Pengupload', 'SharedWith']);
+  tempSheet.appendRow(['ID', 'Nama Arsip', 'Perihal', 'Kategori', 'Tahun', 'Bulan', 'Jenis File', 'Link File', 'Tanggal Upload', 'Pengupload', 'SharedWith']);
 
   var tahunList = getTahunListFromMaster(ss);
   var count = 0;
@@ -1427,9 +1379,9 @@ function generateReport(ss, payload) {
     var data = sheet.getDataRange().getValues();
     for (var i = 1; i < data.length; i++) {
       var row = data[i];
-      if (!(row[0] || row[1])) continue;
+      if (!row[0]) continue;
 
-      var uploadDate = row[8] ? new Date(row[8]) : null;
+      var uploadDate = row[7] ? new Date(row[7]) : null;
       if (startDate && uploadDate && uploadDate < startDate) continue;
       if (endDate && uploadDate && uploadDate > endDate) continue;
 
@@ -1463,28 +1415,35 @@ function generateReport(ss, payload) {
   return { success: true, data: { bytes: bytes, filename: filename } };
 }
 
-// Migrasi struktur arsip Tahun lama: hapus kolom Ordner secara permanen.
-// Aman dijalankan berulang kali; hanya bertindak jika header 'Ordner' masih ada.
+// Migrasi struktur arsip Tahun lama agar hanya menggunakan Tahun/Bulan/Dokumen.
+// Menghapus kolom Ordner dan Nomor Arsip yang sudah tidak digunakan.
 function migrateArchiveSheetsRemoveOrdner(ss) {
   const sheets = ss.getSheets();
+  const expected = ['ID','Nama Arsip','Perihal','Kategori','Bulan','Jenis File','Link File','Tanggal Upload','Pengupload','SharedWith'];
 
   sheets.forEach(function(sheet) {
     const name = sheet.getName();
     if (!/^\d{4}$/.test(name)) return;
     if (sheet.getLastColumn() < 1) return;
 
-    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    const ordnerIndex = headers.findIndex(h => String(h).trim().toLowerCase() === 'ordner');
+    let headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
 
+    let ordnerIndex = headers.findIndex(h => String(h).trim().toLowerCase() === 'ordner');
     if (ordnerIndex >= 0) {
       sheet.deleteColumn(ordnerIndex + 1);
-      sheet.getRange(1, 1, 1, 11).setValues([[
-        'ID', 'Nomor Arsip', 'Nama Arsip', 'Perihal', 'Kategori',
-        'Bulan', 'Jenis File', 'Link File', 'Tanggal Upload',
-        'Pengupload', 'SharedWith'
-      ]]);
-      sheet.setFrozenRows(1);
+      headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     }
+
+    let nomorIndex = headers.findIndex(h => {
+      const v = String(h).trim().toLowerCase();
+      return v === 'nomor arsip' || v === 'nomor kode berkas';
+    });
+    if (nomorIndex >= 0) {
+      sheet.deleteColumn(nomorIndex + 1);
+    }
+
+    sheet.getRange(1, 1, 1, expected.length).setValues([expected]);
+    sheet.setFrozenRows(1);
   });
 }
 
@@ -1526,6 +1485,18 @@ function removeUnusedOrdnerSettings(ss) {
   const data = sheet.getDataRange().getValues();
   for (let i = data.length - 1; i >= 1; i--) {
     if (String(data[i][0]).trim().toLowerCase() === 'ordner') {
+      sheet.deleteRow(i + 1);
+    }
+  }
+}
+
+// Hapus master Nomor lama karena kode nomor berkas sudah tidak digunakan.
+function removeUnusedNomorSettings(ss) {
+  const sheet = ss.getSheetByName('Settings');
+  if (!sheet || sheet.getLastRow() < 2) return;
+  const data = sheet.getDataRange().getValues();
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (String(data[i][0]).trim().toLowerCase() === 'nomor') {
       sheet.deleteRow(i + 1);
     }
   }
