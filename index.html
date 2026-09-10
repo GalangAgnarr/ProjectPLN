@@ -1,4 +1,4 @@
-<!-- REV 34 - Pembatasan tombol penyelesaian BPM berdasarkan tim/step -->
+<!-- REV 39 - Ordner dihapus total dari struktur arsip dan master data -->
 <!DOCTYPE html>
 <html lang="id">
 
@@ -649,13 +649,14 @@
                       <label class="block text-xs font-bold" :class="isDarkMode ? 'text-slate-200' : 'text-slate-700'">
                         Permohonan <span class="text-rose-500">*</span>
                       </label>
-                      <select x-model="bpmForm.permohonan" @change="bpmForm.isPFK = (bpmForm.permohonan === 'PFK')"
+                      <select x-model="bpmForm.permohonan"
                         :class="isDarkMode ? 'bg-slate-900/90 border-slate-700/80 text-white' : 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white'"
                         class="w-full px-4 py-3 border rounded-2xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 text-sm font-medium transition-all" required>
                         <option value="" disabled selected>Pilih Jenis Permohonan</option>
                         <option value="PFK">PFK</option>
                         <option value="ESTETIKA">ESTETIKA</option>
                         <option value="Pelanggan TM">Pelanggan TM</option>
+                        <option value="SPKLU">SPKLU</option>
                       </select>
                     </div>
 
@@ -817,7 +818,7 @@
                           <span x-text="item.permohonan || item.judul" class="text-xs line-clamp-2" :class="isDarkMode ? 'text-slate-200' : 'text-slate-800'"></span>
                         </td>
                         <td class="p-3 sm:p-4 whitespace-nowrap">
-                          <span :class="item.isPFK ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800' : 'bg-sky-50 dark:bg-sky-900/30 text-[#005C9A] dark:text-sky-300 border-sky-200 dark:border-sky-800'" class="px-2 py-0.5 rounded-xl font-bold border text-[10px]" x-text="item.isPFK ? 'PFK' : 'Non-PFK'"></span>
+                          <span :class="getBpmCategoryStyle(item)" class="px-2 py-0.5 rounded-xl font-bold border text-[10px]" x-text="getBpmCategoryLabel(item)"></span>
                         </td>
                         <td class="p-3 sm:p-4 whitespace-nowrap">
                           <span class="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 px-2 py-0.5 rounded-xl font-bold text-[10px]" x-text="'Step ' + Math.min(item.step || 1, 10) + '/10'"></span>
@@ -1093,7 +1094,7 @@
             </div>
 
             <!-- RINGKASAN METRIK/STATS CARDS -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div class="p-4 sm:p-5 rounded-3xl border shadow-sm flex items-center gap-4 transition-all hover:scale-[1.01]"
                 :class="isDarkMode ? 'bg-gradient-to-br from-sky-900/60 to-slate-800 border-slate-700' : 'bg-gradient-to-br from-sky-100 to-sky-50/60 border-sky-100'">
                 <div class="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-900/40 text-[#00A2E2] flex items-center justify-center text-xl font-bold flex-shrink-0">
@@ -1127,15 +1128,32 @@
                 </div>
               </div>
 
-              <div class="p-4 sm:p-5 rounded-3xl border shadow-sm flex items-center gap-4 transition-all hover:scale-[1.01]"
-                :class="isDarkMode ? 'bg-gradient-to-br from-purple-900/60 to-slate-800 border-slate-700' : 'bg-gradient-to-br from-purple-100 to-purple-50/60 border-purple-100'">
-                <div class="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/40 text-purple-500 flex items-center justify-center text-xl font-bold flex-shrink-0">
-                  <i class="fas fa-network-wired"></i>
-                </div>
-                <div>
-                  <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pekerjaan PFK</p>
-                  <h4 class="text-2xl font-black text-purple-500 mt-0.5" x-text="bpmList.filter(b => b.isPFK).length">0</h4>
-                </div>
+            </div>
+
+            <!-- KOMPOSISI JENIS PERMOHONAN -->
+            <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="p-3 rounded-2xl border shadow-sm transition-all hover:scale-[1.01] flex items-center justify-between"
+                :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'">
+                <span class="text-[10px] font-bold text-purple-400 uppercase tracking-wider">PFK</span>
+                <span class="text-lg font-black text-purple-400" x-text="bpmList.filter(b => getBpmCategoryLabel(b).toUpperCase() === 'PFK').length"></span>
+              </div>
+
+              <div class="p-3 rounded-2xl border shadow-sm transition-all hover:scale-[1.01] flex items-center justify-between"
+                :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'">
+                <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider">ESTETIKA</span>
+                <span class="text-lg font-black text-amber-400" x-text="bpmList.filter(b => getBpmCategoryLabel(b).toUpperCase() === 'ESTETIKA').length"></span>
+              </div>
+
+              <div class="p-3 rounded-2xl border shadow-sm transition-all hover:scale-[1.01] flex items-center justify-between"
+                :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'">
+                <span class="text-[10px] font-bold text-sky-400 uppercase tracking-wider">PELANGGAN TM</span>
+                <span class="text-lg font-black text-sky-400" x-text="bpmList.filter(b => getBpmCategoryLabel(b).toUpperCase() === 'PELANGGAN TM').length"></span>
+              </div>
+
+              <div class="p-3 rounded-2xl border shadow-sm transition-all hover:scale-[1.01] flex items-center justify-between"
+                :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'">
+                <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">SPKLU</span>
+                <span class="text-lg font-black text-emerald-400" x-text="bpmList.filter(b => getBpmCategoryLabel(b).toUpperCase() === 'SPKLU').length"></span>
               </div>
             </div>
 
@@ -1169,12 +1187,14 @@
                     class="px-3 py-1.5 rounded-xl text-xs transition-all flex-1 sm:flex-none">Belum RAB</button>
                 </div>
 
-                <select x-model="bpmFilterBranch"
+                <select x-model="bpmFilterCategory"
                   :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-700'"
                   class="px-3 py-2 border rounded-2xl text-xs font-semibold outline-none cursor-pointer">
-                  <option value="all">Semua Branch</option>
-                  <option value="pfk">PFK (Branch 2)</option>
-                  <option value="non-pfk">Non-PFK (Branch 1)</option>
+                  <option value="all">Semua Jenis</option>
+                  <option value="PFK">PFK</option>
+                  <option value="ESTETIKA">ESTETIKA</option>
+                  <option value="Pelanggan TM">Pelanggan TM</option>
+                  <option value="SPKLU">SPKLU</option>
                 </select>
 
                 <button @click="loadBpmData()" class="p-2.5 rounded-2xl border text-slate-400 hover:text-[#005C9A] transition-all hover:scale-105"
@@ -1216,7 +1236,7 @@
                       </th>
                       <th class="p-3 sm:p-4 w-52">Kode / Permohonan</th>
                       <th class="p-3 sm:p-4 w-48">Nama & Lokasi</th>
-                      <th class="p-3 sm:p-4 w-36">Branch Pekerjaan</th>
+                      <th class="p-3 sm:p-4 w-36">Jenis Permohonan</th>
                       <th class="p-3 sm:p-4 w-44">Progres Step</th>
                       <th class="p-3 sm:p-4 w-28">Status Alur</th>
                       <th class="p-3 sm:p-4 text-right pr-4 sm:pr-6 w-36">Aksi</th>
@@ -1229,7 +1249,7 @@
                           <input type="checkbox" :value="item.id" x-model="selectedBpmIds" class="rounded border-slate-300 text-[#005C9A] focus:ring-[#005C9A] cursor-pointer">
                         </td>
                         <td class="p-3 sm:p-4">
-                          <span x-text="item.kode || 'PLN-PFK-2026'" class="font-mono block text-slate-400 text-[10px] font-bold"></span>
+                          <span x-text="item.kode || 'PLN-2026'" class="font-mono block text-slate-400 text-[10px] font-bold"></span>
                           <span x-text="item.permohonan || item.judul" class="text-xs sm:text-sm font-bold line-clamp-2 mt-0.5 transition-colors" :class="isDarkMode ? 'text-slate-100 group-hover:text-sky-400' : 'text-slate-800 group-hover:text-[#005C9A]'"></span>
                         </td>
                         <td class="p-3 sm:p-4">
@@ -1247,7 +1267,7 @@
                           </div>
                         </td>
                         <td class="p-3 sm:p-4 whitespace-nowrap">
-                          <span :class="item.isPFK ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800' : 'bg-sky-50 dark:bg-sky-900/30 text-[#005C9A] dark:text-sky-300 border-sky-200 dark:border-sky-800'" class="px-2.5 py-1 rounded-xl font-extrabold border text-[10px] shadow-sm" x-text="item.isPFK ? 'Branch 2 - PFK' : 'Branch 1 - Non PFK'"></span>
+                          <span :class="getBpmCategoryStyle(item)" class="px-2.5 py-1 rounded-xl font-extrabold border text-[10px] shadow-sm" x-text="getBpmCategoryLabel(item)"></span>
                         </td>
 
                         <td class="p-3 sm:p-4 whitespace-nowrap">
@@ -1326,7 +1346,7 @@
                     <tr :class="isDarkMode ? 'bg-slate-900/60 text-slate-400 border-slate-700' : 'bg-slate-50 text-slate-500 border-slate-200'" class="border-b uppercase text-[10px] font-bold tracking-wider">
                       <th class="p-3 sm:p-4 text-left">Kode / Permohonan</th>
                       <th class="p-3 sm:p-4 text-left">Nama & Lokasi</th>
-                      <th class="p-3 sm:p-4 text-left">Branch Pekerjaan</th>
+                      <th class="p-3 sm:p-4 text-left">Jenis Permohonan</th>
                       <th class="p-3 sm:p-4 text-left">Tgl Selesai</th>
                       <th class="p-3 sm:p-4 text-right">Aksi</th>
                     </tr>
@@ -1345,7 +1365,7 @@
                           </p>
                         </td>
                         <td class="p-3 sm:p-4 whitespace-nowrap">
-                          <span :class="item.isPFK ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800' : 'bg-sky-50 dark:bg-sky-900/30 text-[#005C9A] dark:text-sky-300 border-sky-200 dark:border-sky-800'" class="px-2.5 py-1 rounded-xl font-extrabold border text-[10px] shadow-sm" x-text="item.isPFK ? 'Branch 2 - PFK' : 'Branch 1 - Non PFK'"></span>
+                          <span :class="getBpmCategoryStyle(item)" class="px-2.5 py-1 rounded-xl font-extrabold border text-[10px] shadow-sm" x-text="getBpmCategoryLabel(item)"></span>
                         </td>
                         <td class="p-3 sm:p-4 whitespace-nowrap text-slate-400 font-medium" x-text="item.tglSelesai ? new Date(item.tglSelesai).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}) : '-'"></td>
                         <td class="p-3 sm:p-4 text-right whitespace-nowrap">
@@ -1421,7 +1441,7 @@
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                 <div class="relative w-full">
                   <i class="fas fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-                  <input x-model="searchQuery" @input="pagination.currentPage = 1" type="text" placeholder="Cari berkas/nomor/ordner..."
+                  <input x-model="searchQuery" @input="pagination.currentPage = 1" type="text" placeholder="Cari berkas/nomor..."
                     :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white focus:bg-slate-900' : 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white'"
                     class="w-full pl-8 pr-3 py-1.5 border rounded-xl text-xs outline-none focus:border-[#005C9A]">
                 </div>
@@ -1519,7 +1539,7 @@
                         <tr>
                           <th class="px-4 py-3 sm:px-6 sm:py-4">Informasi Utama Dokumen</th>
                           <th class="px-4 py-3 sm:px-6 sm:py-4">Kategori Klasifikasi</th>
-                          <th class="px-4 py-3 sm:px-6 sm:py-4">Periode / Ordner</th>
+                          <th class="px-4 py-3 sm:px-6 sm:py-4">Periode</th>
                           <th class="px-4 py-3 sm:px-6 sm:py-4">Pengupload</th>
                           <th class="px-4 py-3 sm:px-6 sm:py-4">Tanggal Masuk</th>
                           <th class="px-4 py-3 sm:px-6 sm:py-4 text-right">Aksi</th>
@@ -1554,12 +1574,7 @@
                               <span class="px-2.5 py-1 text-xs rounded-xl border font-bold" :class="isDarkMode ? 'bg-slate-900 text-slate-300 border-slate-700' : 'bg-slate-50 text-slate-600 border-slate-200/60'" x-text="item.kategori"></span>
                             </td>
                             <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap">
-                              <div class="flex flex-col gap-1 items-start">
-                                <span class="px-2.5 py-0.5 text-xs rounded-xl border bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 font-bold border-amber-200 dark:border-amber-800" x-text="(item.bulan || '-') + ' ' + (item.tahun || '')"></span>
-                                <span class="px-2 py-0.5 text-[10px] rounded-lg border bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-bold border-purple-200 dark:border-purple-800 flex items-center gap-1" x-show="item.ordner">
-                                  <i class="fas fa-folder text-[9px]"></i> <span x-text="item.ordner"></span>
-                                </span>
-                              </div>
+                              <span class="px-2.5 py-0.5 text-xs rounded-xl border bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 font-bold border-amber-200 dark:border-amber-800" x-text="(item.bulan || '-') + ' ' + (item.tahun || '')"></span>
                             </td>
                             <td class="px-4 py-3 sm:px-6 sm:py-4 text-xs font-semibold text-slate-400 whitespace-nowrap" x-text="item.uploader"></td>
                             <td class="px-4 py-3 sm:px-6 sm:py-4 text-xs text-slate-400 font-medium whitespace-nowrap"
@@ -1643,7 +1658,6 @@
                         <div class="flex gap-1.5 flex-wrap">
                           <span class="text-[9px] font-bold text-[#005C9A] dark:text-sky-300 bg-sky-50 dark:bg-slate-700 px-2 py-0.5 rounded-lg uppercase border border-sky-100 dark:border-slate-600" x-text="item.kategori"></span>
                           <span class="text-[9px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-lg uppercase border border-amber-100 dark:border-amber-800" x-text="(item.bulan || '-') + ' ' + (item.tahun || '')"></span>
-                          <span class="text-[9px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/30 px-2 py-0.5 rounded-lg uppercase border border-purple-100 dark:border-purple-800" x-show="item.ordner" x-text="item.ordner"></span>
                         </div>
                         <h3
                           class="font-bold text-xs sm:text-sm mt-3 line-clamp-2 min-h-[36px] transition-colors cursor-pointer"
@@ -1813,7 +1827,7 @@
           <div x-show="view === 'settings'" class="space-y-6 pb-20">
             <div>
               <h2 class="text-lg sm:text-xl font-black tracking-tight" :class="isDarkMode ? 'text-white' : 'text-slate-900'">Konfigurasi Variabel Klasifikasi Berkas</h2>
-              <p class="text-slate-400 text-xs mt-0.5">Definisikan nilai acuan dasar bagi penomoran, kategori, tahun, dan ordner.</p>
+              <p class="text-slate-400 text-xs mt-0.5">Definisikan nilai acuan dasar bagi penomoran, kategori, tahun, dan ekstensi file.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-start">
@@ -1908,30 +1922,6 @@
                       <span class="inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 px-2.5 py-1 rounded-xl text-xs font-bold text-emerald-800 dark:text-emerald-300">
                         <span x-text="thn"></span>
                         <i @click="removeSetting('Tahun', thn)" class="fas fa-times text-emerald-300 hover:text-rose-500 cursor-pointer text-[10px]"></i>
-                      </span>
-                    </template>
-                  </div>
-                </div>
-              </div>
-
-              <div class="rounded-3xl shadow-sm border overflow-visible h-auto transition-colors"
-                :class="isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200/80'">
-                <div class="p-4 bg-purple-600 text-white flex items-center gap-2 rounded-t-3xl">
-                  <i class="fas fa-folder-closed text-sm"></i>
-                  <h3 class="font-bold text-xs uppercase tracking-wider">Ordner / Map Berkas</h3>
-                </div>
-                <div class="p-4 sm:p-5 space-y-4">
-                  <div class="flex gap-2">
-                    <input x-model="tempSetting.ordner" @keydown.enter.prevent="addSetting('Ordner')" type="text" placeholder="Ordner Baru..."
-                      :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'"
-                      class="flex-1 px-3 py-2 border rounded-2xl text-xs outline-none focus:border-purple-600">
-                    <button type="button" @click="addSetting('Ordner')" class="bg-purple-600 hover:opacity-95 text-white px-3.5 py-2 rounded-2xl text-xs font-bold shadow-sm"><i class="fas fa-plus"></i></button>
-                  </div>
-                  <div class="flex flex-wrap gap-1.5 pt-1">
-                    <template x-for="ord in masterData.ordners" :key="ord">
-                      <span class="inline-flex items-center gap-1.5 bg-purple-50 dark:bg-purple-900/30 border border-purple-100 dark:border-purple-800 px-2.5 py-1 rounded-xl text-xs font-bold text-purple-800 dark:text-purple-300">
-                        <span x-text="ord"></span>
-                        <i @click="removeSetting('Ordner', ord)" class="fas fa-times text-purple-300 hover:text-rose-500 cursor-pointer text-[10px]"></i>
                       </span>
                     </template>
                   </div>
@@ -2241,7 +2231,7 @@
           <div>
             <h4 class="font-bold text-sm text-[#005C9A] dark:text-sky-300">Tentang Sistem</h4>
             <p class="text-slate-500 dark:text-slate-300 mt-0.5 leading-relaxed">
-              E-Arsip PLN menggabungkan pengelolaan arsip digital dengan alur BPM Survey. Data arsip disusun berdasarkan <b>Tahun</b>, <b>Bulan</b>, dan <b>Ordner</b>, sedangkan proses survey dikelola melalui agenda BPM.
+              E-Arsip PLN menggabungkan pengelolaan arsip digital dengan alur BPM Survey. Data arsip disusun berdasarkan <b>Tahun</b> dan <b>Bulan</b>, sedangkan proses survey dikelola melalui agenda BPM.
             </p>
           </div>
         </div>
@@ -2305,11 +2295,11 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="p-3.5 rounded-2xl border" :class="isDarkMode ? 'border-slate-700 bg-slate-900/40' : 'border-slate-100 bg-slate-50/50'">
               <h5 class="font-bold text-white dark:text-slate-100 flex items-center gap-2"><i class="fas fa-folder-tree text-emerald-500"></i> Struktur Penyimpanan</h5>
-              <p class="text-slate-400 mt-1 leading-relaxed"><b>Tahun → Bulan → Ordner → Dokumen</b>. Sistem tidak lagi menggunakan Lemari sebagai pengelompokan arsip utama.</p>
+              <p class="text-slate-400 mt-1 leading-relaxed"><b>Tahun → Bulan → Dokumen</b>. Sistem tidak lagi menggunakan Lemari maupun Ordner.</p>
             </div>
             <div class="p-3.5 rounded-2xl border" :class="isDarkMode ? 'border-slate-700 bg-slate-900/40' : 'border-slate-100 bg-slate-50/50'">
               <h5 class="font-bold text-white dark:text-slate-100 flex items-center gap-2"><i class="fas fa-filter text-sky-500"></i> Pencarian &amp; Filter</h5>
-              <p class="text-slate-400 mt-1 leading-relaxed">Gunakan pencarian nomor/nama/ordner/perihal/pengupload serta filter kategori, jenis file, tahun, bulan, dan tanggal.</p>
+              <p class="text-slate-400 mt-1 leading-relaxed">Gunakan pencarian nomor/nama/perihal/pengupload serta filter kategori, jenis file, tahun, bulan, dan tanggal.</p>
             </div>
           </div>
         </div>
@@ -2334,7 +2324,7 @@
               <b class="text-slate-200">Laporan</b><p class="text-slate-400 mt-1">Gunakan menu laporan untuk menghasilkan rekap arsip sesuai periode yang dipilih.</p>
             </div>
             <div class="p-3 rounded-2xl border" :class="isDarkMode ? 'border-slate-700 bg-slate-900/40' : 'border-slate-100 bg-slate-50/50'">
-              <b class="text-slate-200">Konfigurasi Master</b><p class="text-slate-400 mt-1">Admin dapat mengelola kategori, ekstensi, nomor, ordner, ULP, dan tahun yang digunakan sistem.</p>
+              <b class="text-slate-200">Konfigurasi Master</b><p class="text-slate-400 mt-1">Admin dapat mengelola kategori, ekstensi, nomor, ULP, dan tahun yang digunakan sistem.</p>
             </div>
           </div>
         </div>
@@ -2384,8 +2374,7 @@
             
             <div class="flex items-center gap-1.5 sm:gap-2 mt-0.5 flex-wrap">
               <span class="text-[10px] sm:text-xs font-mono text-slate-400" x-text="selectedBpmItem?.kode || 'PLN-PFK'"></span>
-              <span class="px-2 py-0.5 bg-sky-50 dark:bg-slate-700 text-[#00A2E2] font-bold text-[9px] sm:text-[10px] rounded-full border border-sky-100 dark:border-slate-600" 
-                    x-text="selectedBpmItem?.isPFK ? 'Branch 2 - PFK' : 'Branch 1 - Non PFK'"></span>
+              <span :class="getBpmCategoryStyle(selectedBpmItem)" class="px-2 py-0.5 font-bold text-[9px] sm:text-[10px] rounded-full border" x-text="getBpmCategoryLabel(selectedBpmItem)"></span>
               
               <template x-if="(selectedBpmItem?.step || 1) > 9">
                 <span class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 font-bold text-[9px] sm:text-[10px] rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
@@ -2646,10 +2635,10 @@
                   <span class="font-mono font-bold text-amber-500" x-text="calculateDuration(selectedBpmItem?.tglPengajuan || selectedBpmItem?.created_at, selectedBpmItem?.tglSelesai)"></span>
                 </div>
 
-                <!-- Branch -->
+                <!-- Jenis Permohonan -->
                 <div class="flex justify-between items-center py-1 border-b" :class="isDarkMode ? 'border-slate-700/60' : 'border-slate-100'">
-                  <span class="text-slate-400 font-medium">Branch</span>
-                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-slate-700 text-[#00A2E2] border border-sky-100 dark:border-slate-600" x-text="selectedBpmItem?.isPFK ? 'Branch 2 – PFK' : 'Branch 1 – Non PFK'"></span>
+                  <span class="text-slate-400 font-medium">Jenis Permohonan</span>
+                  <span :class="getBpmCategoryStyle(selectedBpmItem)" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border" x-text="getBpmCategoryLabel(selectedBpmItem)"></span>
                 </div>
 
                 <!-- Catatan Terakhir -->
@@ -2809,14 +2798,9 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-bold mb-1.5" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">Nomor Kode Berkas</label>
-            <select x-model="form.archive.nomor"
-              :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'"
-              class="w-full px-3 py-2.5 border rounded-2xl outline-none font-mono text-xs focus:border-[#005C9A]" required>
-              <option value="" disabled>Pilih Kode Nomor</option>
-              <template x-for="nom in masterData.nomors" :key="nom">
-                <option :value="nom" x-text="nom"></option>
-              </template>
-            </select>
+            <input x-model="form.archive.nomor" type="text" readonly
+              :class="isDarkMode ? 'bg-slate-800 border-slate-700 text-sky-300' : 'bg-slate-100 border-slate-200 text-slate-700'"
+              class="w-full px-3 py-2.5 border rounded-2xl outline-none font-mono text-xs cursor-not-allowed" required>
           </div>
           <div>
             <label class="block text-xs font-bold mb-1.5" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">Judul / Nama Dokumen</label>
@@ -2866,18 +2850,6 @@
               <option value="" disabled>Pilih Bulan</option>
               <template x-for="bln in bulanIndonesia" :key="bln">
                 <option :value="bln" x-text="bln"></option>
-              </template>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold mb-1.5" :class="isDarkMode ? 'text-slate-300' : 'text-slate-600'">Ordner / Map</label>
-            <select x-model="form.archive.ordner"
-              :class="isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'"
-              class="w-full px-3 py-2 border rounded-2xl text-xs focus:border-[#005C9A]" required>
-              <option value="" disabled>Pilih Ordner</option>
-              <template x-for="ord in masterData.ordners" :key="ord">
-                <option :value="ord" x-text="ord"></option>
               </template>
             </select>
           </div>
@@ -3078,7 +3050,7 @@
 
             bpmSearchQuery: '',
             bpmFilterStatus: 'all',
-            bpmFilterBranch: 'all',
+            bpmFilterCategory: 'all',
             selectedBpmIds: [],
 
             currentUser: { username: '', role: '', nama_lengkap: '', token: '' },
@@ -3090,7 +3062,7 @@
             logs: [],
             notifications: [],
             unreadCount: 0,
-            masterData: { categories: ['PFK', 'ESTETIKA', 'Pelanggan TM', 'SPKLU'], extensions: ['PDF', 'DOCX', 'XLSX'], nomors: ['001/PLN/2026'], ordners: ['Ordner_01', 'Ordner_02', 'Ordner_03', 'Ordner_04'], ulps: ['ULP Malang Kota', 'ULP Blimbing', 'ULP Dinoyo', 'ULP Kebonagung', 'ULP Singosari', 'ULP Lawang', 'ULP Batu', 'ULP Tumpang', 'ULP Bululawang', 'ULP Gondanglegi', 'ULP Kepanjen', 'ULP Sumberpucung', 'ULP Dampit'], tahuns: [] },
+            masterData: { categories: ['PFK', 'ESTETIKA', 'Pelanggan TM', 'SPKLU'], extensions: ['PDF', 'DOCX', 'XLSX'], nomors: ['001/PLN/2026'], ulps: ['ULP Malang Kota', 'ULP Blimbing', 'ULP Dinoyo', 'ULP Kebonagung', 'ULP Singosari', 'ULP Lawang', 'ULP Batu', 'ULP Tumpang', 'ULP Bululawang', 'ULP Gondanglegi', 'ULP Kepanjen', 'ULP Sumberpucung', 'ULP Dampit'], tahuns: [] },
             bulanIndonesia: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
 
             loginForm: { username: '', password: '' },
@@ -3110,19 +3082,19 @@
 
             // BASE CONFIGURATION TAHAPAN (10 STEPS + ESTIMASI TARGET SLA)
             bpmStepsMaster: [
-              { no: 1, team: 'Tim Pengajuan', role: 'ULP/NPS', title: 'Kirim Surat Permohonan Survey & RAB', desc: 'ULP/NPS mengirimkan surat permohonan survey & RAB (Pekerjaan PFK)', sla: '1 Hari' },
+              { no: 1, team: 'Tim Pengajuan', role: 'ULP/NPS', title: 'Kirim Surat Permohonan Survey & RAB', desc: 'ULP/NPS mengirimkan surat permohonan survey & RAB sesuai jenis permohonan', sla: '1 Hari' },
               { no: 2, team: 'Tim Pengajuan', role: 'Admin Perencanaan', title: 'Terima & Entry Data Permohonan', desc: 'Admin menerima surat permohonan dan melakukan entry data', sla: '1 Hari' },
-              { no: 3, team: 'Tim Pengajuan', role: 'Admin Perencanaan', title: 'Penugasan Petugas Survey', desc: 'Admin menugaskan Surveyor untuk Pekerjaan PFK', sla: '1 Hari' },
-              { no: 4, team: 'Tim Survey', role: 'Surveyor', title: 'Survey ke Lokasi (PFK)', desc: 'Surveyor melakukan survey lapangan untuk pekerjaan PFK', sla: '2 Hari' },
-              { no: 5, team: 'Tim Survey', role: 'Surveyor', title: 'Pembuatan Rincian Anggaran Biaya (RAB)', desc: 'Surveyor membuat RAB untuk pekerjaan PFK', sla: '2 Hari' },
-              { no: 6, team: 'Tim Survey', role: 'TL Rensis', title: 'Koreksi Rincian Anggaran Biaya (RAB)', desc: 'TL Rensis melakukan koreksi RAB untuk pekerjaan PFK', sla: '1 Hari' },
-              { no: 7, team: 'Tim Manajemen', role: 'Asman Ren', title: 'Persetujuan RAB + TTD (PFK)', desc: 'Asman Ren menyetujui dan menandatangani dokumen RAB untuk PFK', sla: '1 Hari' },
-              { no: 8, team: 'Tim Pengajuan', role: 'Admin Perencanaan', title: 'AMS ke User (Pemohon) - PFK', desc: 'Admin mengirimkan AMS ke User (ULP/NPS) untuk Permohonan SPKLU, ESTETIKA, Plg TM cc. Bidang Konstruksi', sla: '1 Hari' },
+              { no: 3, team: 'Tim Pengajuan', role: 'Admin Perencanaan', title: 'Penugasan Petugas Survey', desc: 'Admin menugaskan Surveyor sesuai jenis permohonan', sla: '1 Hari' },
+              { no: 4, team: 'Tim Survey', role: 'Surveyor', title: 'Survey ke Lokasi (PFK)', desc: 'Surveyor melakukan survey lapangan sesuai jenis permohonan', sla: '2 Hari' },
+              { no: 5, team: 'Tim Survey', role: 'Surveyor', title: 'Pembuatan Rincian Anggaran Biaya (RAB)', desc: 'Surveyor membuat RAB sesuai jenis permohonan', sla: '2 Hari' },
+              { no: 6, team: 'Tim Survey', role: 'TL Rensis', title: 'Koreksi Rincian Anggaran Biaya (RAB)', desc: 'TL Rensis melakukan koreksi RAB sesuai jenis permohonan', sla: '1 Hari' },
+              { no: 7, team: 'Tim Manajemen', role: 'Asman Ren', title: 'Persetujuan RAB + TTD (PFK)', desc: 'Asman Ren menyetujui dan menandatangani dokumen RAB sesuai jenis permohonan', sla: '1 Hari' },
+              { no: 8, team: 'Tim Pengajuan', role: 'Admin Perencanaan', title: 'AMS ke User (Pemohon)', desc: 'Admin mengirimkan AMS ke User (ULP/NPS) sesuai jenis permohonan, cc. Bidang Konstruksi', sla: '1 Hari' },
               { no: 9, team: 'Tim Pengajuan', role: 'Admin Perencanaan', title: 'Upload & Input Hasil RAB', desc: 'Admin mengunggah hasil RAB ke sistem arsip digital', sla: '1 Hari' }
             ],
 
             form: {
-                archive: { id: '', nomor: '', nama: '', perihal: '', kategori: '', tahun: '', bulan: '', ordner: '', jenis: '', links: [], share_to: [] },
+                archive: { id: '', nomor: '001/PLN/2026', nama: '', perihal: '', kategori: '', tahun: '', bulan: '', jenis: '', links: [], share_to: [] },
                 user: { username: '', nama_lengkap: '', email: '', password: '', role: 'User', status: 'Active', isEdit: false },
                 profile: { nama_lengkap: '', password_lama: '', password_baru: '' }
             },
@@ -3137,12 +3109,11 @@
                 nomorSurat: '', 
                 tanggalSurat: '', 
                 pic: '', 
-                isPFK: false 
             },
 
             fileData: { name: '', bytes: '', type: '' },
             filesData: [], 
-            tempSetting: { category: '', extension: '', nomor: '', ordner: '', ulp: '', tahun: '' },
+            tempSetting: { category: '', extension: '', nomor: '', ulp: '', tahun: '' },
             pagination: { currentPage: 1, perPage: 10 },
 
             getFileIcon(type) {
@@ -3238,9 +3209,9 @@
             bulkExportBpm() {
                 if (this.selectedBpmIds.length === 0) return;
                 const items = this.bpmList.filter(b => this.selectedBpmIds.includes(b.id));
-                let csvContent = "data:text/csv;charset=utf-8,ID,Kode,Permohonan,Nama/Lokasi,Alamat,ULP,Jumlah Unit,Tarif/Daya,Nomor Surat,Tanggal Surat,PIC,Branch,Step,Status\n";
+                let csvContent = "data:text/csv;charset=utf-8,ID,Kode,Permohonan,Nama/Lokasi,Alamat,ULP,Jumlah Unit,Tarif/Daya,Nomor Surat,Tanggal Surat,PIC,Jenis Permohonan,Step,Status\n";
                 items.forEach(i => {
-                    csvContent += `"${i.id}","${i.kode}","${i.permohonan || i.judul}","${i.namaLokasi || i.lokasi}","${i.alamat || ''}","${i.ulp || ''}","${i.jumlahUnit || ''}","${i.tarifDaya || ''}","${i.nomorSurat || ''}","${i.tanggalSurat || ''}","${i.pic || ''}","${i.isPFK ? 'PFK' : 'Non-PFK'}","${i.step}","${i.statusDetail}"\n`;
+                    csvContent += `"${i.id}","${i.kode}","${i.permohonan || i.judul}","${i.namaLokasi || i.lokasi}","${i.alamat || ''}","${i.ulp || ''}","${i.jumlahUnit || ''}","${i.tarifDaya || ''}","${i.nomorSurat || ''}","${i.tanggalSurat || ''}","${i.pic || ''}","${this.getBpmCategoryLabel(i)}","${i.step}","${i.statusDetail}"\n`;
                 });
                 const encodedUri = encodeURI(csvContent);
                 const link = document.createElement("a");
@@ -3250,6 +3221,19 @@
                 link.click();
                 document.body.removeChild(link);
                 Swal.fire({ icon: 'success', title: 'Data Terpilih Diunduh (.CSV)', timer: 1200, showConfirmButton: false });
+            },
+
+            getBpmCategoryLabel(item) {
+                return String(item?.permohonan || item?.judul || '-').trim() || '-';
+            },
+
+            getBpmCategoryStyle(item) {
+                const category = this.getBpmCategoryLabel(item).toUpperCase();
+                if (category === 'PFK') return 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800';
+                if (category === 'ESTETIKA') return 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800';
+                if (category === 'PELANGGAN TM') return 'bg-sky-50 dark:bg-sky-900/30 text-[#005C9A] dark:text-sky-300 border-sky-200 dark:border-sky-800';
+                if (category === 'SPKLU') return 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
+                return 'bg-slate-50 dark:bg-slate-700/60 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600';
             },
 
             get filteredBpmList() {
@@ -3270,11 +3254,12 @@
                     else if (this.bpmFilterStatus === 'before-survey') matchStatus = step <= 3;
                     else if (this.bpmFilterStatus === 'before-rab') matchStatus = step <= 4;
 
-                    let matchBranch = true;
-                    if (this.bpmFilterBranch === 'pfk') matchBranch = item.isPFK === true;
-                    else if (this.bpmFilterBranch === 'non-pfk') matchBranch = item.isPFK === false;
+                    let matchCategory = true;
+                    if (this.bpmFilterCategory !== 'all') {
+                        matchCategory = this.getBpmCategoryLabel(item).toLowerCase() === this.bpmFilterCategory.toLowerCase();
+                    }
 
-                    return matchQ && matchStatus && matchBranch;
+                    return matchQ && matchStatus && matchCategory;
                 });
             },
 
@@ -3309,7 +3294,7 @@
                     const now = new Date();
                     const defaultTahun = (this.masterData.tahuns.includes(now.getFullYear().toString())) ? now.getFullYear().toString() : (this.masterData.tahuns[0] || now.getFullYear().toString());
                     const defaultBulan = this.bulanIndonesia[now.getMonth()];
-                    this.form.archive = { id: '', nomor: '', nama: '', perihal: '', kategori: '', tahun: defaultTahun, bulan: defaultBulan, ordner: 'Ordner_01', jenis: 'PDF', links: [], share_to: [] };
+                    this.form.archive = { id: '', nomor: (this.masterData.nomors && this.masterData.nomors.length > 0 ? this.masterData.nomors[0] : '001/PLN/2026'), nama: '', perihal: '', kategori: '', tahun: defaultTahun, bulan: defaultBulan, jenis: 'PDF', links: [], share_to: [] };
                     this.fileData = { name: '', bytes: '', type: '' };
                     this.filesData = [];
                     this.modals.archive = true;
@@ -3364,7 +3349,7 @@
             },
 
             addSetting(type) {
-                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'Nomor': 'nomors', 'Ordner': 'ordners', 'ULP': 'ulps', 'Tahun': 'tahuns' };
+                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'Nomor': 'nomors', 'ULP': 'ulps', 'Tahun': 'tahuns' };
                 let inputKey = type.toLowerCase();
                 let val = this.tempSetting[inputKey];
 
@@ -3384,7 +3369,7 @@
             },
 
             removeSetting(type, val) {
-                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'Nomor': 'nomors', 'Ordner': 'ordners', 'ULP': 'ulps', 'Tahun': 'tahuns' };
+                let keyMap = { 'Category': 'categories', 'Extension': 'extensions', 'Nomor': 'nomors', 'ULP': 'ulps', 'Tahun': 'tahuns' };
                 let targetArrayKey = keyMap[type];
                 if (this.masterData[targetArrayKey]) {
                     this.masterData[targetArrayKey] = this.masterData[targetArrayKey].filter(item => item !== val);
@@ -3489,9 +3474,9 @@
                 }
                 this.isLoading = true;
                 setTimeout(() => {
-                    let csvContent = "data:text/csv;charset=utf-8,ID,Nomor,Nama,Kategori,Tahun,Bulan,Ordner,Uploader,Tanggal\n";
+                    let csvContent = "data:text/csv;charset=utf-8,ID,Nomor,Nama,Kategori,Tahun,Bulan,Uploader,Tanggal\n";
                     (this.archives || []).forEach(a => {
-                        csvContent += `"${a.id || ''}","${a.nomor || ''}","${a.nama || ''}","${a.kategori || ''}","${a.tahun || ''}","${a.bulan || ''}","${a.ordner || ''}","${a.uploader || ''}","${a.tanggal || ''}"\n`;
+                        csvContent += `"${a.id || ''}","${a.nomor || ''}","${a.nama || ''}","${a.kategori || ''}","${a.tahun || ''}","${a.bulan || ''}","${a.uploader || ''}","${a.tanggal || ''}"\n`;
                     });
                     const encodedUri = encodeURI(csvContent);
                     const link = document.createElement("a");
@@ -3676,14 +3661,12 @@
 
                         const nama     = String(item.nama || item.judul || '').toLowerCase();
                         const nomor    = String(item.nomor || item.kode || '').toLowerCase();
-                        const ordner   = String(item.ordner || '').toLowerCase();
                         const perihal  = String(item.perihal || item.deskripsi || '').toLowerCase();
                         const uploader = String(item.uploader || '').toLowerCase();
 
                         const matchSearch = !q || 
                             nama.includes(q) || 
                             nomor.includes(q) || 
-                            ordner.includes(q) || 
                             perihal.includes(q) || 
                             uploader.includes(q);
 
@@ -3971,7 +3954,7 @@
                         }).then(result => {
                             if (result.isConfirmed) this.printSurveyForm(payload);
                         });
-                        this.bpmForm = { permohonan: '', namaLokasi: '', alamat: '', ulp: '', jumlahUnit: '', tarifDaya: '', nomorSurat: '', tanggalSurat: '', pic: '', isPFK: false };
+                        this.bpmForm = { permohonan: '', namaLokasi: '', alamat: '', ulp: '', jumlahUnit: '', tarifDaya: '', nomorSurat: '', tanggalSurat: '', pic: ''};
                         this.refreshNomorSurat();
                         this.loadBpmData();
                     })
