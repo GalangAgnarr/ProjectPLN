@@ -1,3 +1,5 @@
+// REV 21 - Pembatasan kewenangan penyelesaian BPM berdasarkan tim/step
+// --- KODE REV 18: DEDUPLIKASI MASTER TAHUN + STABILITAS ARSIP ---
 // --- KONFIGURASI UTAMA ---
 const ADMIN_DEFAULT = {
   user: 'admin',
@@ -108,9 +110,6 @@ function initializeSheet() {
       ['Extension', 'DOCX'],
       ['Extension', 'XLSX'],
       ['Extension', 'JPG'],
-      ['Lemari', 'Lemari_A'],
-      ['Lemari', 'Lemari_B'],
-      ['Lemari', 'Lemari_C'],
       ['Ordner', 'Ordner_01'],
       ['Ordner', 'Ordner_02'],
       ['ULP', 'ULP Malang Kota'],
@@ -131,11 +130,10 @@ function initializeSheet() {
     setSheet.setFrozenRows(1);
   }
 
-  // D. Setup Sheet Lemari Default
-  const defaultLemariList = ['Lemari_A', 'Lemari_B', 'Lemari_C'];
-  defaultLemariList.forEach(lemariName => {
-    getOrCreateLemariSheet(ss, lemariName);
-  });
+  // D. Hapus struktur Lemari lama karena arsip kini memakai Tahun/Bulan
+  removeLegacyLemariSheets(ss);
+  removeLegacyLemariSettings(ss);
+  removeDuplicateTahunSettings(ss);
 
   // E. Setup Sheet Notifications
   let notifSheet = ss.getSheetByName('Notifications');
@@ -149,65 +147,6 @@ function initializeSheet() {
   getOrCreateBpmSheet(ss);
 
   return "Database berhasil diinisialisasi dan siap digunakan.";
-}
-
-/**
- * HELPER: Dapatkan atau buat Sheet khusus Lemari
- */
-function getOrCreateLemariSheet(ss, rawLemariName) {
-  let cleanName = (rawLemariName || 'Lemari_A').trim().replace(/\s+/g, '_');
-  let sheet = ss.getSheetByName(cleanName);
-
-  if (!sheet) {
-    sheet = ss.insertSheet(cleanName);
-    sheet.appendRow(['ID', 'Nomor Arsip', 'Nama Arsip', 'Perihal', 'Kategori', 'Lemari', 'Ordner', 'Jenis File', 'Link File', 'Tanggal Upload', 'Pengupload', 'SharedWith']);
-    sheet.setFrozenRows(1);
-  }
-  return sheet;
-}
-
-/**
- * HELPER: Dapatkan atau buat Sheet khusus BPM (TER-UPDATE DENGAN KOLOM FORM LENGKAP)
- */
-function getOrCreateBpmSheet(ss) {
-  let sheet = ss.getSheetByName('BPM');
-  if (!sheet) {
-    sheet = ss.insertSheet('BPM');
-    sheet.appendRow([
-      'ID', 'Kode', 'Judul', 'IsPFK', 'Step', 'StatusDetail', 'Tanggal', 'Pemohon',
-      'Lokasi', 'Alamat', 'ULP', 'JumlahUnit', 'TarifDaya', 'NomorSurat', 'TanggalSurat', 'PIC',
-      'Tgl_Pengajuan', 'Tgl_Survey', 'Tgl_Manajemen', 'Tgl_Selesai', 'StepTimestamps', 'Lampiran'
-    ]);
-    sheet.setFrozenRows(1);
-  } else {
-    // Pastikan header diperbarui jika sheet sudah ada sebelumnya
-    const headerRow = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    if (headerRow.length < 22) {
-      sheet.getRange(1, 1, 1, 22).setValues([[
-        'ID', 'Kode', 'Judul', 'IsPFK', 'Step', 'StatusDetail', 'Tanggal', 'Pemohon',
-        'Lokasi', 'Alamat', 'ULP', 'JumlahUnit', 'TarifDaya', 'NomorSurat', 'TanggalSurat', 'PIC',
-        'Tgl_Pengajuan', 'Tgl_Survey', 'Tgl_Manajemen', 'Tgl_Selesai', 'StepTimestamps', 'Lampiran'
-      ]]);
-    }
-  }
-  return sheet;
-}
-
-/**
- * HELPER: Dapatkan daftar seluruh nama Lemari dari Master Data
- */
-function getLemariListFromMaster(ss) {
-  const setSheet = ss.getSheetByName('Settings');
-  let lemaris = [];
-  if (setSheet) {
-    const data = setSheet.getDataRange().getValues();
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][0] === 'Lemari' && data[i][1]) {
-        lemaris.push(data[i][1].toString().trim().replace(/\s+/g, '_'));
-      }
-    }
-  }
-  return lemaris.length > 0 ? lemaris : ['Lemari_A', 'Lemari_B', 'Lemari_C'];
 }
 
 // --- STRUKTUR ARSIP BARU: TAHUN / BULAN (menggantikan Lemari sebagai pengelompokan utama) ---
@@ -236,23 +175,136 @@ function getOrCreateTahunSheet(ss, rawTahun) {
   return sheet;
 }
 
+function getOrCreateBpmSheet(ss) {
+  let sheet = ss.getSheetByName('BPM');
+
+  if (!sheet) {
+    sheet = ss.insertSheet('BPM');
+
+    sheet.appendRow([
+      'ID', 'Kode', 'Judul', 'IsPFK', 'Step', 'StatusDetail', 'Tanggal', 'Pemohon',
+      'Lokasi', 'Alamat', 'ULP', 'JumlahUnit', 'TarifDaya', 'NomorSurat',
+      'TanggalSurat', 'PIC', 'Tgl_Pengajuan', 'Tgl_Survey', 'Tgl_Manajemen',
+      'Tgl_Selesai', 'StepTimestamps', 'Lampiran'
+    ]);
+
+    sheet.setFrozenRows(1);
+
+  } else {
+    // Pastikan minimal 22 kolom tersedia
+    const lastCol = sheet.getLastColumn();
+
+    if (lastCol < 22) {
+      sheet.getRange(1, 1, 1, 22).setValues([[
+        'ID', 'Kode', 'Judul', 'IsPFK', 'Step', 'StatusDetail', 'Tanggal', 'Pemohon',
+        'Lokasi', 'Alamat', 'ULP', 'JumlahUnit', 'TarifDaya', 'NomorSurat',
+        'TanggalSurat', 'PIC', 'Tgl_Pengajuan', 'Tgl_Survey', 'Tgl_Manajemen',
+        'Tgl_Selesai', 'StepTimestamps', 'Lampiran'
+      ]]);
+    }
+  }
+
+  return sheet;
+}
+
+// --- ARSIP OTOMATIS BPM: pindahkan permohonan yang sudah Selesai & lewat 3 bulan ---
+// Data TIDAK dihapus — hanya dipindah dari sheet 'BPM' (aktif) ke 'BPM_Riwayat' (arsip),
+// supaya daftar utama tidak menumpuk tapi riwayat tetap bisa ditelusuri kapan saja.
+
+const BPM_ARCHIVE_AFTER_MONTHS = 3;
+
+function getOrCreateBpmRiwayatSheet(ss) {
+  let sheet = ss.getSheetByName('BPM_Riwayat');
+  if (!sheet) {
+    sheet = ss.insertSheet('BPM_Riwayat');
+    const bpmSheet = getOrCreateBpmSheet(ss);
+    const header = bpmSheet.getRange(1, 1, 1, bpmSheet.getLastColumn()).getValues();
+    sheet.getRange(1, 1, 1, header[0].length).setValues(header);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+// Memindahkan baris BPM yang sudah Selesai (step > 9) DAN Tgl_Selesai-nya
+// sudah lebih dari BPM_ARCHIVE_AFTER_MONTHS bulan yang lalu.
+function archiveOldCompletedBpm(ss) {
+  const bpmSheet = getOrCreateBpmSheet(ss);
+  const riwayatSheet = getOrCreateBpmRiwayatSheet(ss);
+
+  const data = bpmSheet.getDataRange().getValues();
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - BPM_ARCHIVE_AFTER_MONTHS);
+
+  let archivedCount = 0;
+
+  // Iterasi dari bawah ke atas karena baris akan dihapus sambil looping
+  for (let i = data.length - 1; i >= 1; i--) {
+    const row = data[i];
+    if (!row[0]) continue; // baris kosong
+
+    const step = parseInt(row[4], 10) || 1;
+    if (step <= 9) continue; // belum selesai, lewati
+
+    const tglSelesaiRaw = row[19];
+    if (!tglSelesaiRaw) continue;
+
+    const tglSelesai = new Date(tglSelesaiRaw);
+    if (isNaN(tglSelesai.getTime())) continue;
+    if (tglSelesai > cutoff) continue; // belum genap 3 bulan, lewati
+
+    riwayatSheet.appendRow(row);
+    bpmSheet.deleteRow(i + 1);
+    archivedCount++;
+  }
+
+  return archivedCount;
+}
+
+// Wrapper dengan pembatas waktu (throttle) — supaya proses pengecekan+pemindahan
+// tidak berjalan di SETIAP request (berat), cukup maksimal sekali per 24 jam.
+function archiveOldCompletedBpmIfDue(ss) {
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const lastRun = props.getProperty('lastBpmArchiveRun');
+    const now = new Date();
+
+    if (lastRun) {
+      const hoursSince = (now - new Date(lastRun)) / (1000 * 60 * 60);
+      if (hoursSince < 24) return;
+    }
+
+    props.setProperty('lastBpmArchiveRun', now.toISOString());
+    archiveOldCompletedBpm(ss);
+  } catch (e) {
+    // Jangan sampai proses arsip otomatis ini menggagalkan request utama
+    console.warn('Gagal menjalankan arsip otomatis BPM: ' + e.message);
+  }
+}
+
+
 function getTahunListFromMaster(ss) {
   const setSheet = ss.getSheetByName('Settings');
-  let tahuns = [];
+  const tahunSet = new Set();
+
   if (setSheet) {
     const data = setSheet.getDataRange().getValues();
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === 'Tahun' && data[i][1]) {
-        tahuns.push(data[i][1].toString().trim());
+        const tahun = data[i][1].toString().trim();
+        if (tahun) tahunSet.add(tahun);
       }
     }
   }
-  if (tahuns.length === 0) {
+
+  if (tahunSet.size === 0) {
     const currentYear = new Date().getFullYear();
-    tahuns = [(currentYear - 1).toString(), currentYear.toString(), (currentYear + 1).toString()];
+    tahunSet.add((currentYear - 1).toString());
+    tahunSet.add(currentYear.toString());
+    tahunSet.add((currentYear + 1).toString());
   }
-  // Urutkan dari tahun terbaru
-  return tahuns.sort((a, b) => b.localeCompare(a));
+
+  // Set memastikan satu tahun hanya muncul sekali meskipun Settings memiliki duplikat.
+  return Array.from(tahunSet).sort((a, b) => b.localeCompare(a));
 }
 
 /**
@@ -309,102 +361,12 @@ function resetAllPasswordsToDefault() {
 // =============================================================================
 
 // =============================================================================
-// MIGRASI STRUKTUR ARSIP: LEMARI -> TAHUN/BULAN
-// SENGAJA tidak dihubungkan ke apiHandler — hanya bisa dijalankan manual
-// oleh Admin lewat Apps Script Editor, karena ini operasi struktural sekali-pakai.
-//
-// CARA PAKAI:
-// 1. Buka Apps Script Editor (Extensions > Apps Script).
-// 2. Pilih fungsi 'migrateArchivesToYearStructure' di dropdown atas, klik Run.
-// 3. Cek "Execution log" untuk konfirmasi jumlah dokumen yang dipindahkan.
-//
-// Sheet Lemari lama TIDAK dihapus — hanya diganti nama jadi "OLD_<nama>"
-// sebagai cadangan, supaya data tidak pernah hilang meski migrasi diulang.
-// =============================================================================
-function migrateArchivesToYearStructure() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const lemariList = getLemariListFromMaster(ss);
-  let migratedCount = 0;
-  let skippedCount = 0;
-  const yearsCreated = {};
 
-  lemariList.forEach(lemariName => {
-    const oldSheet = ss.getSheetByName(lemariName);
-    if (!oldSheet) {
-      Logger.log(`Lewati: sheet "${lemariName}" tidak ditemukan.`);
-      return;
-    }
-
-    const data = oldSheet.getDataRange().getValues();
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-      if (!row[0]) continue; // lewati baris kosong
-
-      const uploadDateRaw = row[9];
-      const d = new Date(uploadDateRaw);
-      const tahun = isNaN(d.getTime()) ? new Date().getFullYear().toString() : d.getFullYear().toString();
-      const bulan = getBulanFromDate(uploadDateRaw);
-
-      const targetSheet = getOrCreateTahunSheet(ss, tahun);
-
-      // Cek duplikasi (jaga-jaga kalau migrasi dijalankan dua kali)
-      const existingIds = targetSheet.getDataRange().getValues().map(r => r[0]);
-      if (existingIds.includes(row[0])) {
-        skippedCount++;
-        continue;
-      }
-
-      targetSheet.appendRow([
-        row[0],           // ID
-        row[1],           // Nomor Arsip
-        row[2],           // Nama Arsip
-        row[3],           // Perihal
-        row[4],           // Kategori
-        bulan,            // Bulan (baru, dari tanggal upload)
-        row[6],           // Ordner (tetap dipertahankan)
-        row[7],           // Jenis File
-        row[8],           // Link File
-        row[9],           // Tanggal Upload (asli)
-        row[10],          // Pengupload
-        row[11]           // SharedWith
-      ]);
-
-      yearsCreated[tahun] = true;
-      migratedCount++;
-    }
-
-    // Ganti nama sheet lama jadi cadangan (TIDAK dihapus)
-    try {
-      if (!oldSheet.getName().startsWith('OLD_')) {
-        oldSheet.setName('OLD_' + lemariName);
-      }
-    } catch (e) {
-      Logger.log(`Gagal mengganti nama sheet "${lemariName}": ${e.message}`);
-    }
-  });
-
-  // Daftarkan tahun-tahun baru ke Settings supaya langsung muncul di Konfigurasi Master Data
-  const setSheet = ss.getSheetByName('Settings');
-  if (setSheet) {
-    const existingSettings = setSheet.getDataRange().getValues();
-    Object.keys(yearsCreated).forEach(tahun => {
-      const alreadyExists = existingSettings.some(r => r[0] === 'Tahun' && r[1].toString() === tahun);
-      if (!alreadyExists) {
-        setSheet.appendRow(['Tahun', tahun]);
-      }
-    });
-  }
-
-  Logger.log(`SELESAI. ${migratedCount} dokumen berhasil dipindahkan ke struktur Tahun/Bulan.`);
-  if (skippedCount > 0) Logger.log(`${skippedCount} dokumen dilewati karena sudah pernah dimigrasi sebelumnya.`);
-  Logger.log(`Tahun yang dibuat/terpakai: ${Object.keys(yearsCreated).join(', ') || '(tidak ada)'}`);
-  Logger.log('Sheet Lemari lama telah diganti nama menjadi "OLD_<nama>" sebagai cadangan (tidak dihapus).');
-}
-// =============================================================================
 function apiHandler(action, payload) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     ensureUserSheetSchema(ss);
+    archiveOldCompletedBpmIfDue(ss);
     switch (action) {
       case 'checkSession': return checkSession(ss, payload);
       case 'login': return loginUser(ss, payload);
@@ -727,12 +689,12 @@ function getDashboardStats(ss, { token }) {
   let totalArsipSystem = 0;
   let categoryCounts = {};
 
-  const lemariList = getLemariListFromMaster(ss);
+  const tahunList = getTahunListFromMaster(ss);
 
-  lemariList.forEach(lemariName => {
-    const lemariSheet = ss.getSheetByName(lemariName);
-    if (lemariSheet) {
-      const arsipData = lemariSheet.getDataRange().getValues();
+  tahunList.forEach(tahunName => {
+    const tahunSheet = ss.getSheetByName(tahunName.replace(/\s+/g, '_'));
+    if (tahunSheet) {
+      const arsipData = tahunSheet.getDataRange().getValues();
       for (let i = 1; i < arsipData.length; i++) {
         const row = arsipData[i];
         if (!row[0]) continue;
@@ -916,6 +878,67 @@ function getData(ss, { token, type }) {
       }
     });
   }
+  else if (type === 'bpm_riwayat') {
+    const riwayatSheet = getOrCreateBpmRiwayatSheet(ss);
+    let rawData = riwayatSheet.getDataRange().getValues();
+    rawData.shift();
+
+    rawData.forEach(row => {
+      if (row[0] || row[1] || row[2]) {
+        let safeIso = function(val) {
+          if (!val) return null;
+          let d = new Date(val);
+          return isNaN(d.getTime()) ? null : d.toISOString();
+        };
+
+        let rawIsPfk = row[3];
+        let isPfkVal = typeof rawIsPfk === 'string'
+          ? rawIsPfk.trim().toUpperCase() === 'TRUE'
+          : Boolean(rawIsPfk);
+
+        let stepTimestamps = {};
+        if (row[20]) {
+          try {
+            stepTimestamps = JSON.parse(row[20]);
+          } catch(e) {
+            stepTimestamps = {};
+          }
+        }
+
+        let rawLampiranStr = row[21] ? row[21].toString() : '';
+        let lampiranArr = rawLampiranStr ? rawLampiranStr.split(', ').map(l => l.trim()).filter(Boolean) : [];
+
+        result.push({
+          id: String(row[0] || Date.now()),
+          kode: row[1] ? String(row[1]) : '-',
+          judul: row[2] ? String(row[2]) : 'Permohonan Survey',
+          permohonan: row[2] ? String(row[2]) : 'Permohonan Survey',
+          isPFK: isPfkVal,
+          step: parseInt(row[4]) || 1,
+          statusDetail: row[5] ? String(row[5]) : 'Kirim Surat Permohonan Survey & RAB',
+          tanggal: formatDate(row[6]),
+          uploader: row[7] ? String(row[7]) : 'System',
+          pemohon: row[7] ? String(row[7]) : 'System',
+          lokasi: row[8] ? String(row[8]) : '-',
+          namaLokasi: row[8] ? String(row[8]) : '-',
+          alamat: row[9] ? String(row[9]) : '-',
+          ulp: row[10] ? String(row[10]) : '-',
+          jumlahUnit: row[11] ? String(row[11]) : '-',
+          tarifDaya: row[12] ? String(row[12]) : '-',
+          nomorSurat: row[13] ? String(row[13]) : '-',
+          tanggalSurat: row[14] ? String(row[14]) : '-',
+          pic: row[15] ? String(row[15]) : '-',
+          tglPengajuan: safeIso(row[16]) || safeIso(row[6]) || new Date().toISOString(),
+          tglSurvey: safeIso(row[17]),
+          tglManajemen: safeIso(row[18]),
+          tglSelesai: safeIso(row[19]),
+          stepTimestamps: stepTimestamps,
+          links: lampiranArr,
+          link: lampiranArr[0] || null
+        });
+      }
+    });
+  }
   else if (type === 'logs') {
     const sheet = ss.getSheetByName('ActivityLog');
     if (sheet) {
@@ -946,6 +969,31 @@ function getData(ss, { token, type }) {
 }
 
 // --- SAVE DATA (DI-UPDATE DENGAN SIMPAN SELURUH FIELD PENGAJUAN SURVEY) ---
+/**
+ * Menentukan tim yang berhak menyelesaikan step BPM aktif.
+ * Pembagian tim mengikuti bpmStepsMaster di frontend:
+ * 1-3, 8-9 = Tim Pengajuan
+ * 4-6       = Tim Survey & Rensis
+ * 7         = Tim Manajemen
+ * Admin     = dapat memproses seluruh step
+ */
+function canCompleteBpmStep(userRole, step) {
+  const role = String(userRole || '').toLowerCase();
+  const currentStep = parseInt(step, 10) || 1;
+
+  if (role === 'admin') return true;
+
+  const isPengajuan = role.includes('pengajuan') || role.includes('ulp');
+  const isSurvey = role.includes('survey') || role.includes('rensis');
+  const isManajemen = role.includes('asman') || role.includes('manajemen');
+
+  if ([1, 2, 3, 8, 9].includes(currentStep)) return isPengajuan;
+  if ([4, 5, 6].includes(currentStep)) return isSurvey;
+  if (currentStep === 7) return isManajemen;
+
+  return false;
+}
+
 function saveData(ss, { token, type, data }) {
   const user = validateToken(ss, token);
 
@@ -1069,6 +1117,9 @@ function saveData(ss, { token, type, data }) {
 
   }
   else if (type === 'bpm') {
+    const role = (user.role || '').toLowerCase();
+    const canCreateBpm = role === 'admin' || role.includes('pengajuan') || role.includes('ulp');
+
     const bpmSheet = getOrCreateBpmSheet(ss);
     const rows = bpmSheet.getDataRange().getValues();
     let rowIndex = -1;
@@ -1084,7 +1135,15 @@ function saveData(ss, { token, type, data }) {
 
     if (rowIndex > 0) { // Update status step BPM
       let rowData = rows[rowIndex - 1];
-      let stepVal = data.step !== undefined ? parseInt(data.step) : (parseInt(rowData[4]) || 1);
+      const currentStepVal = parseInt(rowData[4]) || 1;
+
+      // Hanya tim pemilik step aktif yang boleh menyelesaikan/mengubah step tersebut.
+      // Admin tetap memiliki akses penuh.
+      if (!canCompleteBpmStep(user.role, currentStepVal)) {
+        throw new Error(`Akses Ditolak: Anda tidak memiliki kewenangan memproses Step ${currentStepVal}.`);
+      }
+
+      let stepVal = data.step !== undefined ? parseInt(data.step) : currentStepVal;
 
       let tglPengajuan = rowData[16] || rowData[6] || now;
       let tglSurvey    = rowData[17] || (stepVal >= 4 ? now : '');
@@ -1119,6 +1178,13 @@ function saveData(ss, { token, type, data }) {
       
       logActivity(ss, user.username, 'Update BPM', `Memperbarui alur BPM: ${data.permohonan || data.judul || rowData[2]} ke Step ${stepVal}`);
     } else { // Permohonan BPM Baru
+      if (!canCreateBpm) {
+        throw new Error('Akses Ditolak: Tim Survey & Rensis tidak dapat membuat permohonan survey baru.');
+      }
+      if (!canCompleteBpmStep(user.role, 1)) {
+        throw new Error('Akses Ditolak: Anda tidak memiliki kewenangan membuat Step 1.');
+      }
+
       const lock = LockService.getScriptLock();
       lock.waitLock(15000);
       let finalNomorSurat;
@@ -1291,13 +1357,18 @@ function deleteData(ss, { token, type, id }) {
 
 // --- SETTINGS & MASTER DATA ---
 function getSettings(ss, { token }) {
+  // Pastikan struktur lama Lemari selalu dibersihkan saat aplikasi memuat master data.
+  // Arsip aktif sepenuhnya menggunakan Tahun / Bulan / Ordner.
+  removeLegacyLemariSheets(ss);
+  removeLegacyLemariSettings(ss);
+  removeDuplicateTahunSettings(ss);
+
   const sheet = ss.getSheetByName('Settings');
   const userSheet = ss.getSheetByName('Users');
 
   let categories = [];
   let extensions = [];
   let nomors = [];
-  let lemaris = [];
   let ordners = [];
   let ulps = [];
   let tahuns = [];
@@ -1308,7 +1379,6 @@ function getSettings(ss, { token }) {
       if (data[i][0] === 'Category') categories.push(data[i][1]);
       if (data[i][0] === 'Extension') extensions.push(data[i][1]);
       if (data[i][0] === 'Nomor') nomors.push(data[i][1]);
-      if (data[i][0] === 'Lemari') lemaris.push(data[i][1]);
       if (data[i][0] === 'Ordner') ordners.push(data[i][1]);
       if (data[i][0] === 'ULP') ulps.push(data[i][1]);
       if (data[i][0] === 'Tahun') tahuns.push(data[i][1].toString());
@@ -1328,7 +1398,6 @@ function getSettings(ss, { token }) {
     }
   }
 
-  const cleanLemaris = lemaris.length > 0 ? lemaris : ['Lemari_A', 'Lemari_B', 'Lemari_C'];
   const cleanOrdners = ordners.length > 0 ? ordners : ['Ordner_01', 'Ordner_02', 'Ordner_03'];
   const cleanUlps = ulps.length > 0 ? ulps : [
     'ULP Malang Kota', 'ULP Blimbing', 'ULP Dinoyo', 'ULP Kebonagung', 'ULP Singosari',
@@ -1336,9 +1405,11 @@ function getSettings(ss, { token }) {
     'ULP Kepanjen', 'ULP Sumberpucung', 'ULP Dampit'
   ];
   const currentYear = new Date().getFullYear();
-  const cleanTahuns = (tahuns.length > 0 ? tahuns : [(currentYear - 1).toString(), currentYear.toString(), (currentYear + 1).toString()])
+  const sourceTahuns = tahuns.length > 0
+    ? tahuns
+    : [(currentYear - 1).toString(), currentYear.toString(), (currentYear + 1).toString()];
+  const cleanTahuns = Array.from(new Set(sourceTahuns.map(t => t.toString().trim()).filter(Boolean)))
     .sort((a, b) => b.localeCompare(a));
-  cleanLemaris.forEach(l => getOrCreateLemariSheet(ss, l));
   cleanTahuns.forEach(t => getOrCreateTahunSheet(ss, t));
 
   return {
@@ -1347,7 +1418,6 @@ function getSettings(ss, { token }) {
       categories: categories.length > 0 ? categories : ['PFK', 'ESTETIKA', 'Pelanggan TM', 'SPKLU'],
       extensions,
       nomors,
-      lemaris: cleanLemaris,
       ordners: cleanOrdners,
       ulps: cleanUlps,
       tahuns: cleanTahuns,
@@ -1364,9 +1434,7 @@ function saveSetting(ss, { token, type, value }) {
   const data = sheet.getDataRange().getValues();
   let cleanVal = value.toString().trim();
 
-  if (type === 'Lemari') {
-    cleanVal = cleanVal.replace(/\s+/g, '_');
-  }
+  if (type === 'Lemari') throw new Error("Master data Lemari sudah tidak digunakan. Gunakan Tahun, Bulan, dan Ordner.");
 
   for (let i = 1; i < data.length; i++) {
     if (data[i][0] === type && data[i][1].toString().toLowerCase() === cleanVal.toLowerCase()) {
@@ -1376,9 +1444,6 @@ function saveSetting(ss, { token, type, value }) {
 
   sheet.appendRow([type, cleanVal]);
 
-  if (type === 'Lemari') {
-    getOrCreateLemariSheet(ss, cleanVal);
-  }
   if (type === 'Tahun') {
     getOrCreateTahunSheet(ss, cleanVal);
   }
@@ -1404,7 +1469,6 @@ function saveMasterSettings(ss, { token, data }) {
     categories: 'Category',
     extensions: 'Extension',
     nomors: 'Nomor',
-    lemaris: 'Lemari',
     ordners: 'Ordner',
     ulps: 'ULP',
     tahuns: 'Tahun'
@@ -1412,11 +1476,14 @@ function saveMasterSettings(ss, { token, data }) {
 
   Object.keys(mapKeys).forEach(key => {
     if (Array.isArray(data[key])) {
-      data[key].forEach(val => {
+      const values = key === 'tahuns'
+        ? Array.from(new Set(data[key].map(val => val.toString().trim()).filter(Boolean)))
+        : data[key];
+
+      values.forEach(val => {
         let clean = val.toString().trim();
-        if (mapKeys[key] === 'Lemari') clean = clean.replace(/\s+/g, '_');
+        if (!clean) return;
         sheet.appendRow([mapKeys[key], clean]);
-        if (mapKeys[key] === 'Lemari') getOrCreateLemariSheet(ss, clean);
       });
     }
   });
@@ -1446,22 +1513,31 @@ function generateReport(ss, payload) {
   var tempSs = SpreadsheetApp.create("Temp_Report_All");
   var tempSheet = tempSs.getActiveSheet();
 
-  tempSheet.appendRow(['ID', 'Nomor Arsip', 'Nama Arsip', 'Perihal', 'Kategori', 'Lemari', 'Ordner', 'Jenis File', 'Link File', 'Tanggal Upload', 'Pengupload', 'SharedWith']);
+  tempSheet.appendRow(['ID', 'Nomor Arsip', 'Nama Arsip', 'Perihal', 'Kategori', 'Tahun', 'Bulan', 'Ordner', 'Jenis File', 'Link File', 'Tanggal Upload', 'Pengupload', 'SharedWith']);
 
-  var lemariList = getLemariListFromMaster(ss);
+  var tahunList = getTahunListFromMaster(ss);
   var count = 0;
+  var startDate = payload && payload.start ? new Date(payload.start + 'T00:00:00') : null;
+  var endDate = payload && payload.end ? new Date(payload.end + 'T23:59:59') : null;
 
-  lemariList.forEach(lemariName => {
-    var sheet = ss.getSheetByName(lemariName);
-    if (sheet) {
-      var data = sheet.getDataRange().getValues();
-      for (var i = 1; i < data.length; i++) {
-        var row = data[i];
-        if (row[0] || row[1]) {
-          tempSheet.appendRow(row);
-          count++;
-        }
-      }
+  tahunList.forEach(function(tahunName) {
+    var sheet = ss.getSheetByName(tahunName.replace(/\s+/g, '_'));
+    if (!sheet) return;
+
+    var data = sheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      if (!(row[0] || row[1])) continue;
+
+      var uploadDate = row[9] ? new Date(row[9]) : null;
+      if (startDate && uploadDate && uploadDate < startDate) continue;
+      if (endDate && uploadDate && uploadDate > endDate) continue;
+
+      tempSheet.appendRow([
+        row[0], row[1], row[2], row[3], row[4], tahunName, row[5],
+        row[6], row[7], row[8], row[9], row[10], row[11]
+      ]);
+      count++;
     }
   });
 
@@ -1485,6 +1561,62 @@ function generateReport(ss, payload) {
   DriveApp.getFileById(tempSs.getId()).setTrashed(true);
 
   return { success: true, data: { bytes: bytes, filename: filename } };
+}
+
+// Hapus sheet Lemari lama agar tidak pernah dibuat kembali.
+function removeLegacyLemariSheets(ss) {
+  const sheets = ss.getSheets();
+  sheets.forEach(function(sheet) {
+    const name = sheet.getName();
+    if (!/^(Lemari(?:_|\s|$)|OLD_Lemari(?:_|\s|$))/i.test(name)) return;
+
+    // Hindari menghapus sheet terakhir pada spreadsheet.
+    if (ss.getSheets().length <= 1) {
+      sheet.clearContents();
+      sheet.setName('Settings');
+      return;
+    }
+
+    ss.deleteSheet(sheet);
+  });
+}
+
+// Hapus entri master data Lemari lama dari Settings.
+function removeLegacyLemariSettings(ss) {
+  const sheet = ss.getSheetByName('Settings');
+  if (!sheet || sheet.getLastRow() < 2) return;
+  const data = sheet.getDataRange().getValues();
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (String(data[i][0]).trim().toLowerCase() === 'lemari') {
+      sheet.deleteRow(i + 1);
+    }
+  }
+}
+
+// Rapikan duplikat master Tahun agar Settings tetap bersih secara fisik.
+// Baris pertama untuk setiap tahun dipertahankan; baris duplikat dihapus.
+function removeDuplicateTahunSettings(ss) {
+  const sheet = ss.getSheetByName('Settings');
+  if (!sheet || sheet.getLastRow() < 2) return;
+
+  const data = sheet.getDataRange().getValues();
+  const seen = new Set();
+
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (String(data[i][0]).trim().toLowerCase() !== 'tahun') continue;
+
+    const tahun = data[i][1] ? data[i][1].toString().trim() : '';
+    if (!tahun) {
+      sheet.deleteRow(i + 1);
+      continue;
+    }
+
+    if (seen.has(tahun)) {
+      sheet.deleteRow(i + 1);
+    } else {
+      seen.add(tahun);
+    }
+  }
 }
 
 // --- NOTIFICATION SYSTEM ---
